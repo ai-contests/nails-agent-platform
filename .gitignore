@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.so
+
+# Virtual envs
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+
+# Generated outputs (pipeline artifacts, not seed data)
+demo/output/
+output/
+outputs/
+reports/
+contexts/
+
+# Database (runtime)
+*.db
+*.sqlite
+*.sqlite3
+nails_agent/memory/*.db
+
+# ComfyUI temp
+workflows/__pycache__/
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Claude session files
+.claude/settings.local.json
