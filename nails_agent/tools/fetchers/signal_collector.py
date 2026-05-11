@@ -30,30 +30,43 @@ from nails_agent.models.schemas import TrendSignal
 
 logger = logging.getLogger(__name__)
 
-# Strategy B: scene/intent keywords used as supplementary search terms
-DEFAULT_NAIL_KEYWORDS = [
-    "美甲",           # seed for Strategy A discovery
+# Per-platform keyword sets (5 each) — targets ≥100 signals/platform/round.
+
+# Chinese terms work best on XHS (cover scene + intent + style).
+# Empirically XHS de-dups across keywords at ~40%, so 7 kw × 22 ≈ 154 → ~95-100 unique.
+XHS_KEYWORDS = [
+    "美甲",           # broadest seed
     "美甲推荐",
-    "美甲灵感",
-    "显白美甲",
     "夏日美甲",
+    "显白美甲",
+    "美甲灵感",
+    "法式美甲",        # style-specific, lifts unique-rate
     "美甲教程",
 ]
 
-# Explicit style keywords (used when Strategy A discovery yields too few results)
-_STYLE_KEYWORDS = [
-    "猫眼美甲",
-    "法式美甲",
-    "渐变美甲",
-    "奶油美甲",
-    "3D美甲",
-    "贴片美甲",
+# Douyin: keep similar but lean toward tutorial / show-off content
+DOUYIN_KEYWORDS = [
+    "美甲",
+    "美甲教程",
+    "美甲推荐",
+    "夏日美甲",
+    "高级美甲",
 ]
 
-_IG_NAIL_TAGS = [
-    "nailart", "cateyenails", "frenchnails",
-    "3dnailart", "gradientnails", "gelnails",
+# Instagram hashtags (no #) — mix style + general nail tags
+IG_NAIL_TAGS = [
+    "nailart",
+    "cateyenails",
+    "frenchnails",
+    "gradientnails",
+    "3dnailart",
 ]
+
+# Used by clients (orchestrator, etc.) that want a generic keyword set
+DEFAULT_NAIL_KEYWORDS = XHS_KEYWORDS
+
+# Per-platform per-keyword target (5 kw × 25 ≈ 125 → dedup to ~100)
+_PER_KW_LIMIT = 25
 
 
 class SignalCollector:
@@ -137,7 +150,7 @@ class SignalCollector:
     def collect(
         self,
         keywords: Optional[List[str]] = None,
-        limit_per_kw: int = 8,
+        limit_per_kw: int = _PER_KW_LIMIT,
         use_xhs: bool = True,
         use_douyin: bool = True,
         use_instagram: bool = True,
@@ -148,48 +161,55 @@ class SignalCollector:
         """
         Collect from all available sources (parallel by default).
 
+        Each platform uses its own 5-keyword set targeting ~100 signals per
+        platform per round. Pass `keywords` to override the union (used by
+        XHS + Douyin; IG uses english hashtags regardless).
+
         Returns deduplicated List[TrendSignal] sorted by engagement score.
         Falls back to mock data only if all real sources produce nothing.
         """
-        kws = keywords or DEFAULT_NAIL_KEYWORDS
+        xhs_kws    = keywords or XHS_KEYWORDS
+        douyin_kws = keywords or DOUYIN_KEYWORDS
+        ig_tags    = IG_NAIL_TAGS  # english hashtags — not parametrised
+
         all_signals: List[TrendSignal] = []
         sources_used: List[str] = []
-
-        # Build task list
         tasks: Dict[str, callable] = {}
 
         if use_xhs:
             xhs = self._get_xhs_mcp()
             if xhs.is_available():
-                tasks["xhs"] = lambda: xhs.search(kws[:4], limit_per_kw=limit_per_kw)
+                tasks["xhs"] = lambda: xhs.search(xhs_kws, limit_per_kw=limit_per_kw)
             else:
                 logger.debug("XHS-MCP: Go server not running or not logged in")
 
         if use_douyin:
             dy = self._get_douyin()
             if dy.is_available():
-                tasks["douyin"] = lambda: dy.search(kws[:4], limit_per_kw=limit_per_kw)
+                tasks["douyin"] = lambda: dy.search(douyin_kws, limit_per_kw=limit_per_kw)
             else:
                 logger.debug("Douyin CDP: Chrome not running with debug port")
 
         if use_instagram:
             ig = self._get_instagram()
             if ig.is_available():
-                tasks["instagram"] = lambda: ig.fetch_all(_IG_NAIL_TAGS[:4], limit_per_tag=6)
+                tasks["instagram"] = lambda: ig.fetch_all(ig_tags, limit_per_tag=limit_per_kw)
             else:
-                logger.debug("Instagram: instaloader not installed")
+                logger.debug("Instagram: neither CDP nor instaloader available")
 
         if use_tikhub and self._tikhub_key:
-            tasks["tikhub"] = lambda: self._get_tikhub().fetch_all(kws, limit_per_kw=limit_per_kw)
+            tasks["tikhub"] = lambda: self._get_tikhub().fetch_all(xhs_kws, limit_per_kw=limit_per_kw)
 
         # Execute tasks
+        # 5 keywords × scroll/source is slow: XHS ~50s, Douyin ~120s, IG ~150s.
+        # Cap at 4 min per source to bound total runtime when one platform stalls.
         if parallel and len(tasks) > 1:
             with ThreadPoolExecutor(max_workers=min(4, len(tasks))) as pool:
                 futures = {pool.submit(fn): name for name, fn in tasks.items()}
                 for fut in as_completed(futures):
                     name = futures[fut]
                     try:
-                        results = fut.result(timeout=45)
+                        results = fut.result(timeout=240)
                         if results:
                             all_signals.extend(results)
                             sources_used.append(f"{name}({len(results)})")

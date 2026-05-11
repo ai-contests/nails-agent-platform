@@ -112,7 +112,18 @@ class DouyinCDPFetcher:
                     return page
         return None
 
-    def search(self, keywords: List[str], limit_per_kw: int = 10) -> List[TrendSignal]:
+    def search(
+        self,
+        keywords: List[str],
+        limit_per_kw: int = 25,
+        max_scrolls: int = 3,
+    ) -> List[TrendSignal]:
+        """
+        Search Douyin by reusing the user's logged-in tab.
+
+        Scrolls the search result page up to `max_scrolls` times to gather
+        more XHR batches, stopping early once `limit_per_kw` signals are in.
+        """
         try:
             from playwright.sync_api import sync_playwright
         except ImportError:
@@ -149,40 +160,67 @@ class DouyinCDPFetcher:
 
             for kw in keywords:
                 captured_bodies: List[tuple] = []
+                seen_ids: set = set()
 
                 def _on_response(resp):
                     if any(p in resp.url for p in _API_PATTERNS) and resp.status == 200:
                         try:
-                            body = resp.json()
-                            captured_bodies.append((resp.url, body))
+                            captured_bodies.append((resp.url, resp.json()))
                         except Exception:
                             pass
 
                 douyin_page.on("response", _on_response)
 
+                signals: List[TrendSignal] = []
+                processed_idx = 0  # how many captured_bodies entries we've already drained
+
                 try:
                     search_url = _SEARCH_URL.format(kw=urllib.parse.quote(kw))
-                    logger.info("Douyin CDP: searching '%s'", kw)
+                    logger.info("Douyin CDP: searching '%s' (target %d)", kw, limit_per_kw)
                     douyin_page.goto(search_url, timeout=self.timeout_ms, wait_until="domcontentloaded")
 
-                    # Wait for XHR (up to 10s)
+                    # Initial XHR wait
                     deadline = time.time() + 10
                     while not captured_bodies and time.time() < deadline:
                         douyin_page.wait_for_timeout(500)
 
-                    # Parse
-                    signals = []
-                    for _url, body in captured_bodies:
-                        items = _extract_items(body)
-                        for item in items[:limit_per_kw]:
-                            try:
-                                sig = _parse_aweme(item, kw)
-                                if sig and (_is_nail_related(sig.caption) or _is_nail_related(kw)):
-                                    signals.append(sig)
-                            except Exception as e:
-                                logger.debug("Douyin parse: %s", e)
+                    def _drain():
+                        """Parse anything new in captured_bodies into signals."""
+                        nonlocal processed_idx
+                        for _url, body in captured_bodies[processed_idx:]:
+                            for item in _extract_items(body):
+                                try:
+                                    sig = _parse_aweme(item, kw)
+                                except Exception as e:
+                                    logger.debug("Douyin parse: %s", e)
+                                    continue
+                                if not sig:
+                                    continue
+                                if sig.trend_id in seen_ids:
+                                    continue
+                                if not (_is_nail_related(sig.caption) or _is_nail_related(kw)):
+                                    continue
+                                seen_ids.add(sig.trend_id)
+                                signals.append(sig)
+                        processed_idx = len(captured_bodies)
 
-                    logger.info("Douyin CDP: '%s' → %d signals", kw, len(signals))
+                    _drain()
+
+                    # Scroll-and-drain until target hit or max_scrolls exhausted
+                    scrolls = 0
+                    while len(signals) < limit_per_kw and scrolls < max_scrolls:
+                        before = len(captured_bodies)
+                        douyin_page.evaluate("window.scrollBy(0, window.innerHeight * 1.8)")
+                        # Wait for new XHR
+                        deadline = time.time() + 5
+                        while len(captured_bodies) == before and time.time() < deadline:
+                            douyin_page.wait_for_timeout(400)
+                        douyin_page.wait_for_timeout(800)  # settle
+                        _drain()
+                        scrolls += 1
+                        logger.debug("Douyin CDP: '%s' scroll %d → %d signals", kw, scrolls, len(signals))
+
+                    logger.info("Douyin CDP: '%s' → %d signals (%d scrolls)", kw, len(signals), scrolls)
                     all_signals.extend(signals[:limit_per_kw])
 
                 except Exception as e:

@@ -128,6 +128,7 @@ class InstagramFetcher:
         self,
         hashtags: List[str],
         limit_per_tag: int,
+        max_scrolls: int = 3,
     ) -> List[TrendSignal]:
         try:
             from playwright.sync_api import sync_playwright
@@ -155,8 +156,7 @@ class InstagramFetcher:
                     url = resp.url
                     if ("graphql" in url or "api/v1/tags" in url or "sections" in url) and resp.status == 200:
                         try:
-                            body = resp.json()
-                            captured_data.append(body)
+                            captured_data.append(resp.json())
                         except Exception:
                             pass
 
@@ -165,14 +165,15 @@ class InstagramFetcher:
 
                 try:
                     url = _IG_TAG_URL.format(tag=tag)
-                    logger.info("Instagram CDP: → #%s", tag)
+                    logger.info("Instagram CDP: → #%s (target %d)", tag, limit_per_tag)
                     page.goto(url, timeout=self.timeout_ms, wait_until="domcontentloaded")
 
+                    # Initial XHR wait
                     deadline = time.time() + 10
                     while not captured_data and time.time() < deadline:
                         page.wait_for_timeout(600)
 
-                    # Fallback: extract from embedded __initialData__ script
+                    # Fallback: embedded __initialData__ script
                     if not captured_data:
                         try:
                             raw = page.evaluate("""
@@ -188,8 +189,22 @@ class InstagramFetcher:
 
                     keyword = _HASHTAG_TO_KW.get(tag, tag)
                     signals = self._parse_ig_data(captured_data, keyword, limit_per_tag)
-                    logger.info("Instagram CDP: #%s → %d signals", tag, len(signals))
-                    all_signals.extend(signals)
+
+                    # Scroll-and-collect until target hit or max_scrolls exhausted
+                    scrolls = 0
+                    while len(signals) < limit_per_tag and scrolls < max_scrolls:
+                        before = len(captured_data)
+                        page.evaluate("window.scrollBy(0, window.innerHeight * 1.8)")
+                        deadline = time.time() + 5
+                        while len(captured_data) == before and time.time() < deadline:
+                            page.wait_for_timeout(500)
+                        page.wait_for_timeout(800)
+                        signals = self._parse_ig_data(captured_data, keyword, limit_per_tag)
+                        scrolls += 1
+                        logger.debug("Instagram CDP: #%s scroll %d → %d signals", tag, scrolls, len(signals))
+
+                    logger.info("Instagram CDP: #%s → %d signals (%d scrolls)", tag, len(signals), scrolls)
+                    all_signals.extend(signals[:limit_per_tag])
 
                 except Exception as e:
                     logger.warning("Instagram CDP: #%s error — %s", tag, e)
@@ -207,9 +222,9 @@ class InstagramFetcher:
         return all_signals
 
     def _parse_ig_data(self, captured: List[Dict], keyword: str, limit: int) -> List[TrendSignal]:
+        seen_ids: set = set()
         signals = []
         for body in captured:
-            # GraphQL hashtag page
             edges = (
                 body.get("data", {}).get("hashtag", {}).get("edge_hashtag_to_top_posts", {}).get("edges") or
                 body.get("data", {}).get("recent", {}).get("sections") or
@@ -222,10 +237,13 @@ class InstagramFetcher:
                 if node:
                     nodes.append(node)
 
-            for node in nodes[:limit]:
+            for node in nodes:
                 sig = _parse_ig_edge(node, keyword)
-                if sig:
+                if sig and sig.trend_id not in seen_ids:
+                    seen_ids.add(sig.trend_id)
                     signals.append(sig)
+                    if len(signals) >= limit:
+                        return signals
         return signals
 
     # ── Mode B: instaloader (session required) ───────────────────────────────
