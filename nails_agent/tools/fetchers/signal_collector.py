@@ -1,24 +1,21 @@
 """
 SignalCollector — unified entry point for trend signal collection.
 
-All sources are FREE — no paid API keys required.
+Active sources (all FREE):
+  1. XHS-MCP      — local Go xiaohongshu-mcp server (port 18060, REST API)
+  2. Douyin CDP   — reuses logged-in Chrome tab  (requires --remote-debugging-port=9222)
+  3. Instagram    — playwright CDP or instaloader session
+  4. Mock         — demo/data/trend_signals.json  (always available as fallback)
 
-XHS source strategy:
-  Primary:  XHSCDPFetcher  — scroll-based CDP scraper (up to 100+ per keyword)
-            + Strategy A: seed "美甲" → auto-discover hot sub-keywords → drill down
-  Fallback: XHSSkillsFetcher — CLI-based (44 per keyword, no scroll)
-
-Other sources (all tried in parallel, results merged):
-  2. Douyin CDP      抖音    browser CDP  (requires Chrome at localhost:9222)
-  3. Instagram       IG      instaloader  (pip install instaloader, public hashtags)
-  4. Mock            fallback             (demo/data/trend_signals.json)
-
-TikHub (paid) is still supported as optional source if TIKHUB_API_KEY is set.
+Disabled / suspended sources:
+  - XHSCDPFetcher    — direct CDP scraping, suspended after automation warning
+  - XHSSkillsFetcher — Node.js xhs-mcp wrapper; replaced by Go xhs-mcp
+  - TikHub           — paid API; enable by setting TIKHUB_API_KEY
 
 Usage:
     collector = SignalCollector()
-    print(collector.source_status())       # which sources are live
-    signals = collector.collect()          # auto-merge all available sources
+    print(collector.source_status())
+    signals = collector.collect()
 """
 from __future__ import annotations
 
@@ -71,6 +68,7 @@ class SignalCollector:
         cdp_url: str = "http://localhost:9222",
         xhs_skills_dir: Optional[Path] = None,
         ig_session_file: Optional[str] = None,
+        xhs_mcp_url: str = "http://localhost:18060",
         # Optional paid source
         tikhub_api_key: Optional[str] = None,
     ):
@@ -78,28 +76,22 @@ class SignalCollector:
         self._cdp_url = cdp_url
         self._xhs_dir = xhs_skills_dir
         self._ig_session = ig_session_file
+        self._xhs_mcp_url = xhs_mcp_url
         self._tikhub_key = tikhub_api_key or os.environ.get("TIKHUB_API_KEY", "")
 
         # Lazy instances
-        self._xhs_cdp = None   # scroll-based CDP fetcher (primary)
-        self._xhs = None        # CLI skills fetcher (fallback)
+        self._xhs_mcp = None
         self._douyin = None
         self._instagram = None
         self._tikhub = None
 
     # ── Lazy fetcher getters ──────────────────────────────────────────────────
 
-    def _get_xhs_cdp(self):
-        if self._xhs_cdp is None:
-            from nails_agent.tools.fetchers.xhs_cdp_fetcher import XHSCDPFetcher
-            self._xhs_cdp = XHSCDPFetcher(cdp_url=self._cdp_url)
-        return self._xhs_cdp
-
-    def _get_xhs(self):
-        if self._xhs is None:
-            from nails_agent.tools.fetchers.xhs_skills_fetcher import XHSSkillsFetcher
-            self._xhs = XHSSkillsFetcher(skills_dir=self._xhs_dir)
-        return self._xhs
+    def _get_xhs_mcp(self):
+        if self._xhs_mcp is None:
+            from nails_agent.tools.fetchers.xhs_mcp_fetcher import XHSMCPFetcher
+            self._xhs_mcp = XHSMCPFetcher(base_url=self._xhs_mcp_url)
+        return self._xhs_mcp
 
     def _get_douyin(self):
         if self._douyin is None:
@@ -125,9 +117,9 @@ class SignalCollector:
         """Non-blocking check of which sources are ready."""
         status: Dict[str, bool] = {}
         try:
-            status["xhs_skills"] = self._get_xhs_cdp().is_available()
+            status["xhs"] = self._get_xhs_mcp().is_available()
         except Exception:
-            status["xhs_skills"] = False
+            status["xhs"] = False
         try:
             status["douyin_cdp"] = self._get_douyin().is_available()
         except Exception:
@@ -167,39 +159,11 @@ class SignalCollector:
         tasks: Dict[str, callable] = {}
 
         if use_xhs:
-            cdp = self._get_xhs_cdp()
-            if cdp.is_available():
-                # Strategy A: seed "美甲" → discover hot sub-keywords → drill down
-                # Each keyword also supports scroll-based 100-item fetch
-                def _xhs_task(cdp=cdp, kws=kws, lim=limit_per_kw):
-                    # Always run Strategy A from the seed keyword
-                    results = cdp.discover_and_search(
-                        seed_keyword="美甲",
-                        target_total=min(150, lim * 15),
-                        top_n_sub_keywords=5,
-                        per_sub_keyword=min(80, lim * 8),
-                    )
-                    # Also run Strategy B keywords (scene/intent terms) if given
-                    b_kws = [k for k in kws if k != "美甲"][:4]
-                    if b_kws:
-                        b_results = cdp.search_many(b_kws, target_per_kw=min(80, lim * 8))
-                        seen = {s.trend_id for s in results}
-                        for s in b_results:
-                            if s.trend_id not in seen:
-                                results.append(s)
-                                seen.add(s.trend_id)
-                    return results
-                tasks["xhs"] = _xhs_task
+            xhs = self._get_xhs_mcp()
+            if xhs.is_available():
+                tasks["xhs"] = lambda: xhs.search(kws[:4], limit_per_kw=limit_per_kw)
             else:
-                # Fallback: XHS Skills CLI (44 per keyword, no scroll)
-                xhs = self._get_xhs()
-                if xhs.is_available():
-                    logger.info("XHS CDP: not available, falling back to XHS Skills CLI")
-                    def _xhs_cli_task(xhs=xhs, kws=kws, lim=limit_per_kw):
-                        return xhs.search(kws[:5], limit_per_kw=lim)
-                    tasks["xhs"] = _xhs_cli_task
-                else:
-                    logger.debug("XHS: neither CDP nor Skills available")
+                logger.debug("XHS-MCP: Go server not running or not logged in")
 
         if use_douyin:
             dy = self._get_douyin()
