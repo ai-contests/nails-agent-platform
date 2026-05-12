@@ -110,53 +110,62 @@ class ComfyUIClient:
             return resp.headers.get("location", "")
         return ""
 
-    # ── High-level helper ────────────────────────────────────────────────────
+    # ── Generic workflow runner ──────────────────────────────────────────────
 
-    def run_tryon(
+    def run_workflow(
         self,
         workflow: Dict[str, Any],
-        hand_image_path: str,
-        style_image_path: str,
-        hand_node: str = "76",
-        style_node: str = "81",
+        image_inputs: Dict[str, str],
+        text_overrides: Optional[Dict[str, str]] = None,
         timeout: int = 180,
     ) -> Dict[str, Any]:
         """
-        Full try-on pipeline:
-        upload hand + style → patch workflow → submit → poll → CDN URL.
-        """
-        # Upload
-        hand_name = self.upload_image(hand_image_path)
-        if not hand_name:
-            return {"success": False, "error": "Failed to upload hand image"}
-        style_name = self.upload_image(style_image_path)
-        if not style_name:
-            return {"success": False, "error": "Failed to upload style image"}
+        General-purpose: upload N images → patch their LoadImage nodes →
+        optionally override text prompts → submit → poll → return CDN URL.
 
-        # Patch LoadImage nodes
+        Args:
+            image_inputs: {node_id: local_image_path} for every LoadImage
+                          node in the workflow. Single- or multi-image flows
+                          are both supported.
+            text_overrides: {node_id: prompt_text} to swap into TextEncode
+                          nodes (anything with an `inputs.text` or
+                          `inputs.prompt` field).
+        """
         import copy
         wf = copy.deepcopy(workflow)
-        if hand_node in wf:
-            wf[hand_node]["inputs"]["image"] = hand_name
-        if style_node in wf:
-            wf[style_node]["inputs"]["image"] = style_name
 
-        # Submit
-        result = self.submit_workflow(wf)
-        prompt_id = result.get("prompt_id")
+        # Upload + patch images
+        for node_id, path in image_inputs.items():
+            if node_id not in wf:
+                return {"success": False, "error": f"Image node '{node_id}' missing in workflow"}
+            name = self.upload_image(path)
+            if not name:
+                return {"success": False, "error": f"Failed to upload image for node {node_id}: {path}"}
+            wf[node_id].setdefault("inputs", {})["image"] = name
+
+        # Optional text overrides
+        if text_overrides:
+            for node_id, text in text_overrides.items():
+                if node_id not in wf:
+                    continue
+                inp = wf[node_id].setdefault("inputs", {})
+                if "prompt" in inp:
+                    inp["prompt"] = text
+                elif "text" in inp:
+                    inp["text"] = text
+
+        # Submit + poll + extract CDN URL
+        submit = self.submit_workflow(wf)
+        prompt_id = submit.get("prompt_id")
         if not prompt_id:
-            return {"success": False, "error": f"No prompt_id: {result}"}
+            return {"success": False, "error": f"No prompt_id: {submit}"}
 
-        # Poll
         t0 = time.time()
         job = self.wait_for_job(prompt_id, timeout=timeout)
         if not job.get("success"):
             return {"success": False, "error": job.get("error")}
 
-        # Extract filename
-        filename = None
-        preview = job.get("preview_output") or {}
-        filename = preview.get("filename")
+        filename = (job.get("preview_output") or {}).get("filename")
         if not filename:
             for node_out in (job.get("outputs") or {}).values():
                 imgs = node_out.get("images") or []
@@ -172,3 +181,55 @@ class ComfyUIClient:
             "image_url": public_url,
             "duration_s": round(time.time() - t0, 1),
         }
+
+    # ── Workflow-specific convenience wrappers ───────────────────────────────
+
+    def run_tryon(
+        self,
+        workflow: Dict[str, Any],
+        hand_image_path: str,
+        style_image_path: str,
+        hand_node: str = "76",
+        style_node: str = "81",
+        timeout: int = 180,
+    ) -> Dict[str, Any]:
+        """Try-on workflow: 2 LoadImage nodes (hand + style)."""
+        return self.run_workflow(
+            workflow=workflow,
+            image_inputs={hand_node: hand_image_path, style_node: style_image_path},
+            timeout=timeout,
+        )
+
+    def run_product_showcase(
+        self,
+        workflow: Dict[str, Any],
+        nail_image_path: str,
+        prompt: Optional[str] = None,
+        image_node: str = "143",
+        prompt_node: str = "208",
+        timeout: int = 180,
+    ) -> Dict[str, Any]:
+        """Product display image: single input image, optional prompt override."""
+        return self.run_workflow(
+            workflow=workflow,
+            image_inputs={image_node: nail_image_path},
+            text_overrides={prompt_node: prompt} if prompt else None,
+            timeout=timeout,
+        )
+
+    def run_social_post(
+        self,
+        workflow: Dict[str, Any],
+        nail_image_path: str,
+        prompt: Optional[str] = None,
+        image_node: str = "143",
+        prompt_node: str = "192:187",
+        timeout: int = 180,
+    ) -> Dict[str, Any]:
+        """Social-media hero image: single input image, optional prompt override."""
+        return self.run_workflow(
+            workflow=workflow,
+            image_inputs={image_node: nail_image_path},
+            text_overrides={prompt_node: prompt} if prompt else None,
+            timeout=timeout,
+        )

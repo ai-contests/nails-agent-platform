@@ -27,7 +27,7 @@ try:
 except ImportError:
     _CLIENT_AVAILABLE = False
 
-WORKFLOW_PATH = Path("/Users/nev4rb14su/Downloads/image_flux2_klein_image_edit_9b_base.json")
+WORKFLOW_PATH = Path(__file__).parent.parent / "workflows" / "nail_tryon_klein_9b.json"
 HAND_REF_PATH = str(Path(__file__).parent / "static" / "hand_reference.jpg")
 NAIL_REF_PATH = str(Path(__file__).parent / "static" / "nail_reference.jpg")
 

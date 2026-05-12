@@ -1,0 +1,324 @@
+{
+  "9": {
+    "inputs": {
+      "filename_prefix": "product_showcase",
+      "images": [
+        "211",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "143": {
+    "inputs": {
+      "image": "9b660b1592714ca5a5f88edb113f68ca2cf9ab99ca0c138580d93e79226940c7.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "193": {
+    "inputs": {
+      "shift": 3.1,
+      "model": [
+        "194",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingAuraFlow",
+    "_meta": {
+      "title": "ModelSamplingAuraFlow"
+    }
+  },
+  "194": {
+    "inputs": {
+      "switch": [
+        "207",
+        0
+      ],
+      "on_false": [
+        "205",
+        0
+      ],
+      "on_true": [
+        "204",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch (Model)"
+    }
+  },
+  "195": {
+    "inputs": {
+      "value": 40
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Int (Steps)"
+    }
+  },
+  "196": {
+    "inputs": {
+      "strength": 1,
+      "model": [
+        "193",
+        0
+      ]
+    },
+    "class_type": "CFGNorm",
+    "_meta": {
+      "title": "CFGNorm"
+    }
+  },
+  "197": {
+    "inputs": {
+      "switch": [
+        "207",
+        0
+      ],
+      "on_false": [
+        "199",
+        0
+      ],
+      "on_true": [
+        "200",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch (CFG)"
+    }
+  },
+  "198": {
+    "inputs": {
+      "value": 8
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Float (Steps)"
+    }
+  },
+  "199": {
+    "inputs": {
+      "value": 4
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (CFG)"
+    }
+  },
+  "200": {
+    "inputs": {
+      "value": 1
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (CFG)"
+    }
+  },
+  "201": {
+    "inputs": {
+      "switch": [
+        "207",
+        0
+      ],
+      "on_false": [
+        "195",
+        0
+      ],
+      "on_true": [
+        "198",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch (Steps)"
+    }
+  },
+  "202": {
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "203": {
+    "inputs": {
+      "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "204": {
+    "inputs": {
+      "lora_name": "FireRed-Image-Edit-1.0-Lightning-8steps-v1.0.safetensors",
+      "strength_model": 1,
+      "model": [
+        "205",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "205": {
+    "inputs": {
+      "unet_name": "FireRed-Image-Edit-1.1-transformer.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "206": {
+    "inputs": {
+      "pixels": [
+        "212",
+        0
+      ],
+      "vae": [
+        "202",
+        0
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode"
+    }
+  },
+  "207": {
+    "inputs": {
+      "value": false
+    },
+    "class_type": "PrimitiveBoolean",
+    "_meta": {
+      "title": "Enable Lightning LoRA?"
+    }
+  },
+  "208": {
+    "inputs": {
+      "prompt": "生成这个美甲的商家产品展示图，要求是双手都朝向镜头展示，且美甲细节一致，背景虚化",
+      "clip": [
+        "203",
+        0
+      ],
+      "vae": [
+        "202",
+        0
+      ],
+      "image1": [
+        "212",
+        0
+      ]
+    },
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "_meta": {
+      "title": "TextEncodeQwenImageEditPlus (Positive)"
+    }
+  },
+  "209": {
+    "inputs": {
+      "prompt": "",
+      "clip": [
+        "203",
+        0
+      ],
+      "vae": [
+        "202",
+        0
+      ],
+      "image1": [
+        "212",
+        0
+      ]
+    },
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "_meta": {
+      "title": "TextEncodeQwenImageEditPlus"
+    }
+  },
+  "210": {
+    "inputs": {
+      "seed": 43,
+      "steps": [
+        "201",
+        0
+      ],
+      "cfg": [
+        "197",
+        0
+      ],
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "196",
+        0
+      ],
+      "positive": [
+        "208",
+        0
+      ],
+      "negative": [
+        "209",
+        0
+      ],
+      "latent_image": [
+        "206",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "211": {
+    "inputs": {
+      "samples": [
+        "210",
+        0
+      ],
+      "vae": [
+        "202",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "212": {
+    "inputs": {
+      "resize_type": "scale total pixels",
+      "resize_type.megapixels": 1,
+      "scale_method": "lanczos",
+      "input": [
+        "143",
+        0
+      ]
+    },
+    "class_type": "ResizeImageMaskNode",
+    "_meta": {
+      "title": "Resize Image/Mask"
+    }
+  }
+}

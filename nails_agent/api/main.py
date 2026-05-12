@@ -55,7 +55,7 @@ DATA_DIR = os.environ.get("NAILS_DATA_DIR", "demo/data")
 OUTPUT_DIR = os.environ.get("NAILS_OUTPUT_DIR", "demo/output")
 WORKFLOW_PATH = Path(os.environ.get(
     "NAILS_WORKFLOW_PATH",
-    "/Users/nev4rb14su/Downloads/image_flux2_klein_image_edit_9b_base.json"
+    "workflows/nail_tryon_klein_9b.json",
 ))
 HAND_REF_PATH = Path(DATA_DIR).parent / "static" / "hand_reference.jpg"
 NAIL_REF_PATH = Path(DATA_DIR).parent / "static" / "nail_reference.jpg"
