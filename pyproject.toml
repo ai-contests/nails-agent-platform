@@ -19,9 +19,20 @@ dependencies = [
     "playwright>=1.40",
     "anthropic>=0.40",
     "openai>=1.30",
+    "openai-agents>=0.17",
+    # Consumer try-on (hand analysis): only loaded when /hand/analyze or
+    # /sessions endpoints are hit. Heavy native deps — installable via
+    # `pip install -e ".[consumer]"` if you don't need them.
+    "Pillow>=10.0",
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
+consumer = [
+    "mediapipe>=0.10.14",
+    "opencv-contrib-python>=4.13.0",
+    "numpy>=1.26",
+]
 demo = [
     "streamlit>=1.35",
     "pandas>=2.0",

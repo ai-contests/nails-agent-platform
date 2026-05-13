@@ -1,222 +1,165 @@
 """
-Hermes-Agent powered conversational interface.
+HermesNailsAgent — conversational interface for the nail platform.
 
-Uses the NousResearch hermes-agent SDK as the outer shell for user conversations.
-Hermes provides: web search, persistent memory, trajectory saving, multi-model support.
-
-Our domain tools (trend scout, campaign, try-on) are registered as Hermes "skills"
-or called directly from within the conversation via Python tool calls.
+Now powered by openai-agents SDK with NailsOrchestrator.
+Hermes-agent (NousResearch) can optionally be used as an outer wrapper
+for persistent memory and web search, but the core domain logic always
+runs through NailsOrchestrator with specialized handoffs.
 
 Usage (standalone CLI):
-    python -m nails_agent.agents.hermes_chat
+    uv run python -m nails_agent.agents.hermes_chat
 
-Usage (integrated into chat_runner):
+Usage (integrated):
     from nails_agent.agents.hermes_chat import HermesNailsAgent
     agent = HermesNailsAgent()
     reply = agent.chat("找最新猫眼美甲趋势")
 """
 from __future__ import annotations
 
-import json
+import asyncio
 import logging
 import os
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
 logger = logging.getLogger(__name__)
-
-_HERMES_SYSTEM = """\
-你是「美甲 AI 助手」，服务于美甲品牌运营团队。你的能力：
-
-1. **趋势侦察** — 实时搜索小红书/抖音/Instagram，发现热门美甲风格
-2. **运营策略** — 为热门款式生成完整运营策略（定价/排期/多平台文案）
-3. **AI 试戴** — 帮助用户预览美甲上手效果（上传手部图片）
-4. **数据查询** — 查看历史分析报告、款式库存
-
-操作方式：
-- 需要实时趋势数据时，调用 trend_scout 分析工具
-- 需要生成运营内容时，调用 campaign_agent
-- 回答要简洁，数字和事实优先，不用"AI智能"、"赋能"等词
-
-当前平台背景：小红书+抖音+Instagram 三平台同步运营，核心用户群体 18-35岁女性。
-"""
 
 
 class HermesNailsAgent:
     """
-    Wraps hermes-agent AIAgent for the nails platform.
-    Falls back to direct Anthropic if hermes-agent is not installed.
+    User-facing chat agent. Two layers:
+    1. openai-agents NailsOrchestrator (always available if API key set)
+    2. hermes-agent outer wrapper (optional, adds web search + memory)
     """
 
     def __init__(
         self,
-        model: str = "anthropic/claude-sonnet-4-5",
+        use_hermes_wrapper: bool = False,
         quiet_mode: bool = True,
-        save_trajectories: bool = False,
     ):
-        self._model = model
+        self._history: List = []
+        self._use_hermes = use_hermes_wrapper
         self._quiet = quiet_mode
-        self._save_traj = save_trajectories
-        self._agent = None
-        self._history = []
-        self._init_agent()
-
-    def _init_agent(self) -> None:
-        try:
-            from run_agent import AIAgent  # hermes-agent package
-            self._agent = AIAgent(
-                model=self._model,
-                quiet_mode=self._quiet,
-                save_trajectories=self._save_traj,
-                ephemeral_system_prompt=_HERMES_SYSTEM,
-                skip_context_files=True,
-                max_iterations=30,
-                enabled_toolsets=["web", "browser"],
-            )
-            logger.info("Hermes AIAgent initialised (model=%s)", self._model)
-        except ImportError:
-            logger.info("hermes-agent not installed — using Anthropic direct mode")
-            self._agent = None
 
     def chat(
         self,
         message: str,
         progress_cb: Optional[Callable[[str], None]] = None,
     ) -> str:
-        """
-        Send a message and return the response text.
-        Automatically routes domain requests to our specialized agents.
-        """
-        # Check if this is a domain request we should handle directly
-        routed = self._try_route_domain(message, progress_cb)
-        if routed is not None:
-            return routed
+        from nails_agent.agents.agent_config import is_available
 
-        if self._agent is not None:
-            # Use Hermes for general conversation
-            result = self._agent.run_conversation(
+        if not is_available():
+            return "❌ 未配置 API key（MODELSCOPE_API_KEY 或 OPENROUTER_API_KEY），无法启动 Agent。"
+
+        if self._use_hermes:
+            return self._chat_hermes(message, progress_cb)
+        return self._chat_orchestrator(message, progress_cb)
+
+    def _chat_orchestrator(self, message: str, progress_cb) -> str:
+        """Run via openai-agents NailsOrchestrator."""
+        try:
+            from agents import Runner
+            from nails_agent.agents.nail_agents import get_orchestrator_agent
+
+            agent = get_orchestrator_agent()
+
+            async def _run():
+                result = await Runner.run(
+                    agent,
+                    message,
+                    max_turns=30,
+                )
+                return result.final_output
+
+            output = asyncio.get_event_loop().run_until_complete(_run())
+            return str(output) if output else "（无响应）"
+        except Exception as exc:
+            logger.exception("Orchestrator error: %s", exc)
+            return f"❌ Agent 错误：{exc}"
+
+    def _chat_hermes(self, message: str, progress_cb) -> str:
+        """Outer Hermes wrapper (optional). Falls back to orchestrator."""
+        try:
+            from run_agent import AIAgent  # hermes-agent
+            hermes = AIAgent(
+                model="anthropic/claude-sonnet-4-5",
+                quiet_mode=self._quiet,
+                skip_context_files=True,
+                skip_memory=False,
+                enabled_toolsets=["web"],
+                max_iterations=10,
+            )
+            result = hermes.run_conversation(
                 user_message=message,
-                system_message=_HERMES_SYSTEM,
                 conversation_history=self._history or None,
             )
             self._history = result["messages"]
             return result["final_response"]
-        else:
-            # Pure fallback: direct Anthropic
-            return self._anthropic_fallback(message)
+        except ImportError:
+            return self._chat_orchestrator(message, progress_cb)
+        except Exception as exc:
+            logger.warning("Hermes wrapper error, falling back: %s", exc)
+            return self._chat_orchestrator(message, progress_cb)
 
-    def _try_route_domain(
-        self,
-        message: str,
-        progress_cb: Optional[Callable],
-    ) -> Optional[str]:
+    def stream_chat(self, message: str):
         """
-        Route recognised domain intents to specialized agents.
-        Returns response string, or None if not a domain request.
+        Async generator yielding (event_type, content) tuples.
+        event_type: 'text' | 'tool' | 'done'
         """
-        msg_lower = message.lower()
+        from nails_agent.agents.agent_config import is_available
+        if not is_available():
+            yield ("text", "❌ 未配置 API key")
+            yield ("done", "")
+            return
 
-        # Trend analysis intent
-        trend_keywords = ["趋势", "热门", "流行", "搜索美甲", "分析趋势", "trend", "scout"]
-        if any(k in msg_lower for k in trend_keywords):
-            return self._handle_trend_request(message, progress_cb)
+        async def _astream():
+            from agents import Runner
+            from agents.stream_events import RunItemStreamEvent
+            from nails_agent.agents.nail_agents import get_orchestrator_agent
 
-        # Campaign / strategy intent
-        campaign_keywords = ["运营策略", "文案", "排期", "定价", "生成卡片", "campaign", "strategy"]
-        if any(k in msg_lower for k in campaign_keywords):
-            return self._handle_campaign_request(message, progress_cb)
+            agent = get_orchestrator_agent()
+            async with Runner.run_streamed(agent, message, max_turns=30) as stream:
+                async for event in stream.stream_events():
+                    if hasattr(event, "type"):
+                        if event.type == "run_item_stream_event":
+                            item = event.item
+                            if hasattr(item, "raw_item"):
+                                ri = item.raw_item
+                                # Tool call
+                                name = getattr(ri, "name", "")
+                                if name:
+                                    yield ("tool", f"🔧 {name}(…)")
+                        elif event.type == "raw_responses_stream_event":
+                            delta = getattr(event.data, "delta", None)
+                            if delta and hasattr(delta, "content"):
+                                for c in delta.content:
+                                    if hasattr(c, "text"):
+                                        yield ("text", c.text)
+            yield ("done", str(stream.final_output or ""))
 
-        # Try-on intent
-        tryon_keywords = ["试戴", "效果", "上手", "试色", "tryon", "try-on"]
-        if any(k in msg_lower for k in tryon_keywords):
-            return "💅 请上传您的手部照片，选择想试的款式，AI 将为您生成上手效果图。（在 Demo 页面的「AI 试戴」标签中操作）"
-
-        return None  # Not a domain request — let Hermes handle it
-
-    def _handle_trend_request(
-        self,
-        message: str,
-        progress_cb: Optional[Callable],
-    ) -> str:
-        if progress_cb:
-            progress_cb("🔍 TrendScoutAgent 启动，搜索社媒趋势…")
+        # Drive the async generator synchronously
+        loop = asyncio.get_event_loop()
+        agen = _astream()
         try:
-            from nails_agent.agents.trend_agent import run_trend_scout
-            result = run_trend_scout(progress_cb=progress_cb)
-            lines = ["📊 **趋势分析结果**\n"]
-            if result.style_trends:
-                lines.append("| 风格 | 帖数 | 互动量 | 热度 |")
-                lines.append("|------|-----:|---------:|-----:|")
-                for st in result.style_trends[:6]:
-                    lines.append(
-                        f"| {st.tag} | {st.post_count} | {st.total_engagement:,} | {st.aggregated_score:.0f} |"
-                    )
-            if result.patterns:
-                lines.append("\n**观察到的规律**")
-                for p in result.patterns[:3]:
-                    lines.append(f"- {p}")
-            return "\n".join(lines)
-        except Exception as exc:
-            return f"❌ 趋势分析失败：{exc}"
-
-    def _handle_campaign_request(
-        self,
-        message: str,
-        progress_cb: Optional[Callable],
-    ) -> str:
-        if progress_cb:
-            progress_cb("🤖 CampaignAgent 启动，生成运营内容…")
-        try:
-            from nails_agent.agents.trend_agent import run_trend_scout
-            from nails_agent.agents.campaign_agent import run_campaign_agent
-            trend = run_trend_scout(progress_cb=progress_cb)
-            campaign = run_campaign_agent(trend, max_cards=4, progress_cb=progress_cb)
-            lines = [f"🎯 **运营策略** — 共 {len(campaign.style_cards)} 款\n"]
-            if campaign.executive_summary:
-                lines.append(f"> {campaign.executive_summary}\n")
-            for card in campaign.style_cards[:3]:
-                xhs = card.platform_variants.get("xiaohongshu")
-                lines.append(f"### {card.style_name}")
-                lines.append(f"定价 {card.pricing.base_price if card.pricing else '待定'} · 优先级 {card.schedule.priority if card.schedule else 'P1'}")
-                if xhs:
-                    lines.append(f"**小红书文案**：{xhs.caption[:120]}…")
-                lines.append("")
-            return "\n".join(lines)
-        except Exception as exc:
-            return f"❌ 运营策略生成失败：{exc}"
-
-    def _anthropic_fallback(self, message: str) -> str:
-        """Minimal Anthropic SDK fallback when hermes-agent is not installed."""
-        try:
-            import anthropic
-            client = anthropic.Anthropic()
-            response = client.messages.create(
-                model=os.environ.get("NAILS_AGENT_MODEL", "claude-sonnet-4-5"),
-                max_tokens=1024,
-                system=_HERMES_SYSTEM,
-                messages=[{"role": "user", "content": message}],
-            )
-            return response.content[0].text
-        except Exception as exc:
-            return f"❌ 对话失败：{exc}"
+            while True:
+                item = loop.run_until_complete(agen.__anext__())
+                yield item
+        except StopAsyncIteration:
+            pass
 
     def reset(self) -> None:
-        """Clear conversation history."""
         self._history = []
 
 
 def main():
-    """CLI entry point for testing the Hermes chat agent."""
-    import readline  # noqa: F401 — enables arrow-key history in REPL
-    agent = HermesNailsAgent(quiet_mode=False, save_trajectories=True)
-    print("🌸 美甲 AI 助手 (Hermes-powered) — 输入 quit 退出\n")
+    """CLI REPL for testing."""
+    agent = HermesNailsAgent(quiet_mode=False)
+    print("🌸 美甲 AI 助手 (openai-agents powered) — 输入 quit 退出\n")
     while True:
         try:
             user_input = input("You: ").strip()
         except (EOFError, KeyboardInterrupt):
             break
-        if not user_input:
-            continue
-        if user_input.lower() in ("quit", "exit", "q"):
+        if not user_input or user_input.lower() in ("quit", "exit", "q"):
             break
         reply = agent.chat(user_input, progress_cb=lambda m: print(f"  [agent] {m}"))
         print(f"\nAssistant: {reply}\n")
