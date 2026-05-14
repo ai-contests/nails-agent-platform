@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 #
-# Local dev launcher: starts FastAPI + merchant Streamlit + consumer Streamlit
-# + Caddy reverse proxy. Logs go to logs/<svc>.log. Ctrl-C stops everything.
+# Local dev launcher: FastAPI + Chat UI + Consumer C端 + Caddy
+# Logs go to logs/<svc>.log. Ctrl-C stops everything.
 #
 # Routes after start-up:
-#   http://localhost:8080/        → merchant Streamlit (demo/app.py)
-#   http://localhost:8080/user/   → consumer Streamlit (demo_v1/app.py)
-#   http://localhost:8080/api/    → FastAPI
-#   http://localhost:8000         → FastAPI direct (no rewrite)
+#   http://localhost:8080/        → Chat UI       (demo/chat_app.py  :8501)
+#   http://localhost:8080/user/   → C端 AI试戴   (demo_v1/app.py    :8503)
+#   http://localhost:8080/api/    → FastAPI        (nails_agent       :8000)
+#
+# Direct access (no Caddy):
+#   http://localhost:8501         → Chat UI
+#   http://localhost:8503         → C端 AI试戴
+#   http://localhost:8000         → FastAPI
 
 set -euo pipefail
 
@@ -31,15 +35,15 @@ uvicorn nails_agent.api.main:app --host 0.0.0.0 --port 8000 --reload \
   >logs/api.log 2>&1 &
 pids+=($!)
 
-echo "→ starting merchant Streamlit on :8501 (logs/merchant.log)"
-streamlit run demo/app.py --server.port 8501 --server.headless true \
-  >logs/merchant.log 2>&1 &
+echo "→ starting Chat UI on :8501 (logs/chat.log)"
+NAILS_API_BASE="http://localhost:8000" \
+streamlit run demo/chat_app.py --server.port 8501 --server.headless true \
+  >logs/chat.log 2>&1 &
 pids+=($!)
 
-echo "→ starting consumer V1 Streamlit on :8503 with /user prefix (logs/consumer.log)"
+echo "→ starting C端 AI试戴 on :8503 (logs/consumer.log)"
 NAILS_API_BASE="http://localhost:8000" \
 streamlit run demo_v1/app.py --server.port 8503 --server.headless true \
-  --server.baseUrlPath=/user \
   >logs/consumer.log 2>&1 &
 pids+=($!)
 
@@ -48,13 +52,13 @@ if command -v caddy >/dev/null 2>&1; then
   caddy run --config "$ROOT/Caddyfile" >logs/caddy.log 2>&1 &
   pids+=($!)
   echo
-  echo "  Merchant:  http://localhost:8080/"
-  echo "  Consumer:  http://localhost:8080/user/"
+  echo "  Chat UI:   http://localhost:8080/"
+  echo "  C端试戴:   http://localhost:8080/user/"
   echo "  API:       http://localhost:8080/api/health"
 else
   echo "  (Caddy not installed — skipping reverse proxy. Access services directly:)"
-  echo "  Merchant:  http://localhost:8501/"
-  echo "  Consumer:  http://localhost:8503/"
+  echo "  Chat UI:   http://localhost:8501/"
+  echo "  C端试戴:   http://localhost:8503/"
   echo "  API:       http://localhost:8000/health"
 fi
 echo
