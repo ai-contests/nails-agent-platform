@@ -19,6 +19,14 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 mkdir -p logs
 
+# Install git hooks if not already linked
+HOOK_SRC="$ROOT/scripts/hooks/pre-push"
+HOOK_DST="$ROOT/.git/hooks/pre-push"
+if [ -f "$HOOK_SRC" ] && { [ ! -f "$HOOK_DST" ] || ! diff -q "$HOOK_SRC" "$HOOK_DST" >/dev/null 2>&1; }; then
+  cp "$HOOK_SRC" "$HOOK_DST" && chmod +x "$HOOK_DST"
+  echo "→ git pre-push hook installed"
+fi
+
 pids=()
 cleanup() {
   echo

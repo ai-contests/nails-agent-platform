@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Pre-push hook: ruff lint + format check + pytest must pass before any push.
+
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+echo "🔍 ruff check…"
+ruff check nails_agent/
+
+echo "🎨 ruff format --check…"
+ruff format --check nails_agent/
+
+echo "🧪 pytest…"
+python -m pytest tests/ -q --tb=short
+
+echo "✅ all checks passed — pushing"
