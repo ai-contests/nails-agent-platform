@@ -811,7 +811,7 @@ visual_similarity_score =
 建议 V1 初始阶段使用 JSON 存储，延续 V0 Demo 的轻量实现方式。
 
 ```text
-demo_v1/
+consumer/
   data/
     hand_shape_definitions.json
     skin_tone_definitions.json

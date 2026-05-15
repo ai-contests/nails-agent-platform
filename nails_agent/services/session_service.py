@@ -1,7 +1,7 @@
 """
 Session, user image, and user hand-profile persistence — SQLite backed.
 
-Originally `demo_v1/src/session_service.py` which wrote JSON files.
+Originally `consumer/src/session_service.py` which wrote JSON files.
 """
 
 from __future__ import annotations

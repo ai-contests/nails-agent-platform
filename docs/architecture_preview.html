@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nails Agent Platform — 架构现状</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f1117; color: #e2e8f0; }
+
+  /* Layout */
+  .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+  h1 { font-size: 22px; font-weight: 700; color: #f8fafc; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #94a3b8; margin-bottom: 32px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid #1e293b; padding-bottom: 0; }
+  .tab { padding: 8px 18px; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 6px 6px 0 0;
+         color: #94a3b8; background: transparent; border: none; transition: all .15s; }
+  .tab:hover { color: #e2e8f0; background: #1e293b; }
+  .tab.active { color: #f8fafc; background: #1e293b; border-bottom: 2px solid #6366f1; margin-bottom: -1px; }
+
+  /* Panels */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Cards */
+  .card { background: #1e293b; border: 1px solid #2d3a4a; border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+
+  /* Service grid */
+  .services { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .service { background: #0f1117; border: 1px solid #2d3a4a; border-radius: 8px; padding: 14px; text-align: center; }
+  .service .port { font-size: 20px; font-weight: 700; color: #6366f1; }
+  .service .name { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+  .service .desc { font-size: 11px; color: #475569; margin-top: 4px; }
+
+  /* Steps */
+  .steps { display: flex; flex-direction: column; gap: 2px; }
+  .step { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 8px;
+          border: 1px solid transparent; cursor: pointer; transition: all .15s; }
+  .step:hover { background: #0f1117; border-color: #2d3a4a; }
+  .step.active-step { background: #0f1117; border-color: #6366f1; }
+  .step-num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+               font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .step-num.blue { background: #1d4ed8; color: #bfdbfe; }
+  .step-num.purple { background: #4c1d95; color: #ddd6fe; }
+  .step-num.green { background: #064e3b; color: #a7f3d0; }
+  .step-num.amber { background: #78350f; color: #fde68a; }
+  .step-num.red { background: #7f1d1d; color: #fecaca; }
+  .step-content .name { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+  .step-content .detail { font-size: 11px; color: #64748b; margin-top: 3px; line-height: 1.6; }
+
+  /* State machine */
+  .states { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .state { background: #0f1117; border: 1.5px solid #2d3a4a; border-radius: 8px; padding: 12px; }
+  .state.checkpoint { border-color: #f59e0b; }
+  .state.terminal { border-color: #10b981; }
+  .state.error { border-color: #ef4444; }
+  .state-name { font-size: 12px; font-weight: 700; color: #e2e8f0; }
+  .state-type { font-size: 10px; color: #475569; margin-top: 2px; }
+  .state-actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .action-badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .action-badge.approve { background: #052e16; color: #86efac; }
+  .action-badge.adjust { background: #1c1917; color: #d6d3d1; }
+  .action-badge.abort { background: #450a0a; color: #fca5a5; }
+  .action-badge.retry { background: #1c1917; color: #d6d3d1; }
+
+  /* API table */
+  .api-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .api-table th { text-align: left; padding: 8px 12px; color: #64748b; font-weight: 600; border-bottom: 1px solid #2d3a4a; font-size: 11px; }
+  .api-table td { padding: 8px 12px; border-bottom: 1px solid #1e293b; vertical-align: top; }
+  .api-table tr:hover td { background: #0f1117; }
+  .method { font-weight: 700; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+  .method.GET { background: #052e16; color: #86efac; }
+  .method.POST { background: #172554; color: #93c5fd; }
+  .path { font-family: monospace; color: #c4b5fd; font-size: 11px; }
+
+  /* Legend */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #94a3b8; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* Parallel badge */
+  .parallel-note { font-size: 11px; color: #f59e0b; background: #1c1407; border: 1px solid #78350f;
+                   border-radius: 6px; padding: 3px 8px; margin-left: 8px; display: inline-block; }
+
+  /* Callout */
+  .callout { border-left: 3px solid #6366f1; padding: 10px 14px; background: #1a1a2e; border-radius: 0 6px 6px 0;
+             font-size: 12px; color: #94a3b8; margin: 12px 0; line-height: 1.6; }
+  .callout strong { color: #e2e8f0; }
+
+  code { font-family: monospace; font-size: 11px; background: #0f1117; padding: 1px 5px; border-radius: 3px; color: #c4b5fd; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>🔮 Nails Agent Platform — 架构现状</h1>
+  <p class="subtitle">基于代码实际实现梳理，2026-05-14</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('overview', this)">服务总览</button>
+    <button class="tab" onclick="switchTab('b-pipeline', this)">B端 Pipeline</button>
+    <button class="tab" onclick="switchTab('chat-sm', this)">Chat 状态机</button>
+    <button class="tab" onclick="switchTab('c-flow', this)">C端 试戴</button>
+    <button class="tab" onclick="switchTab('api', this)">API 路由</button>
+  </div>
+
+  <!-- TAB 1: 服务总览 -->
+  <div id="tab-overview" class="panel active">
+    <div class="card">
+      <div class="card-title">进程 &amp; 端口</div>
+      <div class="services">
+        <div class="service">
+          <div class="port">:8080</div>
+          <div class="name">Caddy 反向代理</div>
+          <div class="desc">统一入口 / 路径路由</div>
+        </div>
+        <div class="service">
+          <div class="port">:8000</div>
+          <div class="name">FastAPI</div>
+          <div class="desc">B端 + C端 REST API</div>
+        </div>
+        <div class="service">
+          <div class="port">:8501</div>
+          <div class="name">商家 Streamlit</div>
+          <div class="desc">demo/app.py<br>直读 JSON 文件</div>
+        </div>
+        <div class="service">
+          <div class="port">:8503</div>
+          <div class="name">消费者 Streamlit</div>
+          <div class="desc">demo_v1/app.py<br>HTTP → FastAPI</div>
+        </div>
+      </div>
+      <div class="callout">
+        <strong>⚠️ 重要差异：</strong> 商家 Streamlit (8501) <strong>不走 HTTP</strong>，直接用 <code>data_loader.py</code> 读取 <code>demo/output/*.json</code>。只有消费者端 (8503) 才走 FastAPI。Chat UI (<code>demo/chat_app.py</code>) 也不走 HTTP，直接 in-process 调用。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">前后端通信矩阵</div>
+      <table class="api-table">
+        <tr>
+          <th>前端</th><th>通信方式</th><th>数据来源</th><th>备注</th>
+        </tr>
+        <tr>
+          <td style="color:#e2e8f0">商家 Streamlit<br><span style="color:#475569;font-size:10px">demo/app.py :8501</span></td>
+          <td><span style="color:#f59e0b">📁 直读文件</span></td>
+          <td style="font-family:monospace;font-size:11px">demo/output/*.json<br>demo/data/*.json (fallback)</td>
+          <td style="color:#475569;font-size:11px">Pipeline 跑完后刷新即可看到</td>
+        </tr>
+        <tr>
+          <td style="color:#e2e8f0">Chat UI<br><span style="color:#475569;font-size:10px">demo/chat_app.py</span></td>
+          <td><span style="color:#6366f1">⚡ In-process</span></td>
+          <td style="font-family:monospace;font-size:11px">ChatPipelineRunner<br>直接 import</td>
+          <td style="color:#475569;font-size:11px">st.session_state 驱动状态机</td>
+        </tr>
+        <tr>
+          <td style="color:#e2e8f0">消费者 Streamlit<br><span style="color:#475569;font-size:10px">demo_v1/app.py :8503</span></td>
+          <td><span style="color:#3b82f6">🌐 HTTP REST</span></td>
+          <td style="font-family:monospace;font-size:11px">FastAPI :8000</td>
+          <td style="color:#475569;font-size:11px">requests.get/post()</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 2: B端 Pipeline -->
+  <div id="tab-b-pipeline" class="panel">
+    <div class="card">
+      <div class="card-title">4步 Pipeline 执行顺序</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#6366f1"></div>LLM Agent (需 API Key)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>规则 Worker (无需 Key)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>持久化 (JSON + SQLite)</div>
+      </div>
+      <div class="steps">
+        <div class="step active-step">
+          <div class="step-num blue">0</div>
+          <div class="step-content">
+            <div class="name">Signal Collection</div>
+            <div class="detail">SignalCollector.collect(keywords) → XHS / Douyin / IG 或 Mock JSON<br>输出: demo/output/trend_signals.json</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num purple">1</div>
+          <div class="step-content">
+            <div class="name">Trend Analysis</div>
+            <div class="detail">
+              有 Key → <strong style="color:#c4b5fd">TrendScoutAgent</strong>（Qwen3-235B / OpenRouter）调用 search_xhs / douyin / ig → save_trend_analysis<br>
+              无 Key → <strong style="color:#86efac">trend_analyst.analyse()</strong> 规则排名<br>
+              输出: TrendAnalysisResult { top_10, style_trends, patterns, anomalies }
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num green">2</div>
+          <div class="step-content">
+            <div class="name">Value Eval + Asset Gen <span class="parallel-note">⚡ 并行 ThreadPoolExecutor</span></div>
+            <div class="detail">
+              2a: value_evaluator.evaluate() → MetricSnapshot[] → demo/output/metric_snapshots.json<br>
+              2b: asset_generator.generate() → drafts[] → demo/output/style_cards_draft.json
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num amber">3</div>
+          <div class="step-content">
+            <div class="name">Campaign Strategy</div>
+            <div class="detail">
+              有 Key → <strong style="color:#c4b5fd">CampaignAgent</strong> 调用 load_trend_context → check_xhs_compliance → save_campaign_card → finalise_campaign<br>
+              无 Key → <strong style="color:#86efac">campaign_strategist.strategise()</strong> 规则生成<br>
+              输出: StyleCard[] (XHS / Douyin / IG 三端文案 + 定价 + 档期)
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num red">4</div>
+          <div class="step-content">
+            <div class="name">Summary + Memory Distill</div>
+            <div class="detail">
+              summarizer.summarise() → SummaryReport { markdown, top_3_keywords }<br>
+              memory.distill(pipeline_id) → pattern → insight 写入 SQLite<br>
+              输出: demo/output/report.md
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Agent 双链路 Fallback 逻辑</div>
+      <div class="callout">
+        每个 Agent 调用前先检查 <code>is_available()</code>（探测 MODELSCOPE_API_KEY → OPENROUTER_API_KEY）。<br><br>
+        ✅ 成功 → <code>Runner.run_streamed(agent, msg, max_turns=20/30)</code> + 读磁盘结果<br>
+        ❌ 失败 / 异常 → <code>_rule_based_fallback()</code> 调同名 worker，结果结构完全一致
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: Chat 状态机 -->
+  <div id="tab-chat-sm" class="panel">
+    <div class="card">
+      <div class="card-title">11 个状态 — 完整状态机</div>
+      <div class="states">
+        <div class="state">
+          <div class="state-name">💤 idle</div>
+          <div class="state-type">初始态</div>
+        </div>
+        <div class="state checkpoint">
+          <div class="state-name">📋 plan_review</div>
+          <div class="state-type">🚩 P0 Checkpoint（必须人工确认）</div>
+          <div class="state-actions">
+            <span class="action-badge approve">approve</span>
+            <span class="action-badge abort">abort</span>
+          </div>
+        </div>
+        <div class="state">
+          <div class="state-name">🔍 collecting</div>
+          <div class="state-type">Step 0+1 执行中</div>
+        </div>
+        <div class="state checkpoint">
+          <div class="state-name">📊 trends_review</div>
+          <div class="state-type">⏱ P1 Checkpoint（15s 自动通过）</div>
+          <div class="state-actions">
+            <span class="action-badge approve">approve</span>
+            <span class="action-badge adjust">adjust_kws</span>
+            <span class="action-badge abort">abort</span>
+          </div>
+        </div>
+        <div class="state">
+          <div class="state-name">⚙️ evaluating</div>
+          <div class="state-type">Step 2a+2b 并行执行</div>
+        </div>
+        <div class="state checkpoint">
+          <div class="state-name">💎 eval_review</div>
+          <div class="state-type">⏱ P1 Checkpoint（15s 自动通过）</div>
+          <div class="state-actions">
+            <span class="action-badge approve">approve</span>
+            <span class="action-badge abort">abort</span>
+          </div>
+        </div>
+        <div class="state">
+          <div class="state-name">🎯 strategy_building</div>
+          <div class="state-type">Step 3 执行中</div>
+        </div>
+        <div class="state checkpoint">
+          <div class="state-name">📣 strategy_review</div>
+          <div class="state-type">🚩 P0 Checkpoint（必须人工确认）</div>
+          <div class="state-actions">
+            <span class="action-badge approve">approve</span>
+            <span class="action-badge abort">abort</span>
+          </div>
+        </div>
+        <div class="state">
+          <div class="state-name">📝 reporting</div>
+          <div class="state-type">Step 4 执行中</div>
+        </div>
+        <div class="state terminal">
+          <div class="state-name">✅ done</div>
+          <div class="state-type">终止态</div>
+        </div>
+        <div class="state error">
+          <div class="state-name">⚠️ error / interrupted</div>
+          <div class="state-type">可恢复</div>
+          <div class="state-actions">
+            <span class="action-badge retry">retry</span>
+          </div>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:16px">
+        <strong>驱动机制：</strong> 所有状态存在 <code>st.session_state["_chat_event_store"]</code>，事件只追加不修改。<br>
+        <strong>两阶段渲染：</strong> 先渲染 user bubble → phase=pending_start → st.rerun() → 再执行 runner，防止 UI 卡顿。<br>
+        <strong>adjust_kws：</strong> 用户在 trends_review 修改关键词后，重置回 collecting 重新跑 Step 0+1。
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: C端 试戴 -->
+  <div id="tab-c-flow" class="panel">
+    <div class="card">
+      <div class="card-title">C端 AI 试戴 — 6步调用链</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num blue">1</div>
+          <div class="step-content">
+            <div class="name">POST /sessions（上传手部照片）</div>
+            <div class="detail">multipart 上传 → analyze_hand_image() → MediaPipe + 色彩规则 → HandProfile { hand_shape, skin_tone, undertone }<br>自动触发 Round 1 推荐，一并返回 session_id + 标注图</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num green">2</div>
+          <div class="step-content">
+            <div class="name">GET /sessions/{id}（可选，获取会话详情）</div>
+            <div class="detail">返回 session + user_image + hand_profile</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num purple">3</div>
+          <div class="step-content">
+            <div class="name">GET /sessions/{id}/recommendations/latest（展示 Round 1）</div>
+            <div class="detail">RecommendationSnapshot — 按 hand_shape + skin_tone 规则匹配，返回排名款式列表</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num amber">4</div>
+          <div class="step-content">
+            <div class="name">POST /sessions/{id}/events（用户行为埋点）</div>
+            <div class="detail">event_type: click / view / try_on_start → BehaviorEvent 存入 SQLite</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num red">5</div>
+          <div class="step-content">
+            <div class="name">POST /sessions/{id}/tryon（发起试戴）</div>
+            <div class="detail">→ InteractionService.run_tryon() → ComfyUI FLUX.2 Klein → result_image_url<br>GET /sessions/{id}/tryon/latest 查询结果</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num blue">6</div>
+          <div class="step-content">
+            <div class="name">POST /sessions/{id}/recommendations/round2</div>
+            <div class="detail">需要至少 1 条行为事件 → 从历史学习视觉偏好 (色系 / 色温 / 亮度 / 饱和度) → 重新排序款式<br>GET /sessions/{id}/recommendations/latest?round_no=2 取结果</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: API 路由 -->
+  <div id="tab-api" class="panel">
+    <div class="card">
+      <div class="card-title">FastAPI 全部路由（nails_agent/api/main.py）</div>
+      <table class="api-table">
+        <tr><th>方法</th><th>路径</th><th>功能</th></tr>
+        <tr><td><span class="method GET">GET</span></td><td class="path">/health</td><td>健康检查 + 版本 + 数据源状态</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td class="path">/sources</td><td>各 SignalCollector 可用性探测</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td class="path">/styles</td><td>款式库列表（StyleLibraryItem[]）</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td class="path">/styles/{id}</td><td>单款详情</td></tr>
+        <tr style="background:#1a1a2e"><td colspan="3" style="color:#475569;font-size:11px;padding:6px 12px">─── B端 Pipeline ───</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td class="path">/pipeline/run</td><td>完整 4步 pipeline（同步，返回 SummaryReport）</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td class="path">/pipeline/trend</td><td>仅跑 Step 0+1（趋势分析）</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td class="path">/pipeline/{id}</td><td>查询 pipeline 状态（PipelineState）</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td class="path">/pipeline/list</td><td>历史 pipeline 列表</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td class="path">/chat</td><td>对话式触发（NailsOrchestrator）</td></tr>
+        <tr style="background:#1a1a2e"><td colspan="3" style="color:#475569;font-size:11px;padding:6px 12px">─── Memory ───</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td class="path">/memory/search</td><td>FTS5 全文检索 SQLite（?q=&amp;limit=）</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td class="path">/memory/insights</td><td>长期 insight 列表（distill 后）</td></tr>
+        <tr style="background:#1a1a2e"><td colspan="3" style="color:#475569;font-size:11px;padding:6px 12px">─── C端 AI 试戴 ───</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td class="path">/hand/analyze</td><td>手部分析（不创建 session）</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td class="path">/sessions</td><td>创建会话 + 上传手图 + 自动 Round 1</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td class="path">/sessions/{id}</td><td>会话详情</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td class="path">/sessions/{id}/recommendations/round1</td><td>重新生成 Round 1</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td class="path">/sessions/{id}/recommendations/round2</td><td>行为驱动重排（需行为数据）</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td class="path">/sessions/{id}/recommendations/latest</td><td>最新推荐快照（?round_no=1|2）</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td class="path">/sessions/{id}/events</td><td>行为埋点（click / view / try_on_start）</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td class="path">/sessions/{id}/events</td><td>行为事件历史</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td class="path">/sessions/{id}/tryon</td><td>发起 ComfyUI 试戴</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td class="path">/sessions/{id}/tryon/latest</td><td>最新试戴结果</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td class="path">/tryon</td><td>Legacy 直接试戴（无 session）</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+</script>
+</body>
+</html>

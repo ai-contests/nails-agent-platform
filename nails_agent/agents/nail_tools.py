@@ -100,7 +100,7 @@ def get_style_library() -> str:
     Return the current nail style inventory (existing styles the brand already has).
     Use this to identify style gaps — what's trending that we don't have yet.
     """
-    data_dir = os.environ.get("NAILS_DATA_DIR", "demo/data")
+    data_dir = os.environ.get("NAILS_DATA_DIR", "web/data")
     path = os.path.join(data_dir, "style_library.json")
     try:
         with open(path, encoding="utf-8") as f:
@@ -160,7 +160,7 @@ def load_trend_context(limit: int = 5) -> str:
     Load the latest trend analysis result from disk (output of TrendScoutAgent).
     Returns style_trends, patterns, anomalies for use in campaign generation.
     """
-    output_dir = os.environ.get("NAILS_OUTPUT_DIR", "demo/output")
+    output_dir = os.environ.get("NAILS_OUTPUT_DIR", "web/output")
     path = os.path.join(output_dir, "trend_top10.json")
     try:
         with open(path, encoding="utf-8") as f:
@@ -194,7 +194,7 @@ def save_trend_analysis(
     anomalies: styles with unusual 48h growth
     summary: 2-3 sentence plain-language findings
     """
-    output_dir = os.environ.get("NAILS_OUTPUT_DIR", "demo/output")
+    output_dir = os.environ.get("NAILS_OUTPUT_DIR", "web/output")
     os.makedirs(output_dir, exist_ok=True)
     payload = {
         "style_trends": style_trends,
@@ -247,7 +247,7 @@ def save_campaign_card(
     - English + emoji, lifestyle framing
     - 10-15 hashtags mix niche+broad
     """
-    output_dir = os.environ.get("NAILS_OUTPUT_DIR", "demo/output")
+    output_dir = os.environ.get("NAILS_OUTPUT_DIR", "web/output")
     os.makedirs(output_dir, exist_ok=True)
     cards_path = os.path.join(output_dir, "_campaign_cards.json")
 
@@ -289,7 +289,7 @@ def finalise_campaign(executive_summary: str, top_3_styles: list[str]) -> str:
     Complete the campaign. Call after all save_campaign_card calls are done.
     Returns a summary of what was generated.
     """
-    output_dir = os.environ.get("NAILS_OUTPUT_DIR", "demo/output")
+    output_dir = os.environ.get("NAILS_OUTPUT_DIR", "web/output")
     cards_path = os.path.join(output_dir, "_campaign_cards.json")
     try:
         with open(cards_path, encoding="utf-8") as f:

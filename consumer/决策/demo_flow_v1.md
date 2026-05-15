@@ -282,7 +282,7 @@ style_tag
 
 - 当前阶段不处理背景模糊、图片增强、主体裁剪等问题，这部分由图片增强链路保证输入质量。
 - 若 `feature_confidence` 低或 `dominant_palette` 过于分散，则 `needs_manual_review=true`，页面或调试表中提示人工复核。
-- 该流程可以先对 `demo_v1/images` 批处理，后续替换为爬虫图入库后的自动预处理任务。
+- 该流程可以先对 `consumer/images` 批处理，后续替换为爬虫图入库后的自动预处理任务。
 
 ## 5. 第一轮推荐详细规则
 

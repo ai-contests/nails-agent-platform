@@ -1,7 +1,7 @@
 """
 Behavior tracking + real try-on (via ComfyUIClient).
 
-Replaces demo_v1/src/interaction.py — the mock try-on is gone; this service
+Replaces consumer/src/interaction.py — the mock try-on is gone; this service
 uploads the user's hand image + the style image to ComfyUI Cloud, runs the
 nail try-on workflow, and stores the CDN URL of the result.
 """
@@ -174,7 +174,7 @@ class InteractionService:
     # ── Helpers ──────────────────────────────────────────────────────────────
 
     def _resolve_style_image_path(self, style: Dict[str, Any]) -> str:
-        """Resolve relative image_url under repo root or demo_v1/."""
+        """Resolve relative image_url under repo root or consumer/."""
         raw = style.get("image_url", "")
         if not raw:
             return ""
@@ -184,7 +184,7 @@ class InteractionService:
         # Try a few well-known locations the seed data tends to use.
         for candidate in (
             ROOT_DIR / raw,
-            ROOT_DIR / "demo_v1" / raw,
+            ROOT_DIR / "consumer" / raw,
             ROOT_DIR / "demo" / raw,
         ):
             if candidate.exists():

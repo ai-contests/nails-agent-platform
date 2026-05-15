@@ -24,8 +24,8 @@ ComfyUI Cloud for real try-on generation.
                        Uploads at ~/.nails_agent/uploads/
 
   Routes via Caddy on :8080
-    /          → merchant Streamlit  (demo/app.py)
-    /user/     → consumer Streamlit  (demo_v1/app.py — interim, until JS rewrite)
+    /          → merchant Streamlit  (web/app.py)
+    /user/     → consumer Streamlit  (consumer/app.py — interim, until JS rewrite)
     /api/      → FastAPI
 ```
 
@@ -42,7 +42,7 @@ sqlite3 ~/.nails_agent/memory.db ".tables"
 ```
 
 `data/` holds the merged style library + reference profiles + visual features.
-`demo_v1/data/` and `demo_v1/outputs/` are kept temporarily for migration
+`consumer/data/` and `consumer/outputs/` are kept temporarily for migration
 safety; once SQLite parity is confirmed they can go.
 
 ## Running locally
@@ -76,10 +76,10 @@ If you don't have Caddy installed, the script falls back to direct ports:
 
 ```bash
 # 1) Hand analysis
-curl -s -F image=@demo_v1/images/image001.png http://localhost:8000/hand/analyze | jq '{ok,hand_shape,skin_tone,undertone}'
+curl -s -F image=@consumer/images/image001.png http://localhost:8000/hand/analyze | jq '{ok,hand_shape,skin_tone,undertone}'
 
 # 2) Create session (also auto-generates Round 1)
-SID=$(curl -s -F image=@demo_v1/images/image001.png http://localhost:8000/sessions | jq -r .session.session_id)
+SID=$(curl -s -F image=@consumer/images/image001.png http://localhost:8000/sessions | jq -r .session.session_id)
 echo "session: $SID"
 
 # 3) Round 1 recommendations
@@ -103,14 +103,14 @@ curl -s -X POST http://localhost:8000/sessions/$SID/tryon \
 
 | Old path | New path |
 |---|---|
-| `demo_v1/src/hand_analysis.py` | `nails_agent/services/hand_analyzer.py` |
-| `demo_v1/src/recommendation.py` | `nails_agent/services/recommendation.py` |
-| `demo_v1/src/session_service.py` | `nails_agent/services/session_service.py` |
-| `demo_v1/src/interaction.py` | `nails_agent/services/interaction.py` (no more mock) |
-| `demo_v1/src/storage.py` | deleted — SQLite now |
-| `demo_v1/data/nail_styles_v1.json` | `data/nail_styles_v2.json` (merged with V0 lib) |
-| `demo_v1/data/*.json` (others) | `data/*.json` |
+| `consumer/src/hand_analysis.py` | `nails_agent/services/hand_analyzer.py` |
+| `consumer/src/recommendation.py` | `nails_agent/services/recommendation.py` |
+| `consumer/src/session_service.py` | `nails_agent/services/session_service.py` |
+| `consumer/src/interaction.py` | `nails_agent/services/interaction.py` (no more mock) |
+| `consumer/src/storage.py` | deleted — SQLite now |
+| `consumer/data/nail_styles_v1.json` | `data/nail_styles_v2.json` (merged with V0 lib) |
+| `consumer/data/*.json` (others) | `data/*.json` |
 
-The consumer Streamlit at `demo_v1/app.py` is now a thin client over the
+The consumer Streamlit at `consumer/app.py` is now a thin client over the
 FastAPI endpoints. It exists as the QA-able interim UI until the Next.js /
 Vue rewrite ships; nothing in the platform depends on it.

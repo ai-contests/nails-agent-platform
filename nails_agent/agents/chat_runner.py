@@ -97,11 +97,11 @@ class ChatPipelineRunner:
         self,
         collector: Optional[SignalCollector] = None,
         memory: Optional[MemoryStore] = None,
-        library_path: str = "demo/data/style_library.json",
+        library_path: str = "web/data/style_library.json",
         use_agents: bool = True,
     ):
         self.collector = collector or SignalCollector(
-            mock_data_path="demo/data/trend_signals.json",
+            mock_data_path="web/data/trend_signals.json",
         )
         self.memory = memory or MemoryStore()
         self.library_path = library_path

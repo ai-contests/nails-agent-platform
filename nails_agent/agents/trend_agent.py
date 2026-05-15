@@ -40,7 +40,7 @@ def run_trend_scout(
         return _rule_based_fallback(since_days, progress_cb)
 
     # Clear previous output so we read fresh results
-    output_dir = os.environ.get("NAILS_OUTPUT_DIR", "demo/output")
+    output_dir = os.environ.get("NAILS_OUTPUT_DIR", "web/output")
     _clear_file(os.path.join(output_dir, "trend_top10.json"))
 
     kw_hint = ""

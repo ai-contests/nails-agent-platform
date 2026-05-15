@@ -89,7 +89,7 @@ def search_xhs(keywords: list[str], limit_per_keyword: int = 20) -> str:
 - **调用方**：TrendScoutAgent（Step 1）
 - **返回**：JSON `{"count": N, "signals": [TrendSignal...]}`
 - **数据源**：XHS-MCP Go server `:18060`；Go server 未运行则返回 `{"signals": [], "error": "..."}`
-- **Fallback**：`SignalCollector` mock 数据（`demo/data/`）
+- **Fallback**：`SignalCollector` mock 数据（`web/data/`）
 
 ---
 
@@ -125,7 +125,7 @@ def get_style_library() -> str:
 ```
 
 - **调用方**：TrendScoutAgent（计算款式缺口 gap_score 时）
-- **返回**：JSON，来自 `demo/data/style_library.json` 或 SQLite `nail_styles_v2`
+- **返回**：JSON，来自 `web/data/style_library.json` 或 SQLite `nail_styles_v2`
 
 ---
 
@@ -143,7 +143,7 @@ def save_trend_analysis(
 ```
 
 - **`strict_mode=False` 原因**：`list[dict]` 参数类型在 OpenAI strict JSON schema 下会触发 `additionalProperties` 报错；Qwen3 动态组装的结构体需要此豁免
-- **写盘**：`demo/output/trend_top10.json`
+- **写盘**：`web/output/trend_top10.json`
 - **写 SQLite**：`memory` 表（kind=trend/pattern/anomaly）
 
 ---
@@ -169,7 +169,7 @@ def load_trend_context(limit: int = 5) -> str:
 ```
 
 - **调用方**：CampaignAgent（Step 3 开始前读取趋势背景）
-- **读取**：优先读 `demo/output/trend_top10.json`；不存在时从 SQLite `memory` 表（kind=trend）查询
+- **读取**：优先读 `web/output/trend_top10.json`；不存在时从 SQLite `memory` 表（kind=trend）查询
 - **K2 Strategy Loop**：读取包含历史 `insight` 条目，让 CampaignAgent 基于跨 run 积累经验决策
 
 ---
@@ -189,7 +189,7 @@ def save_campaign_card(
 ```
 
 - **调用方**：CampaignAgent（每个款式生成后调用一次）
-- **写盘**：追加到 `demo/output/_campaign_cards.json`
+- **写盘**：追加到 `web/output/_campaign_cards.json`
 
 ---
 
@@ -201,7 +201,7 @@ def finalise_campaign(executive_summary: str, top_3_styles: list[str]) -> str:
 ```
 
 - **调用方**：CampaignAgent（所有款式处理完后调用）
-- **写盘**：合并 `_campaign_cards.json` → `demo/output/campaign.json`
+- **写盘**：合并 `_campaign_cards.json` → `web/output/campaign.json`
 - **写 SQLite**：`memory` 表（kind=style_card）
 
 ---
@@ -273,21 +273,21 @@ flowchart TD
 
 | 写入方 | 文件路径 | 读取方 |
 |-------|---------|--------|
-| `save_trend_analysis` | `demo/output/trend_top10.json` | `_load_trend_result()` / `load_trend_context` |
-| `save_campaign_card` | `demo/output/_campaign_cards.json` | `finalise_campaign` |
-| `finalise_campaign` | `demo/output/campaign.json` | `_load_campaign_result()` |
+| `save_trend_analysis` | `web/output/trend_top10.json` | `_load_trend_result()` / `load_trend_context` |
+| `save_campaign_card` | `web/output/_campaign_cards.json` | `finalise_campaign` |
+| `finalise_campaign` | `web/output/campaign.json` | `_load_campaign_result()` |
 
 ### Worker 写盘（Rule-based，orchestrator._persist_*）
 
 | 写入方 | 文件路径 | 读取方 |
 |-------|---------|--------|
-| `_persist_trend` | `demo/output/trend_top10.json` | `load_trend_context` |
-| `_persist_metrics` | `demo/output/metric_snapshots.json` | data_loader.py |
-| `_persist_assets` | `demo/output/style_cards_draft.json` | CampaignAgent / campaign_strategist |
-| `_persist_campaign` | `demo/output/campaign.json` + `demo/output/style_cards.json` | Summarizer |
-| `_persist_summary` | `demo/output/report.md` | Streamlit 展示 |
+| `_persist_trend` | `web/output/trend_top10.json` | `load_trend_context` |
+| `_persist_metrics` | `web/output/metric_snapshots.json` | data_loader.py |
+| `_persist_assets` | `web/output/style_cards_draft.json` | CampaignAgent / campaign_strategist |
+| `_persist_campaign` | `web/output/campaign.json` + `web/output/style_cards.json` | Summarizer |
+| `_persist_summary` | `web/output/report.md` | Streamlit 展示 |
 
-> **扩展规则**：新增 Agent tool 写盘时，路径必须在 `NAILS_OUTPUT_DIR`（默认 `demo/output/`）下，文件名避免与上表冲突。
+> **扩展规则**：新增 Agent tool 写盘时，路径必须在 `NAILS_OUTPUT_DIR`（默认 `web/output/`）下，文件名避免与上表冲突。
 
 ---
 

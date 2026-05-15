@@ -1,6 +1,6 @@
 """
 美甲 AI 运营平台 — V0 Streamlit Demo
-运行：streamlit run demo/app.py --server.port 8502
+运行：streamlit run web/app.py --server.port 8502
 """
 
 import sys

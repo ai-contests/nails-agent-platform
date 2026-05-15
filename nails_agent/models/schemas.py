@@ -250,7 +250,7 @@ class TryOnResponse(BaseModel):
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# Consumer-side try-on (extracted from demo_v1)
+# Consumer-side try-on (extracted from consumer)
 # ══════════════════════════════════════════════════════════════════════════
 
 # ── Hand & reference profiles ─────────────────────────────────────────────

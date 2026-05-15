@@ -75,8 +75,8 @@ PRD v4 定义 9 个 Agent 角色，分三层部署：
 ```mermaid
 graph TD
     subgraph "入口层 (Caddy :8080)"
-        Caddy -->|"/"| Merchant["🖥 Merchant Streamlit\ndemo/app.py  :8501"]
-        Caddy -->|"/user/"| Consumer["🧑‍💻 Consumer Streamlit\ndemo_v1/app.py  :8503"]
+        Caddy -->|"/"| Merchant["🖥 Merchant Streamlit\nweb/app.py  :8501"]
+        Caddy -->|"/user/"| Consumer["🧑‍💻 Consumer Streamlit\nconsumer/app.py  :8503"]
         Caddy -->|"/api/*"| API["⚡ FastAPI\nnails_agent/api/main.py  :8000"]
     end
 
@@ -102,7 +102,7 @@ graph TD
         Tools -->|"REST :18060"| XHS["小红书 XHS-MCP\nGo server"]
         Tools -->|"CDP :9222"| Douyin["抖音 Douyin\nChrome tab"]
         Tools -->|"Playwright"| IG["Instagram\nPlaywright / instaloader"]
-        Tools -->|"fallback"| Mock["Mock JSON\ndemo/data/"]
+        Tools -->|"fallback"| Mock["Mock JSON\nweb/data/"]
     end
 
     subgraph "AI 试戴层 (C 端)"
@@ -119,7 +119,7 @@ graph TD
         SessSvc --> Mem
         RecSvc --> Mem
         IntSvc --> Mem
-        Tools -->|"L0 Event Log / JSON"| Disk["demo/output/*.json\ntrend_top10.json / campaign.json ..."]
+        Tools -->|"L0 Event Log / JSON"| Disk["web/output/*.json\ntrend_top10.json / campaign.json ..."]
     end
 
     subgraph "模型层"
@@ -147,7 +147,7 @@ graph TD
 │   style_trends: List[StyleTrend]    — 按 tag 聚合，aggregated_score 降序│
 │   patterns: List[str]               — 跨平台风格组合                    │
 │   anomalies: List[str]              — 近 48h 突发热度                   │
-│ → 写盘: demo/output/trend_top10.json                                   │
+│ → 写盘: web/output/trend_top10.json                                   │
 │ → SQLite: memory(kind=trend/pattern/anomaly)                          │
 └──────┬─────────────────────────────────────────────────────────────────┘
        │
@@ -155,10 +155,10 @@ graph TD
        ├────────────────────────────────────────────────►
        │                                                  ValueEvaluationResult
        │  Step 2b (parallel) asset_generator.generate()  {snapshots[]: MetricSnapshot}
-       └────────────────────────────────────────────────► demo/output/metric_snapshots.json
+       └────────────────────────────────────────────────► web/output/metric_snapshots.json
                                                           AssetGenerationResult
                                                           {drafts[]: StyleCardDraft}
-                                                          demo/output/style_cards_draft.json
+                                                          web/output/style_cards_draft.json
                                                   │
               [Reviewer Guardrail Checkpoint]      │
               Chat UI: "审核素材草稿？"           │
@@ -169,8 +169,8 @@ graph TD
                                         {style_cards[]: StyleCard}
                                         each StyleCard: platform_variants (XHS/Douyin/IG)
                                                         pricing, schedule (P0/P1/P2)
-                                        demo/output/style_cards.json
-                                        demo/output/campaign.json
+                                        web/output/style_cards.json
+                                        web/output/campaign.json
                                                   │
               [Reviewer Guardrail Checkpoint]      │
               Chat UI: "确认发布运营计划？"       │
@@ -179,7 +179,7 @@ graph TD
                                                   ▼
                                       SummaryReport
                                         {markdown, sections[], top_3_keywords}
-                                        demo/output/report.md
+                                        web/output/report.md
                                                   │
                                                   │ memory.distill()  ← K2 Strategy Loop
                                                   ▼
@@ -239,7 +239,7 @@ PRD v4 定义四层 Memory Fabric，当前已实现 L0–L3：
 
 | 层级 | 名称 | 实现 | 生命周期 | 用途 |
 |------|------|------|---------|------|
-| **L0** | Event Log | JSON files (`demo/output/`) | 永久（追加） | 原始事件审计；@function_tools 写盘 |
+| **L0** | Event Log | JSON files (`web/output/`) | 永久（追加） | 原始事件审计；@function_tools 写盘 |
 | **L1** | Short-term Memory | `PipelineState`（in-memory Pydantic） | 单次 pipeline run | 步骤间数据传递 |
 | **L2** | Long-term Memory | `MemoryStore`（SQLite + FTS5） | 跨 run 持久 | 历史查询、趋势累积、消费者会话 |
 | **L3** | Strategy Loop | `memory.distill()` → `MemoryEntry(kind=insight)` | 跨 run 累积 | K2 自改进：每次 run 提炼洞察，下次决策读取 |

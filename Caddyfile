@@ -1,7 +1,7 @@
 # Local-dev reverse proxy for the nails-agent-platform.
 #
-#   /         → Chat UI      :8501  (demo/chat_app.py)
-#   /user/*   → C端 AI试戴  :8503  (demo_v1/app.py)
+#   /         → Chat UI      :8501  (web/chat_app.py)
+#   /user/*   → C端 AI试戴  :8503  (consumer/app.py)
 #   /api/*    → FastAPI      :8000  (strip prefix before forwarding)
 
 localhost:8080 {

@@ -48,8 +48,8 @@ class PipelineOrchestrator:
     def __init__(
         self,
         memory: Optional[MemoryStore] = None,
-        data_dir: str = "demo/data",
-        output_dir: str = "demo/output",
+        data_dir: str = "web/data",
+        output_dir: str = "web/output",
         keywords: Optional[List[str]] = None,
         collector: Optional[SignalCollector] = None,
         use_agents: bool = True,  # use LLM-powered agents (falls back if API key absent)

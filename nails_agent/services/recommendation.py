@@ -1,7 +1,7 @@
 """
 Recommendation scoring (Round 1 + Round 2).
 
-Originally `demo_v1/src/recommendation.py`. The scoring logic is unchanged —
+Originally `consumer/src/recommendation.py`. The scoring logic is unchanged —
 data access now goes through StyleLibrary (SQLite) and MemoryStore instead
 of JSON files.
 """

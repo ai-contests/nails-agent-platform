@@ -2,7 +2,7 @@
 Agent Chat — Streamlit entry point.
 
 Run:
-    uv run streamlit run demo/chat_app.py
+    uv run streamlit run web/chat_app.py
 """
 from __future__ import annotations
 

@@ -112,7 +112,7 @@ uploaded = st.file_uploader("上传手部图片", type=["png", "jpg", "jpeg", "w
 sample_files = sorted((ROOT_DIR / "images").glob("image*.png"))
 with st.sidebar:
     st.subheader("本地样例")
-    use_sample = st.checkbox("使用 demo_v1/images 样例", value=False)
+    use_sample = st.checkbox("使用 consumer/images 样例", value=False)
     sample_path = None
     if use_sample and sample_files:
         sample_name = st.selectbox("选择样例图片", [p.name for p in sample_files])

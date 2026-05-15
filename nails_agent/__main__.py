@@ -19,8 +19,8 @@ logging.basicConfig(
 def main():
     parser = argparse.ArgumentParser(prog="nails_agent")
     parser.add_argument("command", choices=["run", "trend", "api", "bot"])
-    parser.add_argument("--data-dir", default="demo/data")
-    parser.add_argument("--output-dir", default="demo/output")
+    parser.add_argument("--data-dir", default="web/data")
+    parser.add_argument("--output-dir", default="web/output")
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=8000)
     args = parser.parse_args()

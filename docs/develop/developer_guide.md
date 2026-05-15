@@ -61,8 +61,8 @@ sqlite3 ~/.nails_agent/memory.db "SELECT COUNT(*) FROM nail_styles_v2;"
 | 进程 | 端口 | 日志 |
 |------|------|------|
 | FastAPI（uvicorn --reload） | `:8000` | `logs/api.log` |
-| Merchant Streamlit（demo/app.py） | `:8501` | `logs/merchant.log` |
-| Consumer Streamlit（demo_v1/app.py） | `:8503` | `logs/consumer.log` |
+| Merchant Streamlit（web/app.py） | `:8501` | `logs/merchant.log` |
+| Consumer Streamlit（consumer/app.py） | `:8503` | `logs/consumer.log` |
 | Caddy 反向代理（需安装） | `:8080` | `logs/caddy.log` |
 
 **访问地址**：
@@ -78,7 +78,7 @@ sqlite3 ~/.nails_agent/memory.db "SELECT COUNT(*) FROM nail_styles_v2;"
 **单独启动 Chat UI**（人机协作流水线）：
 
 ```bash
-uv run streamlit run demo/chat_app.py
+uv run streamlit run web/chat_app.py
 ```
 
 **启动 XHS-MCP Go server**（可选，提供真实小红书数据）：
@@ -110,8 +110,8 @@ open -a "Google Chrome" --args --remote-debugging-port=9222
 | `COMFYUI_API_KEY` | — | 真实 AI 试戴图像生成 |
 | `CHROME_CDP_URL` | `http://localhost:9222` | Douyin / Instagram CDP 数据源 |
 | `MODELSCOPE_BASE_URL` | `https://api-inference.modelscope.cn/v1` | 代理 / 私有部署时替换 |
-| `NAILS_DATA_DIR` | `demo/data` | 款式库和种子数据路径 |
-| `NAILS_OUTPUT_DIR` | `demo/output` | Agents 写盘路径（生产环境改此项） |
+| `NAILS_DATA_DIR` | `web/data` | 款式库和种子数据路径 |
+| `NAILS_OUTPUT_DIR` | `web/output` | Agents 写盘路径（生产环境改此项） |
 | `NAILS_API_BASE` | `http://localhost:8000` | Consumer Streamlit → FastAPI 地址 |
 | `TIKHUB_API_KEY` | — | 付费 TikHub 数据源（可选） |
 | `TELEGRAM_BOT_TOKEN` | — | Telegram 机器人（可选） |

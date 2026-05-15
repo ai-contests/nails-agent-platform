@@ -1,0 +1,472 @@
+[
+  {
+    "card_id": "CARD_001",
+    "trend_id": "TREND_20260504_001",
+    "style_id": "cat_eye",
+    "style_name": "猫眼美甲",
+    "style_tags": [
+      "猫眼",
+      "磁铁",
+      "暗黑"
+    ],
+    "image_url": "https://images.unsplash.com/photo-1604654894610-df63bc536371",
+    "launch_priority_score": 82.4,
+    "generation_status": "success",
+    "platform_variants": {
+      "xiaohongshu": {
+        "caption": "🌟 猫眼美甲 上新！显白 · 猫眼, 磁铁 · 预约立享优惠",
+        "hashtags": [
+          "#美甲",
+          "#猫眼美甲",
+          "#猫眼",
+          "#磁铁"
+        ]
+      },
+      "douyin": {
+        "caption": "猫眼美甲 · 本周爆款 · 门店限量预约",
+        "hashtags": [
+          "#美甲推荐",
+          "#美甲设计",
+          "#猫眼",
+          "#磁铁"
+        ]
+      }
+    },
+    "pricing": {
+      "base_price": 388,
+      "premium_price": 504,
+      "promo_price": 330,
+      "premium_reason": "首发限定"
+    },
+    "schedule": {
+      "priority": "P0",
+      "xiaohongshu_publish_at": "2026-05-14T10:00:00+08:00",
+      "douyin_publish_at": "2026-05-14T12:00:00+08:00",
+      "instagram_publish_at": "2026-05-14T14:00:00+08:00"
+    },
+    "created_at": "2026-05-14T10:00:00+08:00"
+  },
+  {
+    "card_id": "CARD_002",
+    "trend_id": "TREND_20260504_002",
+    "style_id": "ice_blue_cat_eye",
+    "style_name": "冰透蓝猫眼",
+    "style_tags": [
+      "冰透",
+      "猫眼",
+      "显白"
+    ],
+    "image_url": "https://images.unsplash.com/photo-1604654894610-df63bc536371",
+    "launch_priority_score": 76.0,
+    "generation_status": "success",
+    "platform_variants": {
+      "xiaohongshu": {
+        "caption": "🌟 冰透蓝猫眼 上新！显白 · 冰透, 猫眼 · 预约立享优惠",
+        "hashtags": [
+          "#美甲",
+          "#冰透蓝猫眼",
+          "#冰透",
+          "#猫眼"
+        ]
+      },
+      "douyin": {
+        "caption": "冰透蓝猫眼 · 本周爆款 · 门店限量预约",
+        "hashtags": [
+          "#美甲推荐",
+          "#美甲设计",
+          "#冰透",
+          "#猫眼"
+        ]
+      }
+    },
+    "pricing": {
+      "base_price": 368,
+      "premium_price": 478,
+      "promo_price": 313,
+      "premium_reason": "首发限定"
+    },
+    "schedule": {
+      "priority": "P0",
+      "xiaohongshu_publish_at": "2026-05-15T10:00:00+08:00",
+      "douyin_publish_at": "2026-05-15T12:00:00+08:00",
+      "instagram_publish_at": "2026-05-15T14:00:00+08:00"
+    },
+    "created_at": "2026-05-14T10:00:00+08:00"
+  },
+  {
+    "card_id": "CARD_003",
+    "trend_id": "TREND_20260504_003",
+    "style_id": "french",
+    "style_name": "法式渐变美甲",
+    "style_tags": [
+      "法式",
+      "渐变",
+      "高级感"
+    ],
+    "image_url": "https://images.unsplash.com/photo-1604654894610-df63bc536371",
+    "launch_priority_score": 81.3,
+    "generation_status": "success",
+    "platform_variants": {
+      "xiaohongshu": {
+        "caption": "🌟 法式渐变美甲 上新！显白 · 法式, 渐变 · 预约立享优惠",
+        "hashtags": [
+          "#美甲",
+          "#法式渐变美甲",
+          "#法式",
+          "#渐变"
+        ]
+      },
+      "douyin": {
+        "caption": "法式渐变美甲 · 本周爆款 · 门店限量预约",
+        "hashtags": [
+          "#美甲推荐",
+          "#美甲设计",
+          "#法式",
+          "#渐变"
+        ]
+      }
+    },
+    "pricing": {
+      "base_price": 298,
+      "premium_price": 387,
+      "promo_price": 253,
+      "premium_reason": "热门款式"
+    },
+    "schedule": {
+      "priority": "P1",
+      "xiaohongshu_publish_at": "2026-05-17T10:00:00+08:00",
+      "douyin_publish_at": "2026-05-17T12:00:00+08:00",
+      "instagram_publish_at": "2026-05-17T14:00:00+08:00"
+    },
+    "created_at": "2026-05-14T10:00:00+08:00"
+  },
+  {
+    "card_id": "CARD_004",
+    "trend_id": "TREND_20260504_004",
+    "style_id": "emboss",
+    "style_name": "3D立体美甲",
+    "style_tags": [
+      "3D立体",
+      "浮雕",
+      "花卉"
+    ],
+    "image_url": "https://images.unsplash.com/photo-1604654894610-df63bc536371",
+    "launch_priority_score": 73.2,
+    "generation_status": "success",
+    "platform_variants": {
+      "xiaohongshu": {
+        "caption": "🌟 3D立体美甲 上新！好看 · 3D立体, 浮雕 · 预约立享优惠",
+        "hashtags": [
+          "#美甲",
+          "#3D立体美甲",
+          "#3D立体",
+          "#浮雕"
+        ]
+      },
+      "douyin": {
+        "caption": "3D立体美甲 · 本周爆款 · 门店限量预约",
+        "hashtags": [
+          "#美甲推荐",
+          "#美甲设计",
+          "#3D立体",
+          "#浮雕"
+        ]
+      }
+    },
+    "pricing": {
+      "base_price": 268,
+      "premium_price": 348,
+      "promo_price": 228,
+      "premium_reason": "热门款式"
+    },
+    "schedule": {
+      "priority": "P1",
+      "xiaohongshu_publish_at": "2026-05-17T10:00:00+08:00",
+      "douyin_publish_at": "2026-05-17T12:00:00+08:00",
+      "instagram_publish_at": "2026-05-17T14:00:00+08:00"
+    },
+    "created_at": "2026-05-14T10:00:00+08:00"
+  },
+  {
+    "card_id": "CARD_005",
+    "trend_id": "TREND_20260504_005",
+    "style_id": "matte_cream",
+    "style_name": "奶油哑光美甲",
+    "style_tags": [
+      "奶油",
+      "哑光",
+      "柔雾"
+    ],
+    "image_url": "https://images.unsplash.com/photo-1604654894610-df63bc536371",
+    "launch_priority_score": 71.4,
+    "generation_status": "success",
+    "platform_variants": {
+      "xiaohongshu": {
+        "caption": "🌟 奶油哑光美甲 上新！好看 · 奶油, 哑光 · 预约立享优惠",
+        "hashtags": [
+          "#美甲",
+          "#奶油美甲",
+          "#奶油",
+          "#哑光"
+        ]
+      },
+      "douyin": {
+        "caption": "奶油哑光美甲 · 本周爆款 · 门店限量预约",
+        "hashtags": [
+          "#美甲推荐",
+          "#美甲设计",
+          "#奶油",
+          "#哑光"
+        ]
+      }
+    },
+    "pricing": {
+      "base_price": 248,
+      "premium_price": 322,
+      "promo_price": 211,
+      "premium_reason": "热门款式"
+    },
+    "schedule": {
+      "priority": "P1",
+      "xiaohongshu_publish_at": "2026-05-19T10:00:00+08:00",
+      "douyin_publish_at": "2026-05-19T12:00:00+08:00",
+      "instagram_publish_at": "2026-05-19T14:00:00+08:00"
+    },
+    "created_at": "2026-05-14T10:00:00+08:00"
+  },
+  {
+    "card_id": "CARD_006",
+    "trend_id": "TREND_20260504_009",
+    "style_id": "rhinestone",
+    "style_name": "碎钻贴片甲",
+    "style_tags": [
+      "贴片",
+      "DIY",
+      "便捷"
+    ],
+    "image_url": "https://images.unsplash.com/photo-1604654894610-df63bc536371",
+    "launch_priority_score": 83.2,
+    "generation_status": "success",
+    "platform_variants": {
+      "xiaohongshu": {
+        "caption": "🌟 碎钻贴片甲 上新！好看 · 贴片, DIY · 预约立享优惠",
+        "hashtags": [
+          "#美甲",
+          "#贴片美甲",
+          "#贴片",
+          "#DIY"
+        ]
+      },
+      "douyin": {
+        "caption": "碎钻贴片甲 · 本周爆款 · 门店限量预约",
+        "hashtags": [
+          "#美甲推荐",
+          "#美甲设计",
+          "#贴片",
+          "#DIY"
+        ]
+      }
+    },
+    "pricing": {
+      "base_price": 228,
+      "premium_price": 296,
+      "promo_price": 194,
+      "premium_reason": "热门款式"
+    },
+    "schedule": {
+      "priority": "P2",
+      "xiaohongshu_publish_at": "2026-05-21T10:00:00+08:00",
+      "douyin_publish_at": "2026-05-21T12:00:00+08:00",
+      "instagram_publish_at": "2026-05-21T14:00:00+08:00"
+    },
+    "created_at": "2026-05-14T10:00:00+08:00"
+  },
+  {
+    "card_id": "CARD_007",
+    "trend_id": "TREND_20260504_006",
+    "style_id": "celestial",
+    "style_name": "星月美甲",
+    "style_tags": [
+      "星月",
+      "浪漫",
+      "梦幻"
+    ],
+    "image_url": "https://images.unsplash.com/photo-1604654894610-df63bc536371",
+    "launch_priority_score": 68.0,
+    "generation_status": "success",
+    "platform_variants": {
+      "xiaohongshu": {
+        "caption": "🌟 星月美甲 上新！好看 · 星月, 浪漫 · 预约立享优惠",
+        "hashtags": [
+          "#美甲",
+          "#星月美甲",
+          "#星月",
+          "#浪漫"
+        ]
+      },
+      "douyin": {
+        "caption": "星月美甲 · 本周爆款 · 门店限量预约",
+        "hashtags": [
+          "#美甲推荐",
+          "#美甲设计",
+          "#星月",
+          "#浪漫"
+        ]
+      }
+    },
+    "pricing": {
+      "base_price": 218,
+      "premium_price": 283,
+      "promo_price": 185,
+      "premium_reason": "热门款式"
+    },
+    "schedule": {
+      "priority": "P2",
+      "xiaohongshu_publish_at": "2026-05-21T10:00:00+08:00",
+      "douyin_publish_at": "2026-05-21T12:00:00+08:00",
+      "instagram_publish_at": "2026-05-21T14:00:00+08:00"
+    },
+    "created_at": "2026-05-14T10:00:00+08:00"
+  },
+  {
+    "card_id": "CARD_008",
+    "trend_id": "TREND_20260504_007",
+    "style_id": "mirror",
+    "style_name": "镜面美甲",
+    "style_tags": [
+      "镜面",
+      "金属",
+      "科技感"
+    ],
+    "image_url": "https://images.unsplash.com/photo-1604654894610-df63bc536371",
+    "launch_priority_score": 66.3,
+    "generation_status": "success",
+    "platform_variants": {
+      "xiaohongshu": {
+        "caption": "🌟 镜面美甲 上新！好看 · 镜面, 金属 · 预约立享优惠",
+        "hashtags": [
+          "#美甲",
+          "#镜面美甲",
+          "#镜面",
+          "#金属"
+        ]
+      },
+      "douyin": {
+        "caption": "镜面美甲 · 本周爆款 · 门店限量预约",
+        "hashtags": [
+          "#美甲推荐",
+          "#美甲设计",
+          "#镜面",
+          "#金属"
+        ]
+      }
+    },
+    "pricing": {
+      "base_price": 198,
+      "premium_price": 257,
+      "promo_price": 168,
+      "premium_reason": "热门款式"
+    },
+    "schedule": {
+      "priority": "P2",
+      "xiaohongshu_publish_at": "2026-05-21T10:00:00+08:00",
+      "douyin_publish_at": "2026-05-21T12:00:00+08:00",
+      "instagram_publish_at": "2026-05-21T14:00:00+08:00"
+    },
+    "created_at": "2026-05-14T10:00:00+08:00"
+  },
+  {
+    "card_id": "CARD_009",
+    "trend_id": "TREND_20260504_008",
+    "style_id": "gradient",
+    "style_name": "渐变美甲",
+    "style_tags": [
+      "渐变",
+      "彩色",
+      "夏季"
+    ],
+    "image_url": "https://images.unsplash.com/photo-1604654894610-df63bc536371",
+    "launch_priority_score": 68.7,
+    "generation_status": "success",
+    "platform_variants": {
+      "xiaohongshu": {
+        "caption": "🌟 渐变美甲 上新！好看 · 渐变, 彩色 · 预约立享优惠",
+        "hashtags": [
+          "#美甲",
+          "#渐变美甲",
+          "#渐变",
+          "#彩色"
+        ]
+      },
+      "douyin": {
+        "caption": "渐变美甲 · 本周爆款 · 门店限量预约",
+        "hashtags": [
+          "#美甲推荐",
+          "#美甲设计",
+          "#渐变",
+          "#彩色"
+        ]
+      }
+    },
+    "pricing": {
+      "base_price": 188,
+      "premium_price": 244,
+      "promo_price": 160,
+      "premium_reason": "热门款式"
+    },
+    "schedule": {
+      "priority": "P2",
+      "xiaohongshu_publish_at": "2026-05-24T10:00:00+08:00",
+      "douyin_publish_at": "2026-05-24T12:00:00+08:00",
+      "instagram_publish_at": "2026-05-24T14:00:00+08:00"
+    },
+    "created_at": "2026-05-14T10:00:00+08:00"
+  },
+  {
+    "card_id": "CARD_010",
+    "trend_id": "TREND_20260504_010",
+    "style_id": "marble",
+    "style_name": "大理石纹美甲",
+    "style_tags": [
+      "大理石纹",
+      "高级感",
+      "纹理"
+    ],
+    "image_url": "https://images.unsplash.com/photo-1604654894610-df63bc536371",
+    "launch_priority_score": 61.8,
+    "generation_status": "success",
+    "platform_variants": {
+      "xiaohongshu": {
+        "caption": "🌟 大理石纹美甲 上新！好看 · 大理石纹, 高级感 · 预约立享优惠",
+        "hashtags": [
+          "#美甲",
+          "#大理石纹美甲",
+          "#大理石纹",
+          "#高级感"
+        ]
+      },
+      "douyin": {
+        "caption": "大理石纹美甲 · 本周爆款 · 门店限量预约",
+        "hashtags": [
+          "#美甲推荐",
+          "#美甲设计",
+          "#大理石纹",
+          "#高级感"
+        ]
+      }
+    },
+    "pricing": {
+      "base_price": 168,
+      "premium_price": 218,
+      "promo_price": 143,
+      "premium_reason": "热门款式"
+    },
+    "schedule": {
+      "priority": "P2",
+      "xiaohongshu_publish_at": "2026-05-24T10:00:00+08:00",
+      "douyin_publish_at": "2026-05-24T12:00:00+08:00",
+      "instagram_publish_at": "2026-05-24T14:00:00+08:00"
+    },
+    "created_at": "2026-05-14T10:00:00+08:00"
+  }
+]

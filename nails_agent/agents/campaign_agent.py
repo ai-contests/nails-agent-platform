@@ -38,7 +38,7 @@ def run_campaign_agent(
         return _rule_based_fallback(trend_result, progress_cb)
 
     # Clear old campaign cards
-    output_dir = os.environ.get("NAILS_OUTPUT_DIR", "demo/output")
+    output_dir = os.environ.get("NAILS_OUTPUT_DIR", "web/output")
     _clear_file(os.path.join(output_dir, "_campaign_cards.json"))
     _clear_file(os.path.join(output_dir, "campaign.json"))
 

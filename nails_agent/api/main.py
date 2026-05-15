@@ -67,8 +67,8 @@ app.add_middleware(
 _memory: Optional[MemoryStore] = None
 _orchestrator: Optional[PipelineOrchestrator] = None
 
-DATA_DIR = os.environ.get("NAILS_DATA_DIR", "demo/data")
-OUTPUT_DIR = os.environ.get("NAILS_OUTPUT_DIR", "demo/output")
+DATA_DIR = os.environ.get("NAILS_DATA_DIR", "web/data")
+OUTPUT_DIR = os.environ.get("NAILS_OUTPUT_DIR", "web/output")
 WORKFLOW_PATH = Path(
     os.environ.get(
         "NAILS_WORKFLOW_PATH",

@@ -2,7 +2,7 @@
 Hand shape, skin tone, and undertone analysis.
 
 Uses MediaPipe Hands for landmark detection + rule-based classification.
-Originally lifted from demo_v1/src/hand_analysis.py; rule JSON paths now
+Originally lifted from consumer/src/hand_analysis.py; rule JSON paths now
 resolve to the canonical seed dir at the repo root (or NAILS_DATA_DIR_V2).
 """
 
@@ -31,7 +31,7 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = Path(os.environ.get("NAILS_DATA_DIR_V2", str(ROOT_DIR / "data")))
 
 # Labels live in nails_agent.services.labels so they can be imported without
-# pulling MediaPipe; re-exported here for backward compat with demo_v1.
+# pulling MediaPipe; re-exported here for backward compat with consumer.
 from nails_agent.services.labels import (  # noqa: E402
     HAND_SHAPE_LABELS,
     SKIN_TONE_LABELS,

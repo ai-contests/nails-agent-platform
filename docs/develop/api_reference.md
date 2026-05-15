@@ -341,7 +341,7 @@ B 端商户用：使用固定 hand_reference.jpg 测试 ComfyUI 试戴效果。
 {
   "success": true,
   "image_url": "https://...",
-  "fallback_url": "demo/static/nail_reference.jpg",
+  "fallback_url": "web/static/nail_reference.jpg",
   "duration_s": 42.3
 }
 ```

@@ -5,7 +5,7 @@ Active sources (all FREE):
   1. XHS-MCP      — local Go xiaohongshu-mcp server (port 18060, REST API)
   2. Douyin CDP   — reuses logged-in Chrome tab  (requires --remote-debugging-port=9222)
   3. Instagram    — playwright CDP or instaloader session
-  4. Mock         — demo/data/trend_signals.json  (always available as fallback)
+  4. Mock         — web/data/trend_signals.json  (always available as fallback)
 
 Disabled / suspended sources:
   - XHSCDPFetcher    — direct CDP scraping, suspended after automation warning
@@ -298,8 +298,8 @@ class SignalCollector:
             p = Path(self._mock_path)
             return p if p.exists() else None
         for p in [
-            Path("demo/data/trend_signals.json"),
-            Path("demo/data/trend_signals_with_score.json"),
+            Path("web/data/trend_signals.json"),
+            Path("web/data/trend_signals_with_score.json"),
         ]:
             if p.exists():
                 return p

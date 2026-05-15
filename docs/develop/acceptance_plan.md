@@ -1,8 +1,8 @@
-# demo_v1 整合验收方案
+# consumer 整合验收方案
 
 ## 验收范围
 
-本次整合将 `demo_v1/` 的 C 端试戴逻辑迁入 `nails_agent/services/`，通过 FastAPI 暴露，并将 `demo_v1/app.py` 改造为瘦 HTTP 客户端。验收分 4 个层次：基础环境、API 接口、消费者 UI、商家端回归。
+本次整合将 `consumer/` 的 C 端试戴逻辑迁入 `nails_agent/services/`，通过 FastAPI 暴露，并将 `consumer/app.py` 改造为瘦 HTTP 客户端。验收分 4 个层次：基础环境、API 接口、消费者 UI、商家端回归。
 
 ---
 
@@ -57,7 +57,7 @@ curl -s http://localhost:8000/health | jq .
 ### 3.2 手部分析
 
 ```bash
-curl -s -F image=@demo_v1/images/image001.png \
+curl -s -F image=@consumer/images/image001.png \
   http://localhost:8000/hand/analyze | jq '{ok,hand_shape,skin_tone,undertone}'
 # 期望: ok=true，三个字段非 null
 ```
@@ -79,7 +79,7 @@ curl -s http://localhost:8000/styles/STYLE001 | jq '{style_id,title}'
 
 ```bash
 # 创建会话
-SID=$(curl -s -F image=@demo_v1/images/image001.png \
+SID=$(curl -s -F image=@consumer/images/image001.png \
   http://localhost:8000/sessions | jq -r .session.session_id)
 echo "session: $SID"
 # 期望: session: SESSION-001（或类似 ID）
@@ -123,7 +123,7 @@ export COMFYUI_API_KEY=<your-key>
 
 | 步骤 | 操作 | 期望结果 |
 |---|---|---|
-| 1 | 上传 `demo_v1/images/image001.png` | 显示分析结果：手型、肤色、色调 |
+| 1 | 上传 `consumer/images/image001.png` | 显示分析结果：手型、肤色、色调 |
 | 2 | 查看 Round 1 推荐卡片 | 至少 6 张卡片，各有标题和匹配度 |
 | 3 | 点击一张卡片上的"查看详情"或 Like 按钮 | 事件被记录（页面无报错） |
 | 4 | 点击"刷新推荐（Round 2）"按钮 | 卡片重新排序，reason_tags 出现 |

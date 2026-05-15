@@ -12,8 +12,8 @@ Commands:
 Env vars required:
   TELEGRAM_BOT_TOKEN   — bot token from @BotFather
   TELEGRAM_ALLOWED_USERS — comma-separated chat IDs (optional whitelist)
-  NAILS_DATA_DIR       — path to data directory (default: demo/data)
-  NAILS_OUTPUT_DIR     — path to output directory (default: demo/output)
+  NAILS_DATA_DIR       — path to data directory (default: web/data)
+  NAILS_OUTPUT_DIR     — path to output directory (default: web/output)
 """
 
 from __future__ import annotations
@@ -65,8 +65,8 @@ def build_application():
 
         return PipelineOrchestrator(
             memory=MemoryStore(),
-            data_dir=os.environ.get("NAILS_DATA_DIR", "demo/data"),
-            output_dir=os.environ.get("NAILS_OUTPUT_DIR", "demo/output"),
+            data_dir=os.environ.get("NAILS_DATA_DIR", "web/data"),
+            output_dir=os.environ.get("NAILS_OUTPUT_DIR", "web/output"),
         )
 
     # ── Handlers ──────────────────────────────────────────────────────────────

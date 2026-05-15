@@ -50,7 +50,7 @@ sources:
   # ── 兜底 ─────────────────────────────────────────────────────────────────
   mock:
     enabled: true
-    path: demo/data/trend_signals.json
+    path: web/data/trend_signals.json
 
 collection:
   parallel: true            # 并行抓取所有可用源

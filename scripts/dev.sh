@@ -4,8 +4,8 @@
 # Logs go to logs/<svc>.log. Ctrl-C stops everything.
 #
 # Routes after start-up:
-#   http://localhost:8080/        → Chat UI       (demo/chat_app.py  :8501)
-#   http://localhost:8080/user/   → C端 AI试戴   (demo_v1/app.py    :8503)
+#   http://localhost:8080/        → Chat UI       (web/chat_app.py  :8501)
+#   http://localhost:8080/user/   → C端 AI试戴   (consumer/app.py    :8503)
 #   http://localhost:8080/api/    → FastAPI        (nails_agent       :8000)
 #
 # Direct access (no Caddy):
@@ -45,13 +45,13 @@ pids+=($!)
 
 echo "→ starting Chat UI on :8501 (logs/chat.log)"
 NAILS_API_BASE="http://localhost:8000" \
-streamlit run demo/chat_app.py --server.port 8501 --server.headless true \
+streamlit run web/chat_app.py --server.port 8501 --server.headless true \
   >logs/chat.log 2>&1 &
 pids+=($!)
 
 echo "→ starting C端 AI试戴 on :8503 (logs/consumer.log)"
 NAILS_API_BASE="http://localhost:8000" \
-streamlit run demo_v1/app.py --server.port 8503 --server.headless true \
+streamlit run consumer/app.py --server.port 8503 --server.headless true \
   >logs/consumer.log 2>&1 &
 pids+=($!)
 
