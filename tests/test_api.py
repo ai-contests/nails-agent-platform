@@ -80,8 +80,9 @@ async def test_events_endpoint_returns_trigger_event():
     assert events_resp.status_code == 200
     body = events_resp.json()
     assert "events" in body
-    assert len(body["events"]) == 1
-    event = body["events"][0]
-    assert event["event_type"] == "TriggerEvent"
-    assert event["trigger_id"] == trigger_id
-    assert event["agent_id"] == "TriggerGateway"
+    assert len(body["events"]) >= 1
+    # First event must always be TriggerEvent
+    first = body["events"][0]
+    assert first["event_type"] == "TriggerEvent"
+    assert first["trigger_id"] == trigger_id
+    assert first["agent_id"] == "TriggerGateway"

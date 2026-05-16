@@ -24,11 +24,16 @@ from typing import Callable, List, Optional
 
 from nails_agent.models.schemas import (
     PipelineState,
+    TrendCluster,
+    TrendEvent,
+    StrategyEvent,
     TrendSignal,
     StyleLibraryItem,
     MemoryEntry,
+    TriggerEvent,
 )
 from nails_agent.memory.store import MemoryStore
+from nails_agent.memory.event_log import EventLog
 from nails_agent.tools.fetchers.signal_collector import SignalCollector, DEFAULT_NAIL_KEYWORDS
 from nails_agent.agents.workers import (
     value_evaluator,
@@ -43,11 +48,14 @@ from nails_agent.agents.campaign_agent import run_campaign_agent
 
 logger = logging.getLogger(__name__)
 
+AGENT_ID = "Orchestrator"
+
 
 class PipelineOrchestrator:
     def __init__(
         self,
         memory: Optional[MemoryStore] = None,
+        event_log: Optional[EventLog] = None,
         data_dir: str = "web/data",
         output_dir: str = "web/output",
         keywords: Optional[List[str]] = None,
@@ -55,6 +63,7 @@ class PipelineOrchestrator:
         use_agents: bool = True,  # use LLM-powered agents (falls back if API key absent)
     ):
         self.memory = memory or MemoryStore()
+        self.event_log = event_log or EventLog()
         self.data_dir = Path(data_dir)
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -208,6 +217,133 @@ class PipelineOrchestrator:
         except Exception as exc:
             state.errors.append(str(exc))
             state.status = "error"
+        self._save_state(state)
+        return state
+
+    # ── EventLog-aware pipeline (A3) ────────────────────────────────────────
+
+    def run_pipeline(self, trigger: TriggerEvent) -> PipelineState:
+        """
+        Run the full pipeline for a given TriggerEvent, writing EventLog at each step.
+
+        Chain: TrendAnalyst → ValueEvaluator → CampaignStrategist → Summarizer
+        Each step result is written to event_log before proceeding.
+        """
+        trigger_id = trigger.trigger_id
+        keywords = trigger.keywords or self.keywords
+        emit = lambda msg: logger.info("[run_pipeline:%s] %s", trigger_id[:8], msg)
+
+        state = PipelineState()
+        state.status = "running"
+        self._save_state(state)
+
+        try:
+            # ── Load signals ───────────────────────────────────────────────
+            status = self.collector.source_status()
+            live = [k for k, v in status.items() if v and k != "mock"]
+            emit(f"📡 数据源：{', '.join(live) if live else '📦 mock'}")
+            signals = self.collector.collect(keywords=keywords)
+            emit(f"📥 获取信号 {len(signals)} 条")
+            self._persist_signals(signals)
+            library = self._load_library()
+
+            # ── Step 1: Trend Analysis ─────────────────────────────────────
+            emit("⏳ Step 1 趋势分析中…")
+            state.step = 1
+            if self.use_agents:
+                analysis = run_trend_scout(focus_keywords=keywords[:5], progress_cb=emit)
+            else:
+                from nails_agent.agents.workers import trend_analyst as _ta
+                analysis = _ta.analyse(signals)
+            state.trend_analysis = analysis
+            self._persist_trend_analysis(state.pipeline_id, analysis)
+
+            trend_event = TrendEvent(
+                trigger_id=trigger_id,
+                clusters=[
+                    TrendCluster(
+                        cluster_id=f"cluster_{i}",
+                        keywords=[s.keyword for s in analysis.top_10[i * 3: i * 3 + 3]],
+                        top_tags=analysis.top_10[i * 3].style_tags if analysis.top_10[i * 3:] else [],
+                    )
+                    for i in range(min(3, (len(analysis.top_10) + 2) // 3))
+                ],
+                top_keywords=[s.keyword for s in analysis.top_10[:10]],
+                confidence=min(1.0, len(signals) / 100),
+            )
+            self.event_log.write(
+                event_type="TrendEvent",
+                payload=trend_event.model_dump(),
+                trigger_id=trigger_id,
+                agent_id="TrendAnalyst",
+            )
+            emit(f"✅ Step 1 完成 — top 关键词：{', '.join(trend_event.top_keywords[:3])}")
+
+            # ── Step 2: Value Evaluation + Asset Generation (parallel) ─────
+            emit("⏳ Step 2 价值评估 & 素材生成（并行）…")
+            state.step = 2
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                f_value = pool.submit(value_evaluator.evaluate, analysis, library)
+                f_assets = pool.submit(asset_generator.generate, analysis)
+                value_result = f_value.result()
+                asset_result = f_assets.result()
+            state.value_evaluation = value_result
+            state.asset_generation = asset_result
+            self._persist_value_evaluation(state.pipeline_id, value_result)
+            self._persist_asset_generation(state.pipeline_id, asset_result)
+            emit(f"✅ Step 2 完成 — {len(value_result.snapshots)} 条评估")
+
+            # ── Step 3: Campaign Strategy ──────────────────────────────────
+            emit("⏳ Step 3 运营策略制定中…")
+            state.step = 3
+            if self.use_agents:
+                campaign = run_campaign_agent(analysis, max_cards=6, progress_cb=emit)
+            else:
+                campaign = campaign_strategist.strategise(value_result, asset_result)
+            state.campaign_strategy = campaign
+            self._persist_campaign(state.pipeline_id, campaign)
+
+            strategy_event = StrategyEvent(
+                trigger_id=trigger_id,
+                strategy_summary=campaign.executive_summary or (campaign.style_cards[0].style_name if campaign.style_cards else "策略已生成"),
+                platform_variants=[c.model_dump() for c in campaign.style_cards[:3]],
+                publish_schedule=campaign.style_cards[0].schedule.model_dump() if campaign.style_cards and campaign.style_cards[0].schedule else None,
+            )
+            self.event_log.write(
+                event_type="StrategyEvent",
+                payload=strategy_event.model_dump(),
+                trigger_id=trigger_id,
+                agent_id="CampaignStrategist",
+            )
+            emit(f"✅ Step 3 完成 — {len(campaign.style_cards)} 张策略卡片")
+
+            # ── Step 4: Summary ────────────────────────────────────────────
+            emit("⏳ Step 4 生成运营报告…")
+            state.step = 4
+            report = summarizer.summarise(state)
+            state.report = report
+            self._persist_report(state.pipeline_id, report)
+            self._write_markdown(state.pipeline_id, report.markdown)
+            emit("✅ Step 4 完成")
+
+            new_insights = self.memory.distill(state.pipeline_id)
+            if new_insights:
+                emit(f"🧠 记忆蒸馏：{len(new_insights)} 条新洞察")
+
+            state.status = "done"
+            state.finished_at = datetime.now().isoformat()
+
+        except Exception as exc:
+            logger.exception("run_pipeline error at step %d for trigger %s", state.step, trigger_id)
+            state.errors.append(f"Step {state.step}: {exc}")
+            state.status = "error"
+            self.event_log.write(
+                event_type="ErrorEvent",
+                payload={"error": str(exc), "step": state.step},
+                trigger_id=trigger_id,
+                agent_id=AGENT_ID,
+            )
+
         self._save_state(state)
         return state
 

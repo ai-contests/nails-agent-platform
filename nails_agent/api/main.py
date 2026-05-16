@@ -95,6 +95,7 @@ def get_orchestrator() -> PipelineOrchestrator:
     if _orchestrator is None:
         _orchestrator = PipelineOrchestrator(
             memory=get_memory(),
+            event_log=get_event_log(),
             data_dir=DATA_DIR,
             output_dir=OUTPUT_DIR,
         )
@@ -178,7 +179,7 @@ async def trigger_pipeline(req: TriggerRequest, background_tasks: BackgroundTask
         goal=req.goal,
         shop_data=req.shop_data,
     )
-    # A3 will wire up run_pipeline() here; for now TriggerEvent is written to EventLog.
+    background_tasks.add_task(get_orchestrator().run_pipeline, event)
     return TriggerResponse(trigger_id=event.trigger_id)
 
 
