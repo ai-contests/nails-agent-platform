@@ -28,6 +28,8 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import uuid as _uuid
+
 from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -256,8 +258,6 @@ async def action_publish(req: ActionPublishRequest):
 
 # ── Try-on (flat API for Next.js) ─────────────────────────────────────────────
 # Simpler than the session-scoped consumer flow — accepts base64 image + style_id
-
-import uuid as _uuid
 
 _tryon_jobs: Dict[str, Dict[str, Any]] = {}
 

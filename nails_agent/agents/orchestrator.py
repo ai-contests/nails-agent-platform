@@ -233,7 +233,9 @@ class PipelineOrchestrator:
         """
         trigger_id = trigger.trigger_id
         keywords = trigger.keywords or self.keywords
-        emit = lambda msg: logger.info("[run_pipeline:%s] %s", trigger_id[:8], msg)
+
+        def emit(msg: str) -> None:
+            logger.info("[run_pipeline:%s] %s", trigger_id[:8], msg)
 
         state = PipelineState()
         state.status = "running"

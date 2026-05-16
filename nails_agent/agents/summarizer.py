@@ -35,7 +35,6 @@ class Summarizer:
     ) -> CandidatePackage:
         trend: Optional[TrendAnalysisResult] = state.trend_analysis
         campaign: Optional[CampaignStrategyResult] = state.campaign_strategy
-        value = state.value_evaluation
 
         # ── Build trend_summary ───────────────────────────────────────────────
         if trend and trend.style_trends:
