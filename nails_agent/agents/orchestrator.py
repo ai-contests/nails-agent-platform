@@ -46,6 +46,7 @@ from nails_agent.agents.workers import (
 from nails_agent.agents.trend_agent import run_trend_scout
 from nails_agent.agents.campaign_agent import run_campaign_agent
 from nails_agent.agents.summarizer import Summarizer
+from nails_agent.agents.reviewer_guardrail import ReviewerGuardrail
 
 logger = logging.getLogger(__name__)
 
@@ -326,10 +327,16 @@ class PipelineOrchestrator:
             self._persist_report(state.pipeline_id, report)
             self._write_markdown(state.pipeline_id, report.markdown)
 
-            # Build CandidatePackage for ReviewerGuardrail
+            # Build CandidatePackage
             agent_summarizer = Summarizer(event_log=self.event_log)
             candidate = agent_summarizer.summarise(trigger_id=trigger_id, state=state)
             emit(f"✅ Step 4 完成 — CandidatePackage ready (score={candidate.review_score:.2f})")
+
+            # ReviewerGuardrail (rules + optional LLM)
+            emit("⏳ ReviewerGuardrail 审查中…")
+            reviewer = ReviewerGuardrail(event_log=self.event_log)
+            review_decision = reviewer.review(candidate)
+            emit(f"✅ 审查完成 — {review_decision.status}: {review_decision.reason[:60]}")
 
             new_insights = self.memory.distill(state.pipeline_id)
             if new_insights:
