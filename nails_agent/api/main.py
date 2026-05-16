@@ -26,7 +26,9 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
+
+import uuid as _uuid
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
@@ -43,7 +45,10 @@ from nails_agent.models.schemas import (
     ConsumerTryOnRequest,
 )
 from nails_agent.memory.store import MemoryStore
+from nails_agent.memory.event_log import EventLog
 from nails_agent.agents.orchestrator import PipelineOrchestrator
+from nails_agent.agents.trigger_gateway import TriggerGateway
+from nails_agent.agents.action_executor import ActionExecutor
 from nails_agent.services.style_library import StyleLibrary
 from nails_agent.services.session_service import SessionService, annotated_image_b64
 from nails_agent.services.recommendation import RecommendationService
@@ -57,7 +62,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*", "http://localhost:3000", "http://127.0.0.1:3000"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -66,6 +71,9 @@ app.add_middleware(
 
 _memory: Optional[MemoryStore] = None
 _orchestrator: Optional[PipelineOrchestrator] = None
+_event_log: Optional[EventLog] = None
+_trigger_gateway: Optional[TriggerGateway] = None
+_action_executor: Optional[ActionExecutor] = None
 
 DATA_DIR = os.environ.get("NAILS_DATA_DIR", "web/data")
 OUTPUT_DIR = os.environ.get("NAILS_OUTPUT_DIR", "web/output")
@@ -91,10 +99,32 @@ def get_orchestrator() -> PipelineOrchestrator:
     if _orchestrator is None:
         _orchestrator = PipelineOrchestrator(
             memory=get_memory(),
+            event_log=get_event_log(),
             data_dir=DATA_DIR,
             output_dir=OUTPUT_DIR,
         )
     return _orchestrator
+
+
+def get_event_log() -> EventLog:
+    global _event_log
+    if _event_log is None:
+        _event_log = EventLog()
+    return _event_log
+
+
+def get_trigger_gateway() -> TriggerGateway:
+    global _trigger_gateway
+    if _trigger_gateway is None:
+        _trigger_gateway = TriggerGateway()
+    return _trigger_gateway
+
+
+def get_action_executor() -> ActionExecutor:
+    global _action_executor
+    if _action_executor is None:
+        _action_executor = ActionExecutor(event_log=get_event_log())
+    return _action_executor
 
 
 # ── Consumer-side service singletons ──────────────────────────────────────────
@@ -131,6 +161,171 @@ def get_interaction_service() -> InteractionService:
     if _interaction_service is None:
         _interaction_service = InteractionService(get_memory(), get_style_library())
     return _interaction_service
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# MVP B-end pipeline API  (v1)
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+class TriggerRequest(BaseModel):
+    source: str = "manual"
+    keywords: List[str] = []
+    goal: Optional[str] = None
+    shop_data: Dict[str, Any] = {}
+
+
+class TriggerResponse(BaseModel):
+    trigger_id: str
+    status: str = "queued"
+
+
+@app.post("/api/v1/trigger", response_model=TriggerResponse)
+async def trigger_pipeline(req: TriggerRequest, background_tasks: BackgroundTasks):
+    """Fire a new pipeline run. Returns trigger_id immediately; pipeline runs in background."""
+    gw = get_trigger_gateway()
+    event = gw.fire(
+        source=req.source,
+        keywords=req.keywords,
+        goal=req.goal,
+        shop_data=req.shop_data,
+    )
+    background_tasks.add_task(get_orchestrator().run_pipeline, event)
+    return TriggerResponse(trigger_id=event.trigger_id)
+
+
+@app.get("/api/v1/events")
+async def list_events(trigger_id: str, limit: int = 50, offset: int = 0):
+    """Poll EventLog entries for a given trigger_id (for frontend SSE simulation)."""
+    entries = get_event_log().list_by_trigger(trigger_id, limit=limit, offset=offset)
+    return {"events": [e.model_dump() for e in entries]}
+
+
+class ReviewApproveRequest(BaseModel):
+    trigger_id: str
+    decision: str = "pass"  # "pass" | "revise" | "reject"
+    note: Optional[str] = None
+
+
+@app.post("/api/v1/review/approve")
+async def review_approve(req: ReviewApproveRequest):
+    """HITL confirmation endpoint — merchant confirms review decision before ActionExecutor runs."""
+    from nails_agent.models.schemas import ReviewDecision
+
+    el = get_event_log()
+    pkg = el.get_candidate(req.trigger_id)
+    if not pkg:
+        raise HTTPException(status_code=404, detail="CandidatePackage not found for trigger_id")
+
+    human_decision = ReviewDecision(
+        status=req.decision,
+        reason=req.note or "Human operator approved",
+        suggestions=[],
+        risk_flags=[],
+    )
+    el.update_candidate_review(
+        req.trigger_id,
+        human_decision,
+        status="approved" if req.decision == "pass" else "rejected",
+    )
+    el.write(
+        event_type="HumanApprovalEvent",
+        payload={"decision": req.decision, "note": req.note},
+        trigger_id=req.trigger_id,
+        agent_id="HumanOperator",
+    )
+    return {"ok": True}
+
+
+class ActionPublishRequest(BaseModel):
+    trigger_id: str
+    platform: str = "xhs"  # "xhs" | "openclaw"
+    artifact: Dict[str, Any] = {}
+
+
+@app.post("/api/v1/action/publish")
+async def action_publish(req: ActionPublishRequest):
+    """Execute publish action for an approved CandidatePackage (after HITL confirm)."""
+    el = get_event_log()
+    pkg = el.get_candidate(req.trigger_id)
+    if not pkg:
+        raise HTTPException(status_code=404, detail="CandidatePackage not found for trigger_id")
+
+    executor = get_action_executor()
+    action_event = executor.publish(pkg, platform=req.platform)
+    return {"action_id": action_event.action_id, "status": action_event.status}
+
+
+# ── Try-on (flat API for Next.js) ─────────────────────────────────────────────
+# Simpler than the session-scoped consumer flow — accepts base64 image + style_id
+
+_tryon_jobs: Dict[str, Dict[str, Any]] = {}
+
+
+class TryOnSubmitRequest(BaseModel):
+    image_base64: str
+    style_id: str
+
+
+def _run_tryon_job(job_id: str, image_b64: str, style_id: str) -> None:
+    """Background task: run ComfyUI try-on and update job status."""
+    import base64
+    import tempfile
+
+    _tryon_jobs[job_id]["status"] = "running"
+    try:
+        # Decode hand image
+        img_bytes = base64.b64decode(image_b64)
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+            f.write(img_bytes)
+            hand_path = f.name
+
+        # Resolve style image
+        style = get_style_library().get_style(style_id)
+        style_path = style.get("image_url", "") if style else ""
+        if not style_path or not Path(style_path).exists():
+            style_path = str(NAIL_REF_PATH)
+
+        if not WORKFLOW_PATH.exists():
+            raise FileNotFoundError(f"Workflow not found: {WORKFLOW_PATH}")
+
+        with open(WORKFLOW_PATH, encoding="utf-8") as f:
+            workflow = json.load(f)
+
+        from nails_agent.tools.comfyui_client import ComfyUIClient
+
+        result = ComfyUIClient().run_tryon(
+            workflow=workflow,
+            hand_image_path=hand_path,
+            style_image_path=style_path,
+        )
+        if result.get("success"):
+            _tryon_jobs[job_id]["status"] = "done"
+            _tryon_jobs[job_id]["result_url"] = result.get("image_url", "")
+        else:
+            _tryon_jobs[job_id]["status"] = "failed"
+            _tryon_jobs[job_id]["error"] = result.get("error", "unknown")
+    except Exception as exc:
+        _tryon_jobs[job_id]["status"] = "failed"
+        _tryon_jobs[job_id]["error"] = str(exc)
+
+
+@app.post("/api/v1/tryon/submit")
+async def tryon_submit(req: TryOnSubmitRequest, background_tasks: BackgroundTasks):
+    """Submit a try-on job. Returns job_id immediately; renders in background."""
+    job_id = str(_uuid.uuid4())
+    _tryon_jobs[job_id] = {"status": "pending", "result_url": None}
+    background_tasks.add_task(_run_tryon_job, job_id, req.image_base64, req.style_id)
+    return {"job_id": job_id}
+
+
+@app.get("/api/v1/tryon/{job_id}")
+async def tryon_status(job_id: str):
+    """Poll try-on job status. status: pending|running|done|failed."""
+    job = _tryon_jobs.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Try-on job not found")
+    return job
 
 
 # ── Health ────────────────────────────────────────────────────────────────────

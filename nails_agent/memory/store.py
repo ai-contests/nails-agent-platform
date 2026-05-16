@@ -162,6 +162,32 @@ class MemoryStore:
                 );
                 CREATE INDEX IF NOT EXISTS idx_toj_session
                     ON tryon_jobs (session_id, created_at);
+
+                -- ── B-end pipeline event log ──────────────────────────────────
+
+                CREATE TABLE IF NOT EXISTS event_log (
+                    id          TEXT PRIMARY KEY,
+                    event_type  TEXT NOT NULL,
+                    trigger_id  TEXT,
+                    agent_id    TEXT,
+                    payload     TEXT NOT NULL,
+                    created_at  TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_event_log_trigger
+                    ON event_log (trigger_id);
+                CREATE INDEX IF NOT EXISTS idx_event_log_type
+                    ON event_log (event_type);
+
+                CREATE TABLE IF NOT EXISTS candidate_packages (
+                    id             TEXT PRIMARY KEY,
+                    trigger_id     TEXT NOT NULL,
+                    content        TEXT NOT NULL,
+                    review_status  TEXT NOT NULL DEFAULT 'pending_review',
+                    review_output  TEXT,
+                    created_at     TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_candidate_trigger
+                    ON candidate_packages (trigger_id);
             """)
 
     # ── Write ────────────────────────────────────────────────────────────────

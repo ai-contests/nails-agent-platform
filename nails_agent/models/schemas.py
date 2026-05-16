@@ -469,3 +469,73 @@ class BehaviorEventRequest(BaseModel):
 class ConsumerTryOnRequest(BaseModel):
     style_id: str
     source_snapshot_id: Optional[str] = None
+
+
+# ──────────────────────────────────────────────
+# MVP Agent Pipeline — Event Log & HITL Models
+# ──────────────────────────────────────────────
+
+
+class TriggerEvent(BaseModel):
+    trigger_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    source: str  # "manual" | "scheduled" | "signal"
+    keywords: List[str] = []
+    goal: Optional[str] = None
+    shop_data: Dict[str, Any] = {}
+    created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+
+
+class EventLogEntry(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    event_type: str  # TriggerEvent|TrendEvent|StrategyEvent|ReviewEvent|ActionEvent|FeedbackEvent
+    trigger_id: Optional[str] = None
+    agent_id: Optional[str] = None
+    payload: Dict[str, Any] = {}
+    created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+
+
+class TrendCluster(BaseModel):
+    cluster_id: str
+    keywords: List[str]
+    signals: List[TrendSignal] = []
+    top_tags: List[str] = []
+
+
+class TrendEvent(BaseModel):
+    trigger_id: str
+    clusters: List[TrendCluster] = []
+    top_keywords: List[str] = []
+    confidence: float = 0.0
+
+
+class StrategyEvent(BaseModel):
+    trigger_id: str
+    strategy_summary: str
+    platform_variants: List[Dict[str, Any]] = []
+    publish_schedule: Optional[Dict[str, Any]] = None
+
+
+class CandidatePackage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    trigger_id: str
+    trend_summary: str
+    strategy: str
+    assets: List[str] = []
+    review_score: float = 0.0
+    created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+
+
+class ReviewDecision(BaseModel):
+    status: str  # "pass" | "revise" | "reject"
+    reason: str
+    suggestions: List[str] = []
+    risk_flags: List[str] = []
+
+
+class ActionEvent(BaseModel):
+    action_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    trigger_id: str
+    platform: str  # "xhs" | "openclaw"
+    status: str  # "success" | "failed" | "pending"
+    result_url: Optional[str] = None
+    created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
