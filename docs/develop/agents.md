@@ -379,6 +379,74 @@ def publish_to_douyin(style_card_json: str) -> str:
 
 ---
 
+## 10. MVP Agent 设计模式
+
+平台选定 **openai-agents SDK** 的 4 种组合模式。新增 Agent 实现时按此模式选型。
+
+### 模式 A — Orchestrator → Worker 顺序 spawn（主链路）
+
+适用：B端运营链路（TrendAnalyst → ValueEvaluator → CampaignStrategist 顺序执行）
+
+```python
+# orchestrator.py：run_pipeline() 示意
+async def run_pipeline(trigger: TriggerEvent) -> ReviewDecision:
+    trend_result  = await Runner.run(trend_analyst_agent, trigger.model_dump_json())
+    await event_log.write("TrendEvent", trend_result.final_output, trigger_id=trigger.trigger_id)
+    value_result  = await Runner.run(value_evaluator_agent, trend_result.final_output)
+    strategy      = await Runner.run(campaign_strategist_agent, value_result.final_output)
+    candidate     = await Runner.run(summarizer_agent, strategy.final_output)
+    await db.save_candidate_package(candidate.final_output, trigger_id=trigger.trigger_id)
+    review        = await Runner.run(reviewer_guardrail_agent, candidate.final_output)
+    return review.final_output  # ReviewDecision — 后续等 HITL approve
+```
+
+### 模式 B — Agent-as-Tool 并行（集群分析）
+
+适用：TrendAnalyst 内部并行分析多个关键词集群（架构 v1 §5 `spawn cluster_a/b/c`）
+
+```python
+cluster_a = Agent(name="ClusterA_XHS",    tools=[search_xhs, search_douyin], ...)
+cluster_b = Agent(name="ClusterB_IG",     tools=[search_instagram], ...)
+trend_analyst_agent = Agent(
+    name="TrendAnalyst",
+    tools=[cluster_a.as_tool(), cluster_b.as_tool()],
+    output_type=TrendAnalysisResult,
+)
+```
+
+### 模式 C — Structured Output（所有 Worker 强制使用）
+
+每个 Worker 输出固定 Pydantic model，禁止自由文本传递：
+
+```python
+from pydantic import BaseModel
+from typing import Literal
+
+class CandidatePackage(BaseModel):
+    trigger_id: str; trend_summary: str; strategy: str; assets: list[str]; review_score: float
+
+class ReviewDecision(BaseModel):
+    status: Literal["pass", "revise", "reject"]
+    reason: str; suggestions: list[str]; risk_flags: list[str]
+
+summarizer_agent       = Agent(output_type=CandidatePackage, ...)
+reviewer_guardrail_agent = Agent(output_type=ReviewDecision, ...)
+```
+
+### 模式 D — HITL Checkpoint（ReviewerGuardrail 专用）
+
+ReviewerGuardrail 输出后，Action Executor 必须等人工确认才执行（K5）：
+
+```
+ReviewerGuardrail → ReviewDecision(status="pass")
+    ↓ 写 candidate_packages(review_status="pending_human")
+    ↓ 前端轮询 GET /api/v1/events，展示审查结论
+    ↓ 商家点击确认 → POST /api/v1/review/approve
+    ↓ Action Executor 触发
+```
+
+---
+
 ## 关键参考文件
 
 - [`nails_agent/agents/nail_agents.py`](../../nails_agent/agents/nail_agents.py) — Agent 定义（lru_cache 工厂）

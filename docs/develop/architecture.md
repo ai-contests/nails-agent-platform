@@ -56,17 +56,18 @@ PRD v4 定义 9 个 Agent 角色，分三层部署：
 
 | # | 角色 | 职责 | 实现状态 |
 |---|------|------|---------|
-| 1 | **Trigger Gateway** | 接收触发信号（关键词/Webhook/Cron），路由到对应 pipeline | ✅ FastAPI `/chat` + `/pipeline/run` |
-| 2 | **Orchestrator** | 全局步骤编排，管理 PipelineState，驱动并行/串行执行 | ✅ `orchestrator.py` + `NailsOrchestrator` Agent |
+| 1 | **Trigger Gateway** | 接收触发信号（关键词/Webhook/Cron），路由到对应 pipeline | ⚠️ 现以 FastAPI `/chat` + `/pipeline/run` 兜底；MVP 补齐：独立 `trigger_gateway.py`，写 `TriggerEvent` 到 event_log |
+| 2 | **Orchestrator** | 全局步骤编排，管理 PipelineState，驱动并行/串行执行 | ✅ `orchestrator.py` + `NailsOrchestrator` Agent；MVP 扩展 `run_pipeline(trigger: TriggerEvent)`，每步写 EventLog |
 | 3 | **Trend Analyst** | 采集社媒信号，聚合趋势，输出 `TrendAnalysisResult` | ✅ `TrendScoutAgent` + `trend_analyst` worker |
-| 4 | **Value Evaluator** | 三维评分（热度/新鲜度/款式缺口），输出 `ValueEvaluationResult` | ✅ `value_evaluator` worker |
-| 5 | **Asset Generator** | 生成款式卡草稿，输出 `AssetGenerationResult` | ✅ `asset_generator` worker |
+| 4 | **Value Evaluator** | 三维评分（热度/新鲜度/款式缺口），输出 `ValueEvaluationResult` | ⚠️ rule-based worker 已有，待接入 Orchestrator 编排链 |
+| 5 | **Asset Generator** | 生成款式卡草稿，输出 `AssetGenerationResult` | ⚠️ rule-based worker 已有，MVP stub（不阻塞主链路） |
 | 6 | **Campaign Strategist** | 生成三平台文案 + 定价排期，输出 `CampaignStrategyResult` | ✅ `CampaignAgent` + `campaign_strategist` worker |
-| 7 | **Summarizer** | 生成 Markdown 报告，触发 `distill()` 写长期记忆 | ✅ `summarizer` worker |
-| 8 | **Reviewer Guardrail** | 在任意步骤插入人工审核 Checkpoint，可配置通过条件 | ✅ Chat UI 11 相状态机中的 `make_checkpoint()` |
-| 9 | **Action Executor** | 发布到小红书/抖音/Instagram，记录发布状态 | 🔲 设计中（AiToEarn MCP / xhs-mcp） |
+| 7 | **Summarizer** | 汇总 Worker 输出为 `CandidatePackage`，写 candidate_packages 表 | ⚠️ rule-based worker 已有；MVP 升级：输出 `CandidatePackage` 结构化 model |
+| 8 | **Reviewer Guardrail** | 规则 + LLM 两层审查，输出 `ReviewDecision`（pass/revise/reject），HITL | ⚠️ Chat UI `make_checkpoint()` 承担入口；MVP 补齐：`reviewer_guardrail.py` + `POST /api/v1/review/approve` |
+| 9 | **Action Executor** | 执行审核通过的动作（XHS 发草稿 + OpenClaw webhook），写 ActionEvent | 🔲 MVP 实现：XHS 草稿 + OpenClaw stub；详见 [agents.md §9](agents.md) |
 
-> **注**：✅ = 已实现，🔲 = 设计中未实现。当前 Agent 层使用 **openai-agents SDK**（Qwen3-235B 主模型），原设计选型为 **Hermes Agent**（NousResearch）。
+> **注**：✅ = 已实现，⚠️ = 部分实现（MVP 需补齐），🔲 = 未实现。  
+> openai-agents SDK 完全能表达 PRD v4 Orchestrator-Worker 模式，不迁移 Hermes。
 
 ---
 
@@ -263,6 +264,64 @@ PRD v4 定义四层 Memory Fabric，当前已实现 L0–L3：
 | `tryon_jobs` | ComfyUI 任务跟踪 | InteractionService |
 
 **`distill()` 机制（K2 Strategy Loop）**：每次 pipeline 完成后，`memory.distill(pipeline_id)` 遍历所有 `pattern` 条目，合并去重为 `insight` 条目，形成跨 run 长期趋势记忆。下次 TrendScoutAgent 调用 `load_trend_context()` 时优先读取这些 insight。
+
+---
+
+## 6a. MVP 架构补齐目标（2026-05-24）
+
+### 新增 SQLite 表
+
+```sql
+-- Event Log（PRD v4 §10 一等公民）
+CREATE TABLE event_log (
+    id          TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    event_type  TEXT NOT NULL,  -- TriggerEvent|TrendEvent|StrategyEvent|ReviewEvent|ActionEvent|FeedbackEvent
+    trigger_id  TEXT,
+    agent_id    TEXT,
+    payload     TEXT NOT NULL,  -- JSON
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CandidatePackage（Summarizer → ReviewerGuardrail）
+CREATE TABLE candidate_packages (
+    id             TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    trigger_id     TEXT NOT NULL,
+    content        TEXT NOT NULL,  -- JSON: CandidatePackage
+    review_status  TEXT DEFAULT 'pending_review',  -- pending_review|pending_human|approved|rejected
+    review_output  TEXT,           -- JSON: ReviewDecision
+    created_at     DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 新增 Python 文件
+
+| 文件 | 职责 |
+|------|------|
+| `nails_agent/agents/trigger_gateway.py` | TriggerGateway 独立实现 |
+| `nails_agent/agents/summarizer.py` | 升级为输出 CandidatePackage 的 Agent |
+| `nails_agent/agents/reviewer_guardrail.py` | 规则 + LLM 两层审查 |
+| `nails_agent/agents/action_executor.py` | XHS 草稿 + OpenClaw stub |
+| `nails_agent/memory/event_log.py` | EventLog 读写封装 |
+| `nails_agent/api/routes/trigger.py` | POST /api/v1/trigger, GET /api/v1/events |
+| `nails_agent/api/routes/review.py` | POST /api/v1/review/approve |
+| `nails_agent/api/routes/action.py` | POST /api/v1/action/publish |
+
+新增 API 端点详见 [api_reference.md §MVP新增端点](api_reference.md#mvp-新增端点)。
+
+---
+
+## 6b. 前端迁移（Next.js）
+
+当前 `web/`（Streamlit :8501）和 `consumer/`（Streamlit :8503）为过渡期实现，MVP 后由 **Next.js** 替代。
+
+| 项目 | 当前 | MVP 后 |
+|------|------|--------|
+| B端 Dashboard | `web/chat_app.py` Streamlit :8501 | `frontend/app/(merchant)/` Next.js :3000 |
+| C端 试戴 | `consumer/app.py` Streamlit :8503 | `frontend/app/(user)/` Next.js :3000 |
+| 代理 | Caddy :8080 → :8501 / :8503 | Caddy :8080 → :3000 |
+
+**技术栈**：Next.js 15 App Router · TypeScript 5 · Tailwind v4 · shadcn/ui · Zustand · TanStack Query v5  
+**初始化**：见 [developer_guide.md §9](developer_guide.md#9-nextjs-前端开发)
 
 ---
 

@@ -399,6 +399,103 @@ python -c "import mediapipe; print(mediapipe.__version__)"
 
 ---
 
+## 9. Next.js 前端开发
+
+> Streamlit (`web/`, `consumer/`) 为过渡期实现。MVP 后由单一 Next.js 应用替代。
+
+### 9.1 初始化（Track B 周一执行）
+
+```bash
+# 在仓库根目录
+npx create-next-app@latest frontend --typescript --tailwind --app --src-dir --import-alias "@/*"
+cd frontend
+npx shadcn@latest init
+npm install zustand @tanstack/react-query react-hook-form zod react-dropzone
+```
+
+### 9.2 路由结构
+
+```
+frontend/app/
+├── (merchant)/          # B端 route group（商家运营）
+│   ├── layout.tsx
+│   ├── page.tsx         # Chat UI 入口
+│   ├── pipeline/        # Pipeline 触发 + EventLog 轨迹
+│   └── campaign/        # CandidatePackage 展示 + HITL 审查
+└── (user)/              # C端 route group（消费者试戴）
+    ├── layout.tsx
+    ├── page.tsx          # 款式浏览
+    ├── upload/           # 手图上传（react-dropzone）
+    ├── tryon/            # 试戴轮询（TanStack Query）
+    └── recommend/        # 相似款 + 收藏（FeedbackEvent）
+```
+
+### 9.3 开发启动
+
+```bash
+cd frontend && npm run dev   # 启动 :3000
+```
+
+开发阶段 Next.js 直接访问 `http://localhost:3000`，Caddy 不修改（Streamlit 仍在 :8501/:8503）。
+
+### 9.4 API Client
+
+```typescript
+// frontend/lib/api/client.ts
+const BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000"
+
+export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    headers: { "Content-Type": "application/json" },
+    ...init,
+  })
+  if (!res.ok) throw new Error(`${res.status} ${path}`)
+  return res.json() as Promise<T>
+}
+```
+
+类型定义见 [api_reference.md §TypeScript类型](api_reference.md#typescript-类型)。
+
+### 9.5 EventLog 实时轨迹（TanStack Query）
+
+```typescript
+// 在 /merchant/pipeline 页面
+const { data } = useQuery({
+  queryKey: ["events", triggerId],
+  queryFn: () => apiFetch<{ events: EventLogEntry[] }>(`/api/v1/events?trigger_id=${triggerId}&limit=50`),
+  refetchInterval: 2000,  // 每 2s 轮询
+  enabled: !!triggerId,
+})
+```
+
+### 9.6 试戴轮询（TanStack Query）
+
+```typescript
+// 在 /user/tryon 页面
+const { data: job } = useQuery({
+  queryKey: ["tryon", jobId],
+  queryFn: () => apiFetch<TryOnJob>(`/api/v1/tryon/${jobId}`),
+  refetchInterval: (q) => q.state.data?.status === "done" ? false : 3000,
+  enabled: !!jobId,
+})
+```
+
+### 9.7 FastAPI CORS 配置
+
+Next.js (:3000) 调用 FastAPI (:8000) 需要开放 CORS，在 `nails_agent/api/main.py` 中：
+
+```python
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+---
+
 ## 关键参考文件
 
 - [`scripts/dev.sh`](../../scripts/dev.sh) — 本地启动脚本（进程 + 日志位置）

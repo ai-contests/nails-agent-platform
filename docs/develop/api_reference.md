@@ -19,6 +19,168 @@
 
 ---
 
+## MVP 新增端点
+
+> MVP 阶段（2026-05-24 前）新增，与 Next.js 前端契约冻结于 2026-05-19。  
+> TypeScript 类型见本节末尾，由 `frontend/lib/api/types.ts` 消费。
+
+### `POST /api/v1/trigger`
+
+TriggerGateway 统一入口，标准化触发信号为 `TriggerEvent`，写 event_log，调用 Orchestrator。
+
+**Request**
+```json
+{
+  "source": "manual",
+  "keywords": ["猫眼美甲", "法式"],
+  "goal": "探索本周热门趋势",
+  "shop_data": {}
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `source` | str | `"manual"` / `"cron"` / `"webhook"` |
+| `keywords` | str[] | 触发关键词列表 |
+| `goal` | str? | 运营目标（可选） |
+| `shop_data` | dict? | 店内数据补充（可选） |
+
+**Response** `202 Accepted`
+```json
+{ "trigger_id": "abc123", "status": "queued" }
+```
+
+---
+
+### `GET /api/v1/events`
+
+查询 Event Log，前端用于实时展示 Agent 执行轨迹。
+
+**Query Params**
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `trigger_id` | str? | 筛选特定触发链路 |
+| `limit` | int | 最多返回条数（默认 50） |
+| `offset` | int | 分页偏移（默认 0） |
+
+**Response**
+```json
+{
+  "events": [
+    {
+      "id": "evt_001",
+      "event_type": "TriggerEvent",
+      "agent_id": "TriggerGateway",
+      "payload": { "keywords": ["猫眼"] },
+      "created_at": "2026-05-19T09:00:00+08:00"
+    }
+  ]
+}
+```
+
+`event_type` 枚举：`TriggerEvent | TrendEvent | StrategyEvent | ReviewEvent | ActionEvent | FeedbackEvent`
+
+---
+
+### `POST /api/v1/tryon/submit`
+
+C端提交试戴任务，返回 job_id 供轮询。
+
+**Request**
+```json
+{ "image_base64": "data:image/jpeg;base64,...", "style_id": "STYLE_001" }
+```
+
+**Response** `202 Accepted`
+```json
+{ "job_id": "job_xyz789" }
+```
+
+---
+
+### `GET /api/v1/tryon/{job_id}`
+
+轮询试戴任务状态。前端用 TanStack Query `refetchInterval: 3000` 轮询。
+
+**Response**
+```json
+{
+  "job_id": "job_xyz789",
+  "status": "done",
+  "result_url": "/static/tryon/job_xyz789.jpg"
+}
+```
+
+`status`：`pending | running | done | failed`  
+MVP 阶段 `result_url` 为 FastAPI 本地静态文件路径；v1.1 后迁 CDN/OSS。
+
+---
+
+### `POST /api/v1/review/approve`
+
+HITL 人工确认审查结果，触发 ActionExecutor 执行。
+
+**Request**
+```json
+{
+  "trigger_id": "abc123",
+  "decision": "pass",
+  "note": "内容符合品牌调性，批准发布"
+}
+```
+
+| `decision` | 说明 |
+|---|---|
+| `"pass"` | 批准，ActionExecutor 立即执行 |
+| `"revise"` | 要求修改，重新进入 Summarizer |
+| `"reject"` | 拒绝，写 ReviewEvent(status=rejected) |
+
+**Response**
+```json
+{ "ok": true }
+```
+
+---
+
+### `POST /api/v1/action/publish`
+
+ActionExecutor 执行发布动作（XHS 草稿 + OpenClaw webhook）。
+
+**Request**
+```json
+{
+  "trigger_id": "abc123",
+  "platform": "xhs",
+  "artifact": { "title": "猫眼美甲上新", "content": "..." }
+}
+```
+
+`platform`：`"xhs"` / `"openclaw"`
+
+**Response**
+```json
+{ "action_id": "act_001", "status": "pending" }
+```
+
+---
+
+### TypeScript 类型（`frontend/lib/api/types.ts`）
+
+```typescript
+export type TriggerRequest    = { source: string; keywords: string[]; goal?: string; shop_data?: Record<string,unknown> }
+export type TriggerResponse   = { trigger_id: string; status: "queued" }
+export type EventLogEntry     = { id: string; event_type: string; agent_id: string; payload: unknown; created_at: string }
+export type TryOnSubmitReq    = { image_base64: string; style_id: string }
+export type TryOnJob          = { job_id: string; status: "pending"|"running"|"done"|"failed"; result_url?: string }
+export type ReviewApproveReq  = { trigger_id: string; decision: "pass"|"revise"|"reject"; note?: string }
+export type ActionPublishReq  = { trigger_id: string; platform: "xhs"|"openclaw"; artifact: Record<string,unknown> }
+export type CandidatePackage  = { trigger_id: string; trend_summary: string; strategy: string; assets: string[]; review_score: number }
+export type ReviewDecision    = { status: "pass"|"revise"|"reject"; reason: string; suggestions: string[]; risk_flags: string[] }
+```
+
+---
+
 ## 智能运营 B 端接口
 
 ### `GET /health`
