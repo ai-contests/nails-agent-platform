@@ -4,7 +4,7 @@ Minimal stub providing what `nail_feature_extractor` needs:
   - DATA_DIR / IMAGES_DIR / UPLOADS_DIR  Path constants
   - image_path(name)  → resolves an image identifier to an absolute Path
   - read_data(name)   → loads `data/<name>.json` as parsed JSON
-  - write_json(path, payload) → atomic-ish JSON write
+  - write_json(path, payload) → atomic JSON write (tempfile + os.replace)
   - now_iso()         → UTC+8 ISO timestamp
 
 A teammate may replace this with a more capable version later; the public
@@ -14,6 +14,8 @@ surface above must stay stable.
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -59,10 +61,32 @@ def read_data(name: str) -> Any:
 
 
 def write_json(path: str | Path, payload: Any) -> None:
-    """Write JSON to disk, creating parent dirs as needed."""
+    """Write JSON to disk atomically (tempfile + os.replace).
+
+    Avoids truncating the target before the new content is fully written, so
+    a crash mid-write or two concurrent writers can't leave a half-written
+    file. This does NOT protect against lost updates from interleaved
+    read-modify-write callers — add file locking if that becomes a concern.
+    """
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2),
-        encoding="utf-8",
+    body = json.dumps(payload, ensure_ascii=False, indent=2)
+    # NamedTemporaryFile in the same dir → os.replace can do an atomic rename
+    # on the same filesystem.
+    fd, tmp_path = tempfile.mkstemp(
+        prefix=f".{target.name}.",
+        suffix=".tmp",
+        dir=str(target.parent),
     )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(body)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_path, target)
+    except Exception:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise

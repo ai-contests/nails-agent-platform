@@ -53,7 +53,11 @@ def _sample_pixels(rgb: np.ndarray, max_side: int = 560) -> np.ndarray:
     h, w = rgb.shape[:2]
     scale = min(1.0, max_side / max(h, w))
     if scale < 1.0:
-        rgb = cv2.resize(rgb, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
+        # Clamp each dim to ≥1 so highly anisotropic images (e.g. 1×10000)
+        # don't pass 0 to cv2.resize.
+        new_w = max(1, int(w * scale))
+        new_h = max(1, int(h * scale))
+        rgb = cv2.resize(rgb, (new_w, new_h), interpolation=cv2.INTER_AREA)
 
     pixels = rgb.reshape(-1, 3)
     if len(pixels) == 0:
