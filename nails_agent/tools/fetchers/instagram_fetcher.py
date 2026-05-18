@@ -142,15 +142,35 @@ class InstagramFetcher:
         except Exception:
             return False
 
+    def _resolve_session_file(self) -> str:
+        """Return path to an instaloader session file, or '' if none found.
+
+        Search order:
+        1. Explicit session_file argument / INSTAGRAM_SESSION_FILE env var
+        2. INSTAGRAM_USERNAME env var → ~/.config/instaloader/session-{username}
+        3. Any session file found in ~/.config/instaloader/session-*
+        """
+        if self.session_file and os.path.exists(self.session_file):
+            return self.session_file
+        username = os.environ.get("INSTAGRAM_USERNAME", "")
+        if username:
+            candidate = os.path.expanduser(f"~/.config/instaloader/session-{username}")
+            if os.path.exists(candidate):
+                return candidate
+        import glob
+
+        pattern = os.path.expanduser("~/.config/instaloader/session-*")
+        matches = [p for p in glob.glob(pattern) if not p.endswith(".lock")]
+        if matches:
+            return matches[0]
+        return ""
+
     def _instaloader_available(self) -> bool:
-        if not self.session_file or not os.path.exists(self.session_file):
-            return False
         try:
             import instaloader  # noqa: F401
-
-            return True
         except ImportError:
             return False
+        return bool(self._resolve_session_file())
 
     # ── Mode A: playwright CDP ────────────────────────────────────────────────
 
@@ -304,9 +324,18 @@ class InstagramFetcher:
             compress_json=False,
             quiet=True,
         )
+        session_path = self._resolve_session_file()
+        if not session_path:
+            logger.warning("Instagram instaloader: no session file found")
+            return []
         try:
-            username = os.path.basename(self.session_file).replace(".session", "")
-            L.load_session_from_file(username, self.session_file)
+            basename = os.path.basename(session_path)
+            username = (
+                basename[len("session-") :]
+                if basename.startswith("session-")
+                else basename.replace(".session", "")
+            )
+            L.load_session_from_file(username, session_path)
         except Exception as e:
             logger.warning("Instagram instaloader session error: %s", e)
             return []
