@@ -48,6 +48,22 @@
     "priority": 25
   },
   {
+    "rule_id": "CFR_FAMILY_BLUE",
+    "target_type": "color_family",
+    "target_value": "blue",
+    "display_name": "蓝色系",
+    "feature_rules": {"hsv_h": "170-250", "hsv_s": ">= 0.15"},
+    "priority": 25
+  },
+  {
+    "rule_id": "CFR_FAMILY_PURPLE",
+    "target_type": "color_family",
+    "target_value": "purple",
+    "display_name": "紫色系",
+    "feature_rules": {"hsv_h": "250-320", "hsv_s": ">= 0.12"},
+    "priority": 25
+  },
+  {
     "rule_id": "CFR_FAMILY_GOLD_SILVER",
     "target_type": "color_family",
     "target_value": "gold_silver",
