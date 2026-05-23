@@ -1,0 +1,1044 @@
+[
+  {
+    "style_id": "STYLE001",
+    "source_platform": "mock_social",
+    "source_trend_id": null,
+    "source_title": "",
+    "enhanced_image_url": "",
+    "image_url": "images/image001.png",
+    "reference_hand_profile_id": "RHP001",
+    "visual_feature_id": "NVF001",
+    "is_available_for_try_on": true,
+    "style_tags": [
+      "奢华",
+      "复古",
+      "优雅",
+      "宫廷风"
+    ],
+    "color_tags": [
+      "深红色",
+      "酒红色",
+      "金色"
+    ],
+    "material_tags": [
+      "金属饰品",
+      "金色线条",
+      "亮面甲油"
+    ],
+    "scene_tags": [
+      "出席晚宴",
+      "高级约会",
+      "拍照凹造型"
+    ],
+    "is_trend_generated": false,
+    "status": "listed",
+    "created_at": "2026-05-11T16:00:00+08:00",
+    "updated_at": null
+  },
+  {
+    "style_id": "STYLE002",
+    "source_platform": "mock_social",
+    "source_trend_id": null,
+    "source_title": "",
+    "enhanced_image_url": "",
+    "image_url": "images/image002.png",
+    "reference_hand_profile_id": "RHP002",
+    "visual_feature_id": "NVF002",
+    "is_available_for_try_on": true,
+    "style_tags": [
+      "欧美风",
+      "轻奢",
+      "质感",
+      "复古"
+    ],
+    "color_tags": [
+      "深红",
+      "砖红",
+      "金色",
+      "裸色"
+    ],
+    "material_tags": [
+      "金箔碎",
+      "裂纹质感",
+      "亮面顶油"
+    ],
+    "scene_tags": [
+      "日常通勤",
+      "美甲店作品图",
+      "逛街"
+    ],
+    "is_trend_generated": false,
+    "status": "listed",
+    "created_at": "2026-05-11T16:00:00+08:00",
+    "updated_at": null
+  },
+  {
+    "style_id": "STYLE003",
+    "source_platform": "mock_social",
+    "source_trend_id": null,
+    "source_title": "",
+    "enhanced_image_url": "",
+    "image_url": "images/image003.png",
+    "reference_hand_profile_id": "RHP003",
+    "visual_feature_id": "NVF003",
+    "is_available_for_try_on": true,
+    "style_tags": [
+      "Y2K",
+      "甜酷",
+      "个性",
+      "辣妹"
+    ],
+    "color_tags": [
+      "黑色",
+      "裸透色",
+      "透明"
+    ],
+    "material_tags": [
+      "水钻",
+      "贴纸/手绘",
+      "亮面甲油"
+    ],
+    "scene_tags": [
+      "音乐节",
+      "派对",
+      "拍写真",
+      "自拍"
+    ],
+    "is_trend_generated": false,
+    "status": "listed",
+    "created_at": "2026-05-11T16:00:00+08:00",
+    "updated_at": null
+  },
+  {
+    "style_id": "STYLE004",
+    "source_platform": "mock_social",
+    "source_trend_id": null,
+    "source_title": "",
+    "enhanced_image_url": "",
+    "image_url": "images/image004.png",
+    "reference_hand_profile_id": "RHP004",
+    "visual_feature_id": "NVF004",
+    "is_available_for_try_on": true,
+    "style_tags": [
+      "华丽",
+      "派对",
+      "千金风",
+      "精致"
+    ],
+    "color_tags": [
+      "裸色",
+      "香槟金",
+      "米色"
+    ],
+    "material_tags": [
+      "大水钻",
+      "闪粉",
+      "亮片",
+      "钻石"
+    ],
+    "scene_tags": [
+      "婚礼现场",
+      "公司年会",
+      "名媛下午茶"
+    ],
+    "is_trend_generated": false,
+    "status": "listed",
+    "created_at": "2026-05-11T16:00:00+08:00",
+    "updated_at": null
+  },
+  {
+    "style_id": "STYLE005",
+    "source_platform": "mock_social",
+    "source_trend_id": null,
+    "source_title": "",
+    "enhanced_image_url": "",
+    "image_url": "images/image005.png",
+    "reference_hand_profile_id": "RHP005",
+    "visual_feature_id": "NVF005",
+    "is_available_for_try_on": true,
+    "style_tags": [
+      "狂野",
+      "奢华",
+      "欧美风",
+      "夸张"
+    ],
+    "color_tags": [
+      "透明",
+      "棕色",
+      "黑色",
+      "金色"
+    ],
+    "material_tags": [
+      "超大颗水钻",
+      "立体花朵",
+      "闪粉",
+      "晶石"
+    ],
+    "scene_tags": [
+      "美甲比赛",
+      "商业拍摄",
+      "夜店聚会"
+    ],
+    "is_trend_generated": false,
+    "status": "listed",
+    "created_at": "2026-05-11T16:00:00+08:00",
+    "updated_at": null
+  },
+  {
+    "style_id": "STYLE006",
+    "source_platform": "mock_social",
+    "source_trend_id": null,
+    "source_title": "",
+    "enhanced_image_url": "",
+    "image_url": "images/image006.png",
+    "reference_hand_profile_id": "RHP006",
+    "visual_feature_id": "NVF006",
+    "is_available_for_try_on": true,
+    "style_tags": [
+      "温柔",
+      "简约",
+      "莫兰迪",
+      "法式田园"
+    ],
+    "color_tags": [
+      "橄榄绿",
+      "奶白色",
+      "卡其色",
+      "裸色"
+    ],
+    "material_tags": [
+      "纯色甲油胶",
+      "亮面"
+    ],
+    "scene_tags": [
+      "日常上班",
+      "大学上课",
+      "居家生活"
+    ],
+    "is_trend_generated": false,
+    "status": "listed",
+    "created_at": "2026-05-11T16:00:00+08:00",
+    "updated_at": null
+  },
+  {
+    "style_id": "STYLE007",
+    "source_platform": "mock_social",
+    "source_trend_id": null,
+    "source_title": "",
+    "enhanced_image_url": "",
+    "image_url": "images/image007.png",
+    "reference_hand_profile_id": "RHP007",
+    "visual_feature_id": "NVF007",
+    "is_available_for_try_on": true,
+    "style_tags": [
+      "极简主义",
+      "纯净",
+      "高级感",
+      "日常"
+    ],
+    "color_tags": [
+      "裸色",
+      "米白色",
+      "奶油色"
+    ],
+    "material_tags": [
+      "纯色甲油",
+      "亮面"
+    ],
+    "scene_tags": [
+      "医疗行业工作",
+      "办公室文职",
+      "日常素颜搭配"
+    ],
+    "is_trend_generated": false,
+    "status": "listed",
+    "created_at": "2026-05-11T16:00:00+08:00",
+    "updated_at": null
+  },
+  {
+    "style_id": "STYLE008",
+    "source_platform": "mock_social",
+    "source_trend_id": null,
+    "source_title": "",
+    "enhanced_image_url": "",
+    "image_url": "images/image008.png",
+    "reference_hand_profile_id": "RHP008",
+    "visual_feature_id": "NVF008",
+    "is_available_for_try_on": true,
+    "style_tags": [
+      "复古",
+      "千禧风",
+      "可爱",
+      "撞色"
+    ],
+    "color_tags": [
+      "黑色",
+      "红色",
+      "深棕色"
+    ],
+    "material_tags": [
+      "水钻",
+      "亮面甲油"
+    ],
+    "scene_tags": [
+      "情人节约会",
+      "闺蜜逛街",
+      "周末聚会"
+    ],
+    "is_trend_generated": false,
+    "status": "listed",
+    "created_at": "2026-05-11T16:00:00+08:00",
+    "updated_at": null
+  },
+  {
+    "style_id": "STYLE009",
+    "source_platform": "mock_social",
+    "source_trend_id": null,
+    "source_title": "",
+    "enhanced_image_url": "",
+    "image_url": "images/image009.png",
+    "reference_hand_profile_id": "RHP009",
+    "visual_feature_id": "NVF009",
+    "is_available_for_try_on": true,
+    "style_tags": [
+      "现代",
+      "冷淡风",
+      "都市",
+      "简约"
+    ],
+    "color_tags": [
+      "银灰色",
+      "浅灰色",
+      "金属色"
+    ],
+    "material_tags": [
+      "闪粉",
+      "金属反光",
+      "纯色甲油"
+    ],
+    "scene_tags": [
+      "商务会议",
+      "机场穿搭",
+      "咖啡厅办公"
+    ],
+    "is_trend_generated": false,
+    "status": "listed",
+    "created_at": "2026-05-11T16:00:00+08:00",
+    "updated_at": null
+  },
+  {
+    "style_id": "STYLE010",
+    "source_platform": "mock_social",
+    "source_trend_id": null,
+    "source_title": "",
+    "enhanced_image_url": "",
+    "image_url": "images/image010.png",
+    "reference_hand_profile_id": "RHP010",
+    "visual_feature_id": "NVF010",
+    "is_available_for_try_on": true,
+    "style_tags": [
+      "法式",
+      "可爱",
+      "温柔",
+      "百搭"
+    ],
+    "color_tags": [
+      "白色",
+      "透明",
+      "黑色"
+    ],
+    "material_tags": [
+      "法式白边",
+      "手绘斑点"
+    ],
+    "scene_tags": [
+      "上学",
+      "通勤",
+      "见家长",
+      "日常购物"
+    ],
+    "is_trend_generated": false,
+    "status": "listed",
+    "created_at": "2026-05-11T16:00:00+08:00",
+    "updated_at": null
+  },
+  {
+    "style_id": "STYLE011",
+    "source_platform": "mock_social",
+    "source_trend_id": null,
+    "source_title": "",
+    "enhanced_image_url": "",
+    "image_url": "images/image011.png",
+    "reference_hand_profile_id": "RHP011",
+    "visual_feature_id": "NVF011",
+    "is_available_for_try_on": true,
+    "style_tags": [
+      "气质",
+      "酷飒",
+      "黑与白",
+      "通透感"
+    ],
+    "color_tags": [
+      "黑色",
+      "裸透色",
+      "透明"
+    ],
+    "material_tags": [
+      "水钻",
+      "闪粉",
+      "细碎亮片"
+    ],
+    "scene_tags": [
+      "商务社交",
+      "街拍",
+      "约会",
+      "日常通勤"
+    ],
+    "is_trend_generated": false,
+    "status": "listed",
+    "created_at": "2026-05-11T16:00:00+08:00",
+    "updated_at": null
+  },
+  {
+    "style_id": "STYLE012",
+    "source_platform": "mock_social",
+    "source_trend_id": null,
+    "source_title": "",
+    "enhanced_image_url": "",
+    "image_url": "images/image012.png",
+    "reference_hand_profile_id": "RHP012",
+    "visual_feature_id": "NVF012",
+    "is_available_for_try_on": true,
+    "style_tags": [
+      "温柔",
+      "甜美",
+      "简约法式",
+      "少女风"
+    ],
+    "color_tags": [
+      "肉粉色",
+      "纯白色",
+      "裸色"
+    ],
+    "material_tags": [
+      "水钻",
+      "手绘线条"
+    ],
+    "scene_tags": [
+      "日常上班",
+      "校园生活",
+      "约会",
+      "拍照打卡"
+    ],
+    "is_trend_generated": false,
+    "status": "listed",
+    "created_at": "2026-05-11T16:00:00+08:00",
+    "updated_at": null
+  },
+  {
+    "style_id": "STYLE013",
+    "source_platform": "mock_social",
+    "source_trend_id": null,
+    "source_title": "",
+    "enhanced_image_url": "",
+    "image_url": "images/image013.png",
+    "reference_hand_profile_id": "RHP013",
+    "visual_feature_id": "NVF013",
+    "is_available_for_try_on": true,
+    "style_tags": [
+      "森系",
+      "暗黑",
+      "精致",
+      "日系"
+    ],
+    "color_tags": [
+      "黑色",
+      "透明",
+      "黄色花蕊"
+    ],
+    "material_tags": [
+      "手绘花",
+      "黑色甲油",
+      "光面"
+    ],
+    "scene_tags": [
+      "周末野餐",
+      "植物园",
+      "春夏出游",
+      "日常逛街"
+    ],
+    "is_trend_generated": false,
+    "status": "listed",
+    "created_at": "2026-05-11T16:00:00+08:00",
+    "updated_at": null
+  },
+  {
+    "style_id": "STYLE014",
+    "source_platform": "mock_social",
+    "source_trend_id": null,
+    "source_title": "",
+    "enhanced_image_url": "",
+    "image_url": "images/image014.png",
+    "reference_hand_profile_id": "RHP014",
+    "visual_feature_id": "NVF014",
+    "is_available_for_try_on": true,
+    "style_tags": [
+      "可爱",
+      "童趣",
+      "马卡龙",
+      "撞色"
+    ],
+    "color_tags": [
+      "红色",
+      "浅蓝色",
+      "橙色",
+      "白色"
+    ],
+    "material_tags": [
+      "手绘格纹",
+      "手绘小花"
+    ],
+    "scene_tags": [
+      "游乐园",
+      "早午餐",
+      "拍照",
+      "学生日常"
+    ],
+    "is_trend_generated": false,
+    "status": "listed",
+    "created_at": "2026-05-11T16:00:00+08:00",
+    "updated_at": null
+  },
+  {
+    "style_id": "STYLE015",
+    "source_platform": "mock_social",
+    "source_trend_id": null,
+    "source_title": "",
+    "enhanced_image_url": "",
+    "image_url": "images/image015.png",
+    "reference_hand_profile_id": "RHP015",
+    "visual_feature_id": "NVF015",
+    "is_available_for_try_on": true,
+    "style_tags": [
+      "甜美",
+      "活泼",
+      "彩绘",
+      "少女"
+    ],
+    "color_tags": [
+      "透明",
+      "红色",
+      "粉色",
+      "蓝色",
+      "黄色"
+    ],
+    "material_tags": [
+      "小圆点",
+      "渐变甲油"
+    ],
+    "scene_tags": [
+      "春日野餐",
+      "约会",
+      "拍照分享",
+      "日常穿搭"
+    ],
+    "is_trend_generated": false,
+    "status": "listed",
+    "created_at": "2026-05-11T16:00:00+08:00",
+    "updated_at": null
+  },
+  {
+    "style_id": "sc_20260522_xhs_d9b7f8",
+    "source_trend_id": "TREND_20260522_XHS_D9B7F8",
+    "source_title": "审美积累💅｜一些越看越耐看的美甲",
+    "image_url": "web/output/images/latest/raw/TREND_20260522_XHS_D9B7F8_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": "RHP_SC_20260522_XHS_D9B7F8",
+    "visual_feature_id": "NVF_SC_20260522_XHS_D9B7F8",
+    "style_tags": [
+      "ins",
+      "短款",
+      "清透",
+      "白月光"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [
+      "春日",
+      "春天"
+    ],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-22T22:22:43.417504",
+    "updated_at": "2026-05-22T22:23:06+08:00"
+  },
+  {
+    "style_id": "sc_20260522_xhs_5ddca8",
+    "source_trend_id": "TREND_20260522_XHS_5DDCA8",
+    "source_title": "近期超爱的美甲合集💅",
+    "image_url": "web/output/images/latest/raw/TREND_20260522_XHS_5DDCA8_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": "RHP_SC_20260522_XHS_5DDCA8",
+    "visual_feature_id": "NVF_SC_20260522_XHS_5DDCA8",
+    "style_tags": [
+      "猫眼",
+      "法式",
+      "ins"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [
+      "夏天"
+    ],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-22T22:22:43.417474",
+    "updated_at": "2026-05-22T22:23:06+08:00"
+  },
+  {
+    "style_id": "sc_20260522_xhs_5fec52",
+    "source_trend_id": "TREND_20260522_XHS_5FEC52",
+    "source_title": "",
+    "image_url": "web/output/images/latest/raw/TREND_20260522_XHS_5FEC52_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": "RHP_SC_20260522_XHS_5FEC52",
+    "visual_feature_id": "NVF_SC_20260522_XHS_5FEC52",
+    "style_tags": [
+      "富家千金",
+      "长款"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-22T22:22:43.417527",
+    "updated_at": "2026-05-22T22:23:06+08:00"
+  },
+  {
+    "style_id": "sc_20260522_xhs_b9d7a8",
+    "source_trend_id": "TREND_20260522_XHS_B9D7A8",
+    "source_title": "美甲合集 | 甜妹专属美甲💅🏻",
+    "image_url": "web/output/images/latest/raw/TREND_20260522_XHS_B9D7A8_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": "RHP_SC_20260522_XHS_B9D7A8",
+    "visual_feature_id": "NVF_SC_20260522_XHS_B9D7A8",
+    "style_tags": [
+      "温柔",
+      "高级"
+    ],
+    "color_tags": [
+      "蓝色"
+    ],
+    "material_tags": [
+      "钻"
+    ],
+    "scene_tags": [],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-22T22:22:43.417491",
+    "updated_at": "2026-05-22T22:23:06+08:00"
+  },
+  {
+    "style_id": "sc_20260522_xhs_d98616",
+    "source_trend_id": "TREND_20260522_XHS_D98616",
+    "source_title": "公主请看美甲💅丨极限九选一",
+    "image_url": "web/output/images/latest/raw/TREND_20260522_XHS_D98616_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": "RHP_SC_20260522_XHS_D98616",
+    "visual_feature_id": "NVF_SC_20260522_XHS_D98616",
+    "style_tags": [
+      "温柔",
+      "高级",
+      "温柔纯欲",
+      "中长款"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [
+      "约会"
+    ],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-22T22:22:43.417515",
+    "updated_at": "2026-05-22T22:23:06+08:00"
+  },
+  {
+    "style_id": "sc_20260522_xhs_46f659",
+    "source_trend_id": "TREND_20260522_XHS_46F659",
+    "source_title": "简单 高级款美甲💅 好好看🥰",
+    "image_url": "web/output/images/latest/raw/TREND_20260522_XHS_46F659_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": "RHP_SC_20260522_XHS_46F659",
+    "visual_feature_id": "NVF_SC_20260522_XHS_46F659",
+    "style_tags": [
+      "温柔",
+      "高级",
+      "仙女",
+      "清透",
+      "简约"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-22T22:22:43.417538",
+    "updated_at": "2026-05-22T22:23:06+08:00"
+  },
+  {
+    "style_id": "sc_20260522_xhs_1ca696",
+    "source_trend_id": "TREND_20260522_XHS_1CA696",
+    "source_title": "干净的白月光气质美甲💅🏻",
+    "image_url": "web/output/images/latest/raw/TREND_20260522_XHS_1CA696_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": "RHP_SC_20260522_XHS_1CA696",
+    "visual_feature_id": "NVF_SC_20260522_XHS_1CA696",
+    "style_tags": [
+      "温柔",
+      "白月光",
+      "中长款"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-22T22:22:43.417550",
+    "updated_at": "2026-05-22T22:23:06+08:00"
+  },
+  {
+    "style_id": "sc_20260522_xhs_65a7c1",
+    "source_trend_id": "TREND_20260522_XHS_65A7C1",
+    "source_title": "告别显黑！裸色美甲天花板，手嫩如磨皮✨",
+    "image_url": "web/output/images/latest/raw/TREND_20260522_XHS_65A7C1_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": "RHP_SC_20260522_XHS_65A7C1",
+    "visual_feature_id": "NVF_SC_20260522_XHS_65A7C1",
+    "style_tags": [
+      "温柔",
+      "高级",
+      "裸色",
+      "高级清冷"
+    ],
+    "color_tags": [
+      "裸色"
+    ],
+    "material_tags": [],
+    "scene_tags": [],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-22T22:22:43.417564",
+    "updated_at": "2026-05-22T22:23:06+08:00"
+  },
+  {
+    "style_id": "sc_20260522_xhs_97af52",
+    "source_trend_id": "TREND_20260522_XHS_97AF52",
+    "source_title": "冰透裸感美甲是真美！😍",
+    "image_url": "web/output/images/latest/raw/TREND_20260522_XHS_97AF52_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": "RHP_SC_20260522_XHS_97AF52",
+    "visual_feature_id": "NVF_SC_20260522_XHS_97AF52",
+    "style_tags": [
+      "冰透",
+      "温柔",
+      "高级",
+      "冰透裸感",
+      "仙气"
+    ],
+    "color_tags": [
+      "裸色"
+    ],
+    "material_tags": [
+      "穿戴甲"
+    ],
+    "scene_tags": [],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-22T22:22:43.417576",
+    "updated_at": "2026-05-22T22:23:06+08:00"
+  },
+  {
+    "style_id": "sc_20260522_xhs_b4ebd9",
+    "source_trend_id": "TREND_20260522_XHS_B4EBD9",
+    "source_title": "美女是不会错过任何一个爱美的机会的💅",
+    "image_url": "web/output/images/latest/raw/TREND_20260522_XHS_B4EBD9_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": "RHP_SC_20260522_XHS_B4EBD9",
+    "visual_feature_id": "NVF_SC_20260522_XHS_B4EBD9",
+    "style_tags": [
+      "温柔",
+      "裸色"
+    ],
+    "color_tags": [
+      "裸色"
+    ],
+    "material_tags": [
+      "穿戴甲"
+    ],
+    "scene_tags": [],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-22T22:22:43.417587",
+    "updated_at": "2026-05-22T22:23:06+08:00"
+  },
+  {
+    "style_id": "sc_20260520_xhs_e829b9",
+    "source_trend_id": "TREND_20260520_XHS_E829B9",
+    "source_title": "多巴胺法式🫧🍧丨夏日美甲",
+    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_E829B9_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": null,
+    "visual_feature_id": "NVF_SC_20260520_XHS_E829B9",
+    "style_tags": [
+      "法式",
+      "美甲"
+    ],
+    "color_tags": [
+      "多巴胺"
+    ],
+    "material_tags": [],
+    "scene_tags": [
+      "夏日"
+    ],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-23T20:31:05.273972",
+    "updated_at": "2026-05-23T20:31:06+08:00"
+  },
+  {
+    "style_id": "sc_20260520_xhs_6b3a3b",
+    "source_trend_id": "TREND_20260520_XHS_6B3A3B",
+    "source_title": "好仙的法式美甲！一整个温柔~",
+    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_6B3A3B_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": null,
+    "visual_feature_id": "NVF_SC_20260520_XHS_6B3A3B",
+    "style_tags": [
+      "法式",
+      "温柔",
+      "美甲"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [
+      "约会"
+    ],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-23T20:31:05.274073",
+    "updated_at": "2026-05-23T20:31:06+08:00"
+  },
+  {
+    "style_id": "sc_20260520_xhs_fbf32e",
+    "source_trend_id": "TREND_20260520_XHS_FBF32E",
+    "source_title": "💅极简法式美甲，太干净了！极限三选一 又到了每月换美甲大关 美甲的尽头是裸色 是法式呀 哪个姐妹做过给点返图",
+    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_FBF32E_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": null,
+    "visual_feature_id": "NVF_SC_20260520_XHS_FBF32E",
+    "style_tags": [
+      "法式",
+      "渐变",
+      "极简",
+      "高级",
+      "美甲"
+    ],
+    "color_tags": [
+      "裸色"
+    ],
+    "material_tags": [],
+    "scene_tags": [],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-23T20:31:05.274372",
+    "updated_at": "2026-05-23T20:31:06+08:00"
+  },
+  {
+    "style_id": "sc_20260520_xhs_5416d7",
+    "source_trend_id": "TREND_20260520_XHS_5416D7",
+    "source_title": "蝴蝶结💫冰透猫眼⚗️再发一遍原图无滤镜 好多人问这款细节图所以我再发一遍~原图无滤镜蝴蝶结💫冰透猫眼⚗️宁波美甲",
+    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_5416D7_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": null,
+    "visual_feature_id": "NVF_SC_20260520_XHS_5416D7",
+    "style_tags": [
+      "猫眼",
+      "冰透",
+      "蝴蝶",
+      "美甲"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-23T20:31:05.274454",
+    "updated_at": "2026-05-23T20:31:06+08:00"
+  },
+  {
+    "style_id": "sc_20260520_xhs_8a1ad7",
+    "source_trend_id": "TREND_20260520_XHS_8A1AD7",
+    "source_title": "新手小美甲详细步骤",
+    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_8A1AD7_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": null,
+    "visual_feature_id": "NVF_SC_20260520_XHS_8A1AD7",
+    "style_tags": [
+      "美甲"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-23T20:31:05.274533",
+    "updated_at": "2026-05-23T20:31:06+08:00"
+  },
+  {
+    "style_id": "sc_20260520_xhs_3d5880",
+    "source_trend_id": "TREND_20260520_XHS_3D5880",
+    "source_title": "近期超爱的美甲合集💅长款美甲",
+    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_3D5880_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": null,
+    "visual_feature_id": "NVF_SC_20260520_XHS_3D5880",
+    "style_tags": [
+      "猫眼",
+      "法式",
+      "蝴蝶",
+      "高级",
+      "美甲"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-23T20:31:05.274697",
+    "updated_at": "2026-05-23T20:31:06+08:00"
+  },
+  {
+    "style_id": "sc_20260520_xhs_d1e261",
+    "source_trend_id": "TREND_20260520_XHS_D1E261",
+    "source_title": "💅🏻2025的N个我｜之我的年度美甲合集 又是一年要结束惹 今年也做了不少漂亮美甲！ 其实现在手上还有的新的雪花美甲但还没来得及拍！ 这几天一定安排上！！ 最最",
+    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_D1E261_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": null,
+    "visual_feature_id": "NVF_SC_20260520_XHS_D1E261",
+    "style_tags": [
+      "温柔",
+      "美甲"
+    ],
+    "color_tags": [
+      "紫色"
+    ],
+    "material_tags": [],
+    "scene_tags": [],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-23T20:31:05.275465",
+    "updated_at": "2026-05-23T20:31:06+08:00"
+  },
+  {
+    "style_id": "sc_20260520_xhs_ef8afc",
+    "source_trend_id": "TREND_20260520_XHS_EF8AFC",
+    "source_title": "新美甲look ♡♩miu系氛围感芭蕾法式少女",
+    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_EF8AFC_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": null,
+    "visual_feature_id": "NVF_SC_20260520_XHS_EF8AFC",
+    "style_tags": [
+      "法式",
+      "冰透",
+      "蝴蝶",
+      "美甲"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [
+      "约会"
+    ],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-23T20:31:05.275558",
+    "updated_at": "2026-05-23T20:31:06+08:00"
+  },
+  {
+    "style_id": "sc_20260520_xhs_88279f",
+    "source_trend_id": "TREND_20260520_XHS_88279F",
+    "source_title": "做了半年的短甲，长甲还是一如既往的美丽",
+    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_88279F_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": null,
+    "visual_feature_id": "NVF_SC_20260520_XHS_88279F",
+    "style_tags": [
+      "温柔",
+      "美甲"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-23T20:31:05.275640",
+    "updated_at": "2026-05-23T20:31:06+08:00"
+  },
+  {
+    "style_id": "sc_20260520_xhs_aadc46",
+    "source_trend_id": "TREND_20260520_XHS_AADC46",
+    "source_title": "大家都在催的教程来啦 这辈子剪视频最快的一次[睡觉R] 如果还有任何问题直接在评论区问我！",
+    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_AADC46_1.webp",
+    "enhanced_image_url": "",
+    "source_platform": "小红书",
+    "is_available_for_try_on": true,
+    "reference_hand_profile_id": null,
+    "visual_feature_id": "NVF_SC_20260520_XHS_AADC46",
+    "style_tags": [],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [],
+    "is_trend_generated": true,
+    "status": "listed",
+    "created_at": "2026-05-23T20:31:05.275370",
+    "updated_at": "2026-05-23T20:31:06+08:00"
+  }
+]

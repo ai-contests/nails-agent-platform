@@ -8,7 +8,7 @@
       "美甲"
     ],
     "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_E829B9_1.webp",
-    "launch_priority_score": 74.7,
+    "launch_priority_score": 0.0,
     "platform_variants": {
       "xiaohongshu": {
         "caption": "这组法式 / 多巴胺 / 夏日绝了！低调有魅力，通勤约会都能驾驭～ ✨",
@@ -49,15 +49,7 @@
       "premium_reason": "精工制作+拍照服务",
       "tier": "进阶款"
     },
-    "created_at": "2026-05-20T21:15:16.464726",
-    "style_id": "sc_20260520_xhs_e829b9",
-    "generation_status": "success",
-    "schedule": {
-      "priority": "P0",
-      "xiaohongshu_publish_at": "2026-05-20T20:00:00+08:00",
-      "douyin_publish_at": "2026-05-21T18:00:00+08:00",
-      "instagram_publish_at": "2026-05-22T10:00:00+08:00"
-    }
+    "created_at": "2026-05-20T21:15:16.464726"
   },
   {
     "card_id": "SC77EC6F",
@@ -69,7 +61,7 @@
       "美甲"
     ],
     "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_6B3A3B_1.webp",
-    "launch_priority_score": 74.0,
+    "launch_priority_score": 0.0,
     "platform_variants": {
       "xiaohongshu": {
         "caption": "最近爱上这种法式 / 温柔 / 约会，质感超绝，看一眼就心动 💅",
@@ -110,68 +102,7 @@
       "premium_reason": "精工制作+拍照服务",
       "tier": "进阶款"
     },
-    "created_at": "2026-05-20T21:15:16.464805",
-    "style_id": "sc_20260520_xhs_6b3a3b",
-    "generation_status": "success",
-    "schedule": {
-      "priority": "P0",
-      "xiaohongshu_publish_at": "2026-05-20T20:00:00+08:00",
-      "douyin_publish_at": "2026-05-21T18:00:00+08:00",
-      "instagram_publish_at": "2026-05-22T10:00:00+08:00"
-    }
-  },
-  {
-    "card_id": "SC691F48",
-    "trend_id": "TREND_20260520_XHS_8A1AD7",
-    "style_name": "样本 05",
-    "style_tags": [
-      "美甲"
-    ],
-    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_8A1AD7_1.webp",
-    "launch_priority_score": 72.0,
-    "platform_variants": {
-      "xiaohongshu": {
-        "caption": "最近爱上这种趋势美甲，质感超绝，看一眼就心动 💅",
-        "hashtags": [
-          "#美甲",
-          "#美甲推荐",
-          "#美甲日记"
-        ]
-      },
-      "douyin": {
-        "caption": "种草这组趋势美甲，这是今年很值得试的款式",
-        "hashtags": [
-          "#美甲",
-          "#美甲教程",
-          "#美甲分享"
-        ]
-      },
-      "instagram": {
-        "caption": "Obsessed with this nail look! 美甲 energy only 💅",
-        "hashtags": [
-          "#nailart",
-          "#nails",
-          "#naildesign",
-          "#nailinspo"
-        ]
-      }
-    },
-    "pricing": {
-      "base_price": "¥69",
-      "premium_price": "¥128",
-      "promo_price": "¥49",
-      "premium_reason": "精工制作+拍照服务",
-      "tier": "进阶款"
-    },
-    "created_at": "2026-05-20T21:15:16.465026",
-    "style_id": "sc_20260520_xhs_8a1ad7",
-    "generation_status": "success",
-    "schedule": {
-      "priority": "P0",
-      "xiaohongshu_publish_at": "2026-05-20T20:00:00+08:00",
-      "douyin_publish_at": "2026-05-21T18:00:00+08:00",
-      "instagram_publish_at": "2026-05-22T10:00:00+08:00"
-    }
+    "created_at": "2026-05-20T21:15:16.464805"
   },
   {
     "card_id": "SCCF6FAF",
@@ -185,7 +116,7 @@
       "美甲"
     ],
     "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_FBF32E_1.webp",
-    "launch_priority_score": 69.8,
+    "launch_priority_score": 0.0,
     "platform_variants": {
       "xiaohongshu": {
         "caption": "法式 / 渐变 / 极简 / 高级拍照超出片，美到不像话 🌸",
@@ -226,73 +157,7 @@
       "premium_reason": "精工制作+拍照服务",
       "tier": "进阶款"
     },
-    "created_at": "2026-05-20T21:15:16.464881",
-    "style_id": "sc_20260520_xhs_fbf32e",
-    "generation_status": "success",
-    "schedule": {
-      "priority": "P0",
-      "xiaohongshu_publish_at": "2026-05-20T20:00:00+08:00",
-      "douyin_publish_at": "2026-05-21T18:00:00+08:00",
-      "instagram_publish_at": "2026-05-22T10:00:00+08:00"
-    }
-  },
-  {
-    "card_id": "SCE299FB",
-    "trend_id": "TREND_20260520_XHS_D1E261",
-    "style_name": "样本 08 · 温柔 / 紫色",
-    "style_tags": [
-      "温柔",
-      "美甲"
-    ],
-    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_D1E261_1.webp",
-    "launch_priority_score": 66.0,
-    "platform_variants": {
-      "xiaohongshu": {
-        "caption": "最近爱上这种温柔 / 紫色，质感超绝，看一眼就心动 💅",
-        "hashtags": [
-          "#美甲",
-          "#温柔美甲",
-          "#紫色美甲",
-          "#美甲推荐",
-          "#美甲日记"
-        ]
-      },
-      "douyin": {
-        "caption": "种草这组温柔 / 紫色，这是今年很值得试的款式",
-        "hashtags": [
-          "#美甲",
-          "#温柔美甲",
-          "#紫色美甲",
-          "#美甲教程",
-          "#美甲分享"
-        ]
-      },
-      "instagram": {
-        "caption": "Obsessed with this nail look! 温柔 & 美甲 energy only 💅",
-        "hashtags": [
-          "#nailart",
-          "#nails",
-          "#naildesign",
-          "#nailinspo"
-        ]
-      }
-    },
-    "pricing": {
-      "base_price": "¥69",
-      "premium_price": "¥128",
-      "promo_price": "¥49",
-      "premium_reason": "精工制作+拍照服务",
-      "tier": "进阶款"
-    },
-    "created_at": "2026-05-20T21:15:16.465268",
-    "style_id": "sc_20260520_xhs_d1e261",
-    "generation_status": "success",
-    "schedule": {
-      "priority": "P0",
-      "xiaohongshu_publish_at": "2026-05-20T20:00:00+08:00",
-      "douyin_publish_at": "2026-05-21T18:00:00+08:00",
-      "instagram_publish_at": "2026-05-22T10:00:00+08:00"
-    }
+    "created_at": "2026-05-20T21:15:16.464881"
   },
   {
     "card_id": "SC4441F2",
@@ -305,7 +170,7 @@
       "美甲"
     ],
     "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_5416D7_1.webp",
-    "launch_priority_score": 65.5,
+    "launch_priority_score": 0.0,
     "platform_variants": {
       "xiaohongshu": {
         "caption": "这组猫眼 / 冰透 / 蝴蝶绝了！低调有魅力，通勤约会都能驾驭～ ✨",
@@ -346,15 +211,52 @@
       "premium_reason": "精工制作+拍照服务",
       "tier": "进阶款"
     },
-    "created_at": "2026-05-20T21:15:16.464954",
-    "style_id": "sc_20260520_xhs_5416d7",
-    "generation_status": "success",
-    "schedule": {
-      "priority": "P0",
-      "xiaohongshu_publish_at": "2026-05-20T20:00:00+08:00",
-      "douyin_publish_at": "2026-05-21T18:00:00+08:00",
-      "instagram_publish_at": "2026-05-22T10:00:00+08:00"
-    }
+    "created_at": "2026-05-20T21:15:16.464954"
+  },
+  {
+    "card_id": "SC691F48",
+    "trend_id": "TREND_20260520_XHS_8A1AD7",
+    "style_name": "样本 05",
+    "style_tags": [
+      "美甲"
+    ],
+    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_8A1AD7_1.webp",
+    "launch_priority_score": 0.0,
+    "platform_variants": {
+      "xiaohongshu": {
+        "caption": "最近爱上这种趋势美甲，质感超绝，看一眼就心动 💅",
+        "hashtags": [
+          "#美甲",
+          "#美甲推荐",
+          "#美甲日记"
+        ]
+      },
+      "douyin": {
+        "caption": "种草这组趋势美甲，这是今年很值得试的款式",
+        "hashtags": [
+          "#美甲",
+          "#美甲教程",
+          "#美甲分享"
+        ]
+      },
+      "instagram": {
+        "caption": "Obsessed with this nail look! 美甲 energy only 💅",
+        "hashtags": [
+          "#nailart",
+          "#nails",
+          "#naildesign",
+          "#nailinspo"
+        ]
+      }
+    },
+    "pricing": {
+      "base_price": "¥69",
+      "premium_price": "¥128",
+      "promo_price": "¥49",
+      "premium_reason": "精工制作+拍照服务",
+      "tier": "进阶款"
+    },
+    "created_at": "2026-05-20T21:15:16.465026"
   },
   {
     "card_id": "SCC6CE68",
@@ -368,7 +270,7 @@
       "美甲"
     ],
     "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_3D5880_1.webp",
-    "launch_priority_score": 64.5,
+    "launch_priority_score": 0.0,
     "platform_variants": {
       "xiaohongshu": {
         "caption": "猫眼 / 法式 / 蝴蝶 / 高级拍照超出片，美到不像话 🌸",
@@ -409,47 +311,34 @@
       "premium_reason": "精工制作+拍照服务",
       "tier": "进阶款"
     },
-    "created_at": "2026-05-20T21:15:16.465099",
-    "style_id": "sc_20260520_xhs_3d5880",
-    "generation_status": "success",
-    "schedule": {
-      "priority": "P1",
-      "xiaohongshu_publish_at": "2026-05-22T20:00:00+08:00",
-      "douyin_publish_at": "2026-05-23T18:00:00+08:00",
-      "instagram_publish_at": "2026-05-24T10:00:00+08:00"
-    }
+    "created_at": "2026-05-20T21:15:16.465099"
   },
   {
-    "card_id": "SC4F5B2C",
-    "trend_id": "TREND_20260520_XHS_88279F",
-    "style_name": "样本 10 · 温柔",
-    "style_tags": [
-      "温柔",
-      "美甲"
-    ],
-    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_88279F_1.webp",
-    "launch_priority_score": 62.9,
+    "card_id": "SCE1E2B4",
+    "trend_id": "TREND_20260520_XHS_AADC46",
+    "style_name": "样本 07",
+    "style_tags": [],
+    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_AADC46_1.webp",
+    "launch_priority_score": 0.0,
     "platform_variants": {
       "xiaohongshu": {
-        "caption": "这组温柔绝了！低调有魅力，通勤约会都能驾驭～ ✨",
+        "caption": "这组趋势美甲绝了！低调有魅力，通勤约会都能驾驭～ ✨",
         "hashtags": [
           "#美甲",
-          "#温柔美甲",
           "#美甲推荐",
           "#美甲日记"
         ]
       },
       "douyin": {
-        "caption": "温柔✨ 你值得拥有",
+        "caption": "趋势美甲✨ 你值得拥有",
         "hashtags": [
           "#美甲",
-          "#温柔美甲",
           "#美甲教程",
           "#美甲分享"
         ]
       },
       "instagram": {
-        "caption": "Nail look with 温柔 & 美甲 vibes — effortlessly chic ✨",
+        "caption": "Nail look with aesthetic vibes — effortlessly chic ✨",
         "hashtags": [
           "#nailart",
           "#nails",
@@ -465,15 +354,57 @@
       "premium_reason": "精工制作+拍照服务",
       "tier": "进阶款"
     },
-    "created_at": "2026-05-20T21:15:16.465430",
-    "style_id": "sc_20260520_xhs_88279f",
-    "generation_status": "success",
-    "schedule": {
-      "priority": "P1",
-      "xiaohongshu_publish_at": "2026-05-22T20:00:00+08:00",
-      "douyin_publish_at": "2026-05-23T18:00:00+08:00",
-      "instagram_publish_at": "2026-05-24T10:00:00+08:00"
-    }
+    "created_at": "2026-05-20T21:15:16.465184"
+  },
+  {
+    "card_id": "SCE299FB",
+    "trend_id": "TREND_20260520_XHS_D1E261",
+    "style_name": "样本 08 · 温柔 / 紫色",
+    "style_tags": [
+      "温柔",
+      "美甲"
+    ],
+    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_D1E261_1.webp",
+    "launch_priority_score": 0.0,
+    "platform_variants": {
+      "xiaohongshu": {
+        "caption": "最近爱上这种温柔 / 紫色，质感超绝，看一眼就心动 💅",
+        "hashtags": [
+          "#美甲",
+          "#温柔美甲",
+          "#紫色美甲",
+          "#美甲推荐",
+          "#美甲日记"
+        ]
+      },
+      "douyin": {
+        "caption": "种草这组温柔 / 紫色，这是今年很值得试的款式",
+        "hashtags": [
+          "#美甲",
+          "#温柔美甲",
+          "#紫色美甲",
+          "#美甲教程",
+          "#美甲分享"
+        ]
+      },
+      "instagram": {
+        "caption": "Obsessed with this nail look! 温柔 & 美甲 energy only 💅",
+        "hashtags": [
+          "#nailart",
+          "#nails",
+          "#naildesign",
+          "#nailinspo"
+        ]
+      }
+    },
+    "pricing": {
+      "base_price": "¥69",
+      "premium_price": "¥128",
+      "promo_price": "¥49",
+      "premium_reason": "精工制作+拍照服务",
+      "tier": "进阶款"
+    },
+    "created_at": "2026-05-20T21:15:16.465268"
   },
   {
     "card_id": "SC4B4095",
@@ -486,7 +417,7 @@
       "美甲"
     ],
     "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_EF8AFC_1.webp",
-    "launch_priority_score": 59.1,
+    "launch_priority_score": 0.0,
     "platform_variants": {
       "xiaohongshu": {
         "caption": "法式 / 冰透 / 蝴蝶 / 约会拍照超出片，美到不像话 🌸",
@@ -527,42 +458,39 @@
       "premium_reason": "精工制作+拍照服务",
       "tier": "进阶款"
     },
-    "created_at": "2026-05-20T21:15:16.465350",
-    "style_id": "sc_20260520_xhs_ef8afc",
-    "generation_status": "success",
-    "schedule": {
-      "priority": "P1",
-      "xiaohongshu_publish_at": "2026-05-22T20:00:00+08:00",
-      "douyin_publish_at": "2026-05-23T18:00:00+08:00",
-      "instagram_publish_at": "2026-05-24T10:00:00+08:00"
-    }
+    "created_at": "2026-05-20T21:15:16.465350"
   },
   {
-    "card_id": "SCE1E2B4",
-    "trend_id": "TREND_20260520_XHS_AADC46",
-    "style_name": "样本 07",
-    "style_tags": [],
-    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_AADC46_1.webp",
-    "launch_priority_score": 55.3,
+    "card_id": "SC4F5B2C",
+    "trend_id": "TREND_20260520_XHS_88279F",
+    "style_name": "样本 10 · 温柔",
+    "style_tags": [
+      "温柔",
+      "美甲"
+    ],
+    "image_url": "web/data/images/mock/raw/TREND_20260520_XHS_88279F_1.webp",
+    "launch_priority_score": 0.0,
     "platform_variants": {
       "xiaohongshu": {
-        "caption": "这组趋势美甲绝了！低调有魅力，通勤约会都能驾驭～ ✨",
+        "caption": "这组温柔绝了！低调有魅力，通勤约会都能驾驭～ ✨",
         "hashtags": [
           "#美甲",
+          "#温柔美甲",
           "#美甲推荐",
           "#美甲日记"
         ]
       },
       "douyin": {
-        "caption": "趋势美甲✨ 你值得拥有",
+        "caption": "温柔✨ 你值得拥有",
         "hashtags": [
           "#美甲",
+          "#温柔美甲",
           "#美甲教程",
           "#美甲分享"
         ]
       },
       "instagram": {
-        "caption": "Nail look with aesthetic vibes — effortlessly chic ✨",
+        "caption": "Nail look with 温柔 & 美甲 vibes — effortlessly chic ✨",
         "hashtags": [
           "#nailart",
           "#nails",
@@ -578,14 +506,6 @@
       "premium_reason": "精工制作+拍照服务",
       "tier": "进阶款"
     },
-    "created_at": "2026-05-20T21:15:16.465184",
-    "style_id": "sc_20260520_xhs_aadc46",
-    "generation_status": "success",
-    "schedule": {
-      "priority": "P1",
-      "xiaohongshu_publish_at": "2026-05-22T20:00:00+08:00",
-      "douyin_publish_at": "2026-05-23T18:00:00+08:00",
-      "instagram_publish_at": "2026-05-24T10:00:00+08:00"
-    }
+    "created_at": "2026-05-20T21:15:16.465430"
   }
 ]

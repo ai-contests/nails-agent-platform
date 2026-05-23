@@ -21,6 +21,8 @@ import asyncio
 import logging
 from typing import Callable, List, Optional
 
+from nails_agent.services.llm_config import hermes_model
+
 logger = logging.getLogger(__name__)
 
 
@@ -82,7 +84,7 @@ class HermesNailsAgent:
             from run_agent import AIAgent  # hermes-agent
 
             hermes = AIAgent(
-                model="anthropic/claude-sonnet-4-5",
+                model=hermes_model(),
                 quiet_mode=self._quiet,
                 skip_context_files=True,
                 skip_memory=False,

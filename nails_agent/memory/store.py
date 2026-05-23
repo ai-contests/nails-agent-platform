@@ -8,15 +8,32 @@ Supports full-text search across tags/values and pipeline-scoped queries.
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional
 
-from nails_agent.models.schemas import MemoryEntry
+from nails_agent.models.schemas import MemoryEntry, RejectedTrendCandidate
 
 
-_DEFAULT_DB_PATH = Path.home() / ".nails_agent" / "memory.db"
+_DEFAULT_DB_PATH = Path(
+    os.environ.get("NAILS_MEMORY_DB_PATH", Path.home() / ".nails_agent" / "memory.db")
+)
+_RETIRED_INTERNAL_V0_STYLE_IDS = (
+    "cat_eye",
+    "french",
+    "gradient",
+    "emboss",
+    "marble",
+    "celestial",
+    "solid",
+    "colorful",
+    "mirror",
+    "matte_cream",
+    "rhinestone",
+    "ice_blue_cat_eye",
+)
 
 
 class MemoryStore:
@@ -81,6 +98,13 @@ class MemoryStore:
 
                 -- ── Consumer-side tables (try-on session) ──────────────────
 
+                CREATE TABLE IF NOT EXISTS nail_styles_store (
+                    style_id   TEXT PRIMARY KEY,
+                    data_json  TEXT NOT NULL
+                );
+
+                -- Legacy table kept for local DB compatibility during the
+                -- nail_styles_v2 → nail_styles_store migration.
                 CREATE TABLE IF NOT EXISTS nail_styles_v2 (
                     style_id   TEXT PRIMARY KEY,
                     data_json  TEXT NOT NULL
@@ -188,7 +212,58 @@ class MemoryStore:
                 );
                 CREATE INDEX IF NOT EXISTS idx_candidate_trigger
                     ON candidate_packages (trigger_id);
+
+                CREATE TABLE IF NOT EXISTS rejected_trend_candidates (
+                    rejection_id      TEXT PRIMARY KEY,
+                    pipeline_id       TEXT,
+                    source_platform   TEXT,
+                    source_note_id    TEXT,
+                    keyword           TEXT,
+                    source_title      TEXT,
+                    caption           TEXT,
+                    style_tags        TEXT,
+                    color_tags        TEXT,
+                    material_tags     TEXT,
+                    scene_tags        TEXT,
+                    reason_code       TEXT NOT NULL,
+                    reason_text       TEXT,
+                    interaction_score REAL DEFAULT 0,
+                    tag_source        TEXT,
+                    tag_confidence    REAL DEFAULT 0,
+                    captured_at       TEXT,
+                    created_at        TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_rejected_trend_pipeline
+                    ON rejected_trend_candidates (pipeline_id);
+                CREATE INDEX IF NOT EXISTS idx_rejected_trend_reason
+                    ON rejected_trend_candidates (reason_code);
             """)
+            self._cleanup_retired_internal_v0_styles(conn)
+
+    def _cleanup_retired_internal_v0_styles(self, conn: sqlite3.Connection) -> None:
+        """Best-effort cleanup for the retired V0 mock styles.
+
+        Some CI/sandbox contexts import the API against a read-only user DB. Schema
+        creation may already be satisfied there, but cleanup DELETEs can fail; that
+        should not block normal read-only API tests.
+        """
+        try:
+            for table in ("nail_styles_store", "nail_styles_v2"):
+                placeholders = ",".join("?" for _ in _RETIRED_INTERNAL_V0_STYLE_IDS)
+                conn.execute(
+                    f"DELETE FROM {table} WHERE style_id IN ({placeholders})",
+                    _RETIRED_INTERNAL_V0_STYLE_IDS,
+                )
+                conn.execute(
+                    f"""
+                    DELETE FROM {table}
+                    WHERE data_json LIKE '%"source_platform": "internal_v0"%'
+                       OR data_json LIKE '%"source_platform":"internal_v0"%'
+                    """
+                )
+        except sqlite3.OperationalError as exc:
+            if "readonly" not in str(exc).lower():
+                raise
 
     # ── Write ────────────────────────────────────────────────────────────────
 
@@ -213,6 +288,45 @@ class MemoryStore:
     def save_many(self, entries: List[MemoryEntry]) -> None:
         for e in entries:
             self.save(e)
+
+    def save_rejected_trend_candidates(
+        self,
+        candidates: List[RejectedTrendCandidate],
+        pipeline_id: str = "",
+    ) -> None:
+        if not candidates:
+            return
+        with self._conn() as conn:
+            for c in candidates:
+                data = c.model_copy(update={"pipeline_id": pipeline_id or c.pipeline_id})
+                conn.execute(
+                    """INSERT OR REPLACE INTO rejected_trend_candidates
+                       (rejection_id, pipeline_id, source_platform, source_note_id, keyword,
+                        source_title, caption, style_tags, color_tags, material_tags, scene_tags,
+                        reason_code, reason_text, interaction_score, tag_source, tag_confidence,
+                        captured_at, created_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        data.rejection_id,
+                        data.pipeline_id,
+                        data.source_platform,
+                        data.source_note_id,
+                        data.keyword,
+                        data.source_title,
+                        data.caption,
+                        json.dumps(data.style_tags, ensure_ascii=False),
+                        json.dumps(data.color_tags, ensure_ascii=False),
+                        json.dumps(data.material_tags, ensure_ascii=False),
+                        json.dumps(data.scene_tags, ensure_ascii=False),
+                        data.reason_code,
+                        data.reason_text,
+                        data.interaction_score,
+                        data.tag_source,
+                        data.tag_confidence,
+                        data.captured_at,
+                        data.created_at,
+                    ),
+                )
 
     def save_pipeline_state(self, pipeline_id: str, status: str, state_json: str) -> None:
         from datetime import datetime
@@ -345,14 +459,57 @@ class MemoryStore:
 
     # ── Styles ───────────────────────────────────────────────────────────────
 
+    @staticmethod
+    def _normalize_style_store_item(style: Dict[str, Any]) -> Dict[str, Any]:
+        data = dict(style)
+        source_trend_id = data.get("source_trend_id") or data.get("created_from_trend_id")
+        image = (
+            data.get("source_image_url")
+            or data.get("image_url")
+            or data.get("enhanced_image_url")
+            or ""
+        )
+
+        # These fields belong to old demo naming or unsupported dimensions and
+        # should not leak into the canonical nail_styles_store record.
+        data.pop("title", None)
+        data.pop("source_style_id", None)
+        data.pop("source_note_id", None)
+        data.pop("source_image_url", None)
+        data.pop("created_from_trend_id", None)
+        data.pop("nail_shape_tags", None)
+
+        data["source_trend_id"] = source_trend_id
+        data.setdefault("source_title", "")
+        data["image_url"] = image
+        data.setdefault("enhanced_image_url", "")
+        data.setdefault("source_platform", "internal")
+        data.setdefault("reference_hand_profile_id", None)
+        data.setdefault("visual_feature_id", None)
+        data.setdefault("is_available_for_try_on", True)
+        data.setdefault("style_tags", [])
+        data.setdefault("color_tags", [])
+        data.setdefault("material_tags", [])
+        data.setdefault("scene_tags", [])
+        data.setdefault("is_trend_generated", False)
+        data["status"] = data.get("status") or "listed"
+        data.setdefault("updated_at", None)
+        return data
+
     def put_style(self, style: Dict[str, Any]) -> None:
-        self._put_json("nail_styles_v2", "style_id", style["style_id"], style)
+        style = self._normalize_style_store_item(style)
+        self._put_json("nail_styles_store", "style_id", style["style_id"], style)
 
     def get_style(self, style_id: str) -> Optional[Dict[str, Any]]:
-        return self._get_json("nail_styles_v2", "style_id", style_id)
+        style = self._get_json("nail_styles_store", "style_id", style_id) or self._get_json(
+            "nail_styles_v2", "style_id", style_id
+        )
+        return self._normalize_style_store_item(style) if style else None
 
     def list_styles(self) -> List[Dict[str, Any]]:
-        return self._list_all_json("nail_styles_v2", order_by="style_id")
+        styles = self._list_all_json("nail_styles_store", order_by="style_id")
+        styles = styles or self._list_all_json("nail_styles_v2", order_by="style_id")
+        return [self._normalize_style_store_item(style) for style in styles]
 
     # ── Reference hand profiles ──────────────────────────────────────────────
 

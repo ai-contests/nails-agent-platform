@@ -19,6 +19,8 @@ class TrendSignal(BaseModel):
     trend_id: str
     platform: str
     keyword: str
+    display_label: str = ""
+    source_title: str = ""
     caption: str = ""
     likes: int = 0
     comments: int = 0
@@ -31,8 +33,36 @@ class TrendSignal(BaseModel):
     material_tags: List[str] = []
     scene_tags: List[str] = []
     image_urls: List[str] = []
+    local_image_paths: List[str] = []
+    image_download_status: str = ""
+    image_content_type: str = ""
+    detail_enriched: bool = False
+    source_note_id: str = ""
+    tag_source: str = "rules"
+    tag_confidence: float = 0.0
     composite_score: float = 0.0
     rank: int = 0
+
+
+class RejectedTrendCandidate(BaseModel):
+    rejection_id: str = Field(default_factory=lambda: f"RJ{uuid.uuid4().hex[:8].upper()}")
+    pipeline_id: str = ""
+    source_platform: str = "小红书"
+    source_note_id: str = ""
+    keyword: str = ""
+    source_title: str = ""
+    caption: str = ""
+    style_tags: List[str] = []
+    color_tags: List[str] = []
+    material_tags: List[str] = []
+    scene_tags: List[str] = []
+    reason_code: str
+    reason_text: str = ""
+    interaction_score: float = 0.0
+    tag_source: str = ""
+    tag_confidence: float = 0.0
+    captured_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
 
 # ──────────────────────────────────────────────
@@ -68,9 +98,12 @@ class MetricSnapshot(BaseModel):
     metric_id: str = Field(default_factory=lambda: f"M{uuid.uuid4().hex[:6].upper()}")
     trend_id: str
     keyword: str
+    display_label: str = ""
+    tag_summary: str = ""
+    image_url: str = ""
     external_heat_score: float  # 0-100, from composite_score normalisation
     trend_growth_score: float  # 0-100, captured_at recency bonus
-    style_gap_score: float  # 0-100, how underserved in style_library
+    style_gap_score: float  # 0-100, how underserved in nail_styles_store
     launch_priority_score: float  # weighted average → final score
     rank: int
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
@@ -211,7 +244,6 @@ class StyleLibraryItem(BaseModel):
     style_tags: List[str] = []
     color_tags: List[str] = []
     material_tags: List[str] = []
-    nail_shape_tags: List[str] = []
     scene_tags: List[str] = []
     is_trend_generated: bool = False
     created_from_trend_id: Optional[str] = None
@@ -308,13 +340,14 @@ class NailVisualFeature(BaseModel):
     updated_at: Optional[str] = None
 
 
-class NailStyleV2(BaseModel):
-    """Unified nail style — superset of V0 StyleLibraryItem + V1 nail_styles."""
+class NailStyleStoreItem(BaseModel):
+    """Unified nail style store item shared by B-end evaluation and C-end display."""
 
     style_id: str
-    title: str
-    image_url: str = ""
-    source_style_id: Optional[str] = None
+    source_trend_id: Optional[str] = None
+    source_title: str = ""  # provenance only; not used as the primary display label
+    image_url: str = ""  # original/base nail image
+    enhanced_image_url: str = ""
     source_platform: str = "internal"  # mock_social | xhs | douyin | internal | trend_generated
     is_available_for_try_on: bool = True
 
@@ -326,12 +359,16 @@ class NailStyleV2(BaseModel):
     style_tags: List[str] = []
     color_tags: List[str] = []
     material_tags: List[str] = []
-    nail_shape_tags: List[str] = []
     scene_tags: List[str] = []
     is_trend_generated: bool = False
-    created_from_trend_id: Optional[str] = None
+    status: str = "listed"  # candidate | enhanced | listed | archived
 
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+    updated_at: Optional[str] = None
+
+
+# Backward-compatible alias for older imports/docs.
+NailStyleV2 = NailStyleStoreItem
 
 
 # ── Session, recommendations, behavior, jobs ─────────────────────────────

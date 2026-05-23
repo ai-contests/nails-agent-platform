@@ -22,6 +22,7 @@ from typing import Optional
 
 from nails_agent.memory.event_log import EventLog
 from nails_agent.models.schemas import CandidatePackage, ReviewDecision
+from nails_agent.services.llm_config import reviewer_model
 
 logger = logging.getLogger(__name__)
 
@@ -162,7 +163,7 @@ class ReviewerGuardrail:
             '"suggestions": ["..."], "risk_flags": ["..."]}'
         )
         msg = client.messages.create(
-            model="claude-haiku-4-5-20251001",
+            model=reviewer_model(),
             max_tokens=512,
             messages=[{"role": "user", "content": prompt}],
         )

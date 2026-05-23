@@ -49,8 +49,10 @@ def seed(data_dir: Path | None = None, store: MemoryStore | None = None) -> dict
 
     counts: dict[str, int] = {}
 
-    styles = _load_json(data_dir / "nail_styles_v2.json")
-    counts["nail_styles_v2"] = _seed_table(styles, store.put_style, "styles")
+    styles = _load_json(data_dir / "nail_styles_store.json")
+    if not styles:
+        styles = _load_json(data_dir / "nail_styles_v2.json")
+    counts["nail_styles_store"] = _seed_table(styles, store.put_style, "styles")
 
     refs = _load_json(data_dir / "reference_hand_profiles.json")
     counts["reference_hand_profiles"] = _seed_table(

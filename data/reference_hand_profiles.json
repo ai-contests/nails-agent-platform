@@ -7,7 +7,11 @@
     "hand_shape_confidence": 0.86,
     "skin_tone": "wheat",
     "undertone": "warm",
-    "skin_rgb": [173, 118, 82],
+    "skin_rgb": [
+      173,
+      118,
+      82
+    ],
     "skin_confidence": 0.78,
     "analysis_method": "manual_mock",
     "created_at": "2026-05-11T16:00:00+08:00"
@@ -17,10 +21,14 @@
     "owner_type": "nail_reference",
     "owner_id": "STYLE002",
     "hand_shape": "short_wide",
-    "hand_shape_confidence": 0.80,
+    "hand_shape_confidence": 0.8,
     "skin_tone": "warm_fair",
     "undertone": "warm",
-    "skin_rgb": [224, 176, 143],
+    "skin_rgb": [
+      224,
+      176,
+      143
+    ],
     "skin_confidence": 0.84,
     "analysis_method": "manual_mock",
     "created_at": "2026-05-11T16:00:00+08:00"
@@ -33,7 +41,11 @@
     "hand_shape_confidence": 0.76,
     "skin_tone": "natural",
     "undertone": "warm",
-    "skin_rgb": [207, 154, 118],
+    "skin_rgb": [
+      207,
+      154,
+      118
+    ],
     "skin_confidence": 0.78,
     "analysis_method": "manual_mock",
     "created_at": "2026-05-11T16:00:00+08:00"
@@ -46,7 +58,11 @@
     "hand_shape_confidence": 0.84,
     "skin_tone": "warm_fair",
     "undertone": "warm",
-    "skin_rgb": [229, 190, 158],
+    "skin_rgb": [
+      229,
+      190,
+      158
+    ],
     "skin_confidence": 0.82,
     "analysis_method": "manual_mock",
     "created_at": "2026-05-11T16:00:00+08:00"
@@ -59,7 +75,11 @@
     "hand_shape_confidence": 0.74,
     "skin_tone": "natural",
     "undertone": "warm",
-    "skin_rgb": [211, 166, 134],
+    "skin_rgb": [
+      211,
+      166,
+      134
+    ],
     "skin_confidence": 0.76,
     "analysis_method": "manual_mock",
     "created_at": "2026-05-11T16:00:00+08:00"
@@ -72,7 +92,11 @@
     "hand_shape_confidence": 0.88,
     "skin_tone": "warm_fair",
     "undertone": "warm",
-    "skin_rgb": [226, 181, 150],
+    "skin_rgb": [
+      226,
+      181,
+      150
+    ],
     "skin_confidence": 0.84,
     "analysis_method": "manual_mock",
     "created_at": "2026-05-11T16:00:00+08:00"
@@ -85,7 +109,11 @@
     "hand_shape_confidence": 0.82,
     "skin_tone": "cool_fair",
     "undertone": "neutral",
-    "skin_rgb": [232, 198, 176],
+    "skin_rgb": [
+      232,
+      198,
+      176
+    ],
     "skin_confidence": 0.82,
     "analysis_method": "manual_mock",
     "created_at": "2026-05-11T16:00:00+08:00"
@@ -98,8 +126,12 @@
     "hand_shape_confidence": 0.78,
     "skin_tone": "natural",
     "undertone": "warm",
-    "skin_rgb": [206, 151, 121],
-    "skin_confidence": 0.80,
+    "skin_rgb": [
+      206,
+      151,
+      121
+    ],
+    "skin_confidence": 0.8,
     "analysis_method": "manual_mock",
     "created_at": "2026-05-11T16:00:00+08:00"
   },
@@ -111,8 +143,12 @@
     "hand_shape_confidence": 0.84,
     "skin_tone": "cool_fair",
     "undertone": "neutral",
-    "skin_rgb": [226, 192, 176],
-    "skin_confidence": 0.80,
+    "skin_rgb": [
+      226,
+      192,
+      176
+    ],
+    "skin_confidence": 0.8,
     "analysis_method": "manual_mock",
     "created_at": "2026-05-11T16:00:00+08:00"
   },
@@ -124,7 +160,11 @@
     "hand_shape_confidence": 0.82,
     "skin_tone": "warm_fair",
     "undertone": "warm",
-    "skin_rgb": [229, 183, 150],
+    "skin_rgb": [
+      229,
+      183,
+      150
+    ],
     "skin_confidence": 0.83,
     "analysis_method": "manual_mock",
     "created_at": "2026-05-11T16:00:00+08:00"
@@ -137,7 +177,11 @@
     "hand_shape_confidence": 0.76,
     "skin_tone": "cool_fair",
     "undertone": "neutral",
-    "skin_rgb": [224, 190, 174],
+    "skin_rgb": [
+      224,
+      190,
+      174
+    ],
     "skin_confidence": 0.78,
     "analysis_method": "manual_mock",
     "created_at": "2026-05-11T16:00:00+08:00"
@@ -150,7 +194,11 @@
     "hand_shape_confidence": 0.78,
     "skin_tone": "warm_fair",
     "undertone": "warm",
-    "skin_rgb": [229, 180, 151],
+    "skin_rgb": [
+      229,
+      180,
+      151
+    ],
     "skin_confidence": 0.82,
     "analysis_method": "manual_mock",
     "created_at": "2026-05-11T16:00:00+08:00"
@@ -163,7 +211,11 @@
     "hand_shape_confidence": 0.74,
     "skin_tone": "natural",
     "undertone": "warm",
-    "skin_rgb": [205, 153, 120],
+    "skin_rgb": [
+      205,
+      153,
+      120
+    ],
     "skin_confidence": 0.78,
     "analysis_method": "manual_mock",
     "created_at": "2026-05-11T16:00:00+08:00"
@@ -173,10 +225,14 @@
     "owner_type": "nail_reference",
     "owner_id": "STYLE014",
     "hand_shape": "square_palm",
-    "hand_shape_confidence": 0.80,
+    "hand_shape_confidence": 0.8,
     "skin_tone": "warm_fair",
     "undertone": "warm",
-    "skin_rgb": [230, 181, 151],
+    "skin_rgb": [
+      230,
+      181,
+      151
+    ],
     "skin_confidence": 0.82,
     "analysis_method": "manual_mock",
     "created_at": "2026-05-11T16:00:00+08:00"
@@ -189,9 +245,311 @@
     "hand_shape_confidence": 0.76,
     "skin_tone": "warm_fair",
     "undertone": "warm",
-    "skin_rgb": [222, 171, 141],
+    "skin_rgb": [
+      222,
+      171,
+      141
+    ],
     "skin_confidence": 0.79,
     "analysis_method": "manual_mock",
     "created_at": "2026-05-11T16:00:00+08:00"
+  },
+  {
+    "hand_profile_id": "RHP_SC_20260522_XHS_D9B7F8",
+    "owner_type": "nail_reference",
+    "owner_id": "sc_20260522_xhs_d9b7f8",
+    "session_id": null,
+    "hand_shape": "square_palm",
+    "hand_shape_confidence": 0.84,
+    "skin_tone": "deep",
+    "undertone": "warm",
+    "skin_rgb": [
+      135,
+      99,
+      79
+    ],
+    "skin_confidence": 0.521,
+    "undertone_confidence": 0.521,
+    "analysis_method": "mediapipe_opencv",
+    "hand_metrics": {
+      "palm_width": 139.9348,
+      "palm_length": 50.9025,
+      "avg_finger_length": 244.7538,
+      "finger_to_palm_ratio": 4.8083,
+      "palm_width_ratio": 2.7491,
+      "hand_aspect_ratio": 1.7929,
+      "finger_length_variance": 0.1775,
+      "landmark_visibility_score": 0.9937
+    },
+    "color_metrics": {
+      "median_rgb": [
+        135,
+        99,
+        79
+      ],
+      "lab_l": 45.0378,
+      "lab_a": 11.9531,
+      "lab_b": 17.0938,
+      "hsv_h": 22.0,
+      "hsv_s": 0.4157,
+      "ycrcb_y": 107.0,
+      "ycrcb_cr": 148.0,
+      "ycrcb_cb": 112.0,
+      "sample_stability": 0.521,
+      "sample_size": 7151
+    },
+    "created_at": "2026-05-22T22:23:05+08:00"
+  },
+  {
+    "hand_profile_id": "RHP_SC_20260522_XHS_5DDCA8",
+    "owner_type": "nail_reference",
+    "owner_id": "sc_20260522_xhs_5ddca8",
+    "session_id": null,
+    "hand_shape": "unknown",
+    "hand_shape_confidence": 0.0,
+    "skin_tone": "unknown",
+    "undertone": "unknown",
+    "skin_rgb": [],
+    "skin_confidence": 0.0,
+    "undertone_confidence": 0.0,
+    "analysis_method": "mediapipe_opencv_failed",
+    "hand_metrics": {
+      "error": "未检测到完整手部，请上传自然光下、手背完整露出的图片。"
+    },
+    "color_metrics": {},
+    "created_at": "2026-05-22T22:23:05+08:00"
+  },
+  {
+    "hand_profile_id": "RHP_SC_20260522_XHS_5FEC52",
+    "owner_type": "nail_reference",
+    "owner_id": "sc_20260522_xhs_5fec52",
+    "session_id": null,
+    "hand_shape": "unknown",
+    "hand_shape_confidence": 0.0,
+    "skin_tone": "unknown",
+    "undertone": "unknown",
+    "skin_rgb": [],
+    "skin_confidence": 0.0,
+    "undertone_confidence": 0.0,
+    "analysis_method": "mediapipe_opencv_failed",
+    "hand_metrics": {
+      "error": "未检测到完整手部，请上传自然光下、手背完整露出的图片。"
+    },
+    "color_metrics": {},
+    "created_at": "2026-05-22T22:23:05+08:00"
+  },
+  {
+    "hand_profile_id": "RHP_SC_20260522_XHS_B9D7A8",
+    "owner_type": "nail_reference",
+    "owner_id": "sc_20260522_xhs_b9d7a8",
+    "session_id": null,
+    "hand_shape": "unknown",
+    "hand_shape_confidence": 0.0,
+    "skin_tone": "unknown",
+    "undertone": "unknown",
+    "skin_rgb": [],
+    "skin_confidence": 0.0,
+    "undertone_confidence": 0.0,
+    "analysis_method": "mediapipe_opencv_failed",
+    "hand_metrics": {
+      "error": "未检测到完整手部，请上传自然光下、手背完整露出的图片。"
+    },
+    "color_metrics": {},
+    "created_at": "2026-05-22T22:23:05+08:00"
+  },
+  {
+    "hand_profile_id": "RHP_SC_20260522_XHS_D98616",
+    "owner_type": "nail_reference",
+    "owner_id": "sc_20260522_xhs_d98616",
+    "session_id": null,
+    "hand_shape": "unknown",
+    "hand_shape_confidence": 0.0,
+    "skin_tone": "unknown",
+    "undertone": "unknown",
+    "skin_rgb": [],
+    "skin_confidence": 0.0,
+    "undertone_confidence": 0.0,
+    "analysis_method": "mediapipe_opencv_failed",
+    "hand_metrics": {
+      "error": "未检测到完整手部，请上传自然光下、手背完整露出的图片。"
+    },
+    "color_metrics": {},
+    "created_at": "2026-05-22T22:23:05+08:00"
+  },
+  {
+    "hand_profile_id": "RHP_SC_20260522_XHS_46F659",
+    "owner_type": "nail_reference",
+    "owner_id": "sc_20260522_xhs_46f659",
+    "session_id": null,
+    "hand_shape": "unknown",
+    "hand_shape_confidence": 0.0,
+    "skin_tone": "unknown",
+    "undertone": "unknown",
+    "skin_rgb": [],
+    "skin_confidence": 0.0,
+    "undertone_confidence": 0.0,
+    "analysis_method": "mediapipe_opencv_failed",
+    "hand_metrics": {
+      "error": "未检测到完整手部，请上传自然光下、手背完整露出的图片。"
+    },
+    "color_metrics": {},
+    "created_at": "2026-05-22T22:23:05+08:00"
+  },
+  {
+    "hand_profile_id": "RHP_SC_20260522_XHS_1CA696",
+    "owner_type": "nail_reference",
+    "owner_id": "sc_20260522_xhs_1ca696",
+    "session_id": null,
+    "hand_shape": "short_wide",
+    "hand_shape_confidence": 0.84,
+    "skin_tone": "natural",
+    "undertone": "warm",
+    "skin_rgb": [
+      195,
+      157,
+      149
+    ],
+    "skin_confidence": 0.668,
+    "undertone_confidence": 0.668,
+    "analysis_method": "mediapipe_opencv",
+    "hand_metrics": {
+      "palm_width": 136.7648,
+      "palm_length": 157.8919,
+      "avg_finger_length": 157.6037,
+      "finger_to_palm_ratio": 0.9982,
+      "palm_width_ratio": 0.8662,
+      "hand_aspect_ratio": 2.3946,
+      "finger_length_variance": 0.0772,
+      "landmark_visibility_score": 0.7074
+    },
+    "color_metrics": {
+      "median_rgb": [
+        195,
+        157,
+        149
+      ],
+      "lab_l": 67.8894,
+      "lab_a": 12.8125,
+      "lab_b": 9.4844,
+      "hsv_h": 10.0,
+      "hsv_s": 0.2353,
+      "ycrcb_y": 167.0,
+      "ycrcb_cr": 148.0,
+      "ycrcb_cb": 118.0,
+      "sample_stability": 0.6684,
+      "sample_size": 6661
+    },
+    "created_at": "2026-05-22T22:23:05+08:00"
+  },
+  {
+    "hand_profile_id": "RHP_SC_20260522_XHS_65A7C1",
+    "owner_type": "nail_reference",
+    "owner_id": "sc_20260522_xhs_65a7c1",
+    "session_id": null,
+    "hand_shape": "unknown",
+    "hand_shape_confidence": 0.0,
+    "skin_tone": "unknown",
+    "undertone": "unknown",
+    "skin_rgb": [],
+    "skin_confidence": 0.0,
+    "undertone_confidence": 0.0,
+    "analysis_method": "mediapipe_opencv_failed",
+    "hand_metrics": {
+      "error": "未检测到完整手部，请上传自然光下、手背完整露出的图片。"
+    },
+    "color_metrics": {},
+    "created_at": "2026-05-22T22:23:05+08:00"
+  },
+  {
+    "hand_profile_id": "RHP_SC_20260522_XHS_97AF52",
+    "owner_type": "nail_reference",
+    "owner_id": "sc_20260522_xhs_97af52",
+    "session_id": null,
+    "hand_shape": "slender_long",
+    "hand_shape_confidence": 0.788,
+    "skin_tone": "cool_fair",
+    "undertone": "warm",
+    "skin_rgb": [
+      231,
+      206,
+      199
+    ],
+    "skin_confidence": 0.9,
+    "undertone_confidence": 0.88,
+    "analysis_method": "mediapipe_opencv",
+    "hand_metrics": {
+      "palm_width": 98.7062,
+      "palm_length": 108.5422,
+      "avg_finger_length": 151.1425,
+      "finger_to_palm_ratio": 1.3925,
+      "palm_width_ratio": 0.9094,
+      "hand_aspect_ratio": 2.8413,
+      "finger_length_variance": 0.1345,
+      "landmark_visibility_score": 0.9687
+    },
+    "color_metrics": {
+      "median_rgb": [
+        231,
+        206,
+        199
+      ],
+      "lab_l": 84.5032,
+      "lab_a": 7.5625,
+      "lab_b": 6.6406,
+      "hsv_h": 14.0,
+      "hsv_s": 0.1373,
+      "ycrcb_y": 213.0,
+      "ycrcb_cr": 141.0,
+      "ycrcb_cb": 120.0,
+      "sample_stability": 0.9383,
+      "sample_size": 3398
+    },
+    "created_at": "2026-05-22T22:23:05+08:00"
+  },
+  {
+    "hand_profile_id": "RHP_SC_20260522_XHS_B4EBD9",
+    "owner_type": "nail_reference",
+    "owner_id": "sc_20260522_xhs_b4ebd9",
+    "session_id": null,
+    "hand_shape": "square_palm",
+    "hand_shape_confidence": 0.84,
+    "skin_tone": "natural",
+    "undertone": "warm",
+    "skin_rgb": [
+      200,
+      158,
+      139
+    ],
+    "skin_confidence": 0.88,
+    "undertone_confidence": 0.88,
+    "analysis_method": "mediapipe_opencv",
+    "hand_metrics": {
+      "palm_width": 111.2446,
+      "palm_length": 99.3005,
+      "avg_finger_length": 171.558,
+      "finger_to_palm_ratio": 1.7277,
+      "palm_width_ratio": 1.1203,
+      "hand_aspect_ratio": 2.6053,
+      "finger_length_variance": 0.1272,
+      "landmark_visibility_score": 0.9559
+    },
+    "color_metrics": {
+      "median_rgb": [
+        200,
+        158,
+        139
+      ],
+      "lab_l": 68.4082,
+      "lab_a": 12.7969,
+      "lab_b": 15.8125,
+      "hsv_h": 18.0,
+      "hsv_s": 0.3059,
+      "ycrcb_y": 168.0,
+      "ycrcb_cr": 151.0,
+      "ycrcb_cb": 112.0,
+      "sample_stability": 0.8974,
+      "sample_size": 4452
+    },
+    "created_at": "2026-05-22T22:23:05+08:00"
   }
 ]

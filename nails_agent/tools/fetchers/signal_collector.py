@@ -27,22 +27,23 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from nails_agent.models.schemas import TrendSignal
+from nails_agent.models.schemas import RejectedTrendCandidate, TrendSignal
 
 logger = logging.getLogger(__name__)
 
 # Per-platform keyword sets (5 each) — targets ≥100 signals/platform/round.
 
 # Chinese terms work best on XHS (cover scene + intent + style).
-# Empirically XHS de-dups across keywords at ~40%, so 7 kw × 22 ≈ 154 → ~95-100 unique.
+# XHS now search-enriches only the highest-engagement candidates with detail calls,
+# so keep the per-keyword search page shallow to reduce runtime and account risk.
 XHS_KEYWORDS = [
-    "美甲",  # broadest seed
+    "美甲款式",
+    "热门美甲",
     "美甲推荐",
-    "夏日美甲",
-    "显白美甲",
-    "美甲灵感",
-    "法式美甲",  # style-specific, lifts unique-rate
-    "美甲教程",
+    "春夏新款美甲",
+    "氛围感日常美甲",
+    "气质美甲",
+    "百搭美甲",
 ]
 
 # Douyin: keep similar but lean toward tutorial / show-off content
@@ -66,8 +67,8 @@ IG_NAIL_TAGS = [
 # Used by clients (orchestrator, etc.) that want a generic keyword set
 DEFAULT_NAIL_KEYWORDS = XHS_KEYWORDS
 
-# Per-platform per-keyword target (5 kw × 25 ≈ 125 → dedup to ~100)
-_PER_KW_LIMIT = 25
+# Per-platform per-keyword target. XHS detail enrichment then keeps global Top 10.
+_PER_KW_LIMIT = 10
 
 
 class SignalCollector:
@@ -98,6 +99,7 @@ class SignalCollector:
         self._douyin = None
         self._instagram = None
         self._tikhub = None
+        self.rejected_candidates: List[RejectedTrendCandidate] = []
 
     # ── Lazy fetcher getters ──────────────────────────────────────────────────
 
@@ -131,11 +133,11 @@ class SignalCollector:
 
     # ── Status ────────────────────────────────────────────────────────────────
 
-    def source_status(self) -> Dict[str, bool]:
+    def source_status(self, refresh: bool = False) -> Dict[str, bool]:
         """Non-blocking check of which sources are ready."""
         status: Dict[str, bool] = {}
         try:
-            status["xhs"] = self._get_xhs_mcp().is_available()
+            status["xhs"] = self._get_xhs_mcp().is_available(force_refresh=refresh)
         except Exception:
             status["xhs"] = False
         try:
@@ -162,6 +164,13 @@ class SignalCollector:
         use_instagram: bool = True,
         use_tikhub: bool = True,
         use_mock_fallback: bool = True,
+        refresh_sources: bool = True,
+        download_xhs_images: bool = True,
+        xhs_image_dir: str = "web/output/images/latest/raw",
+        xhs_max_images_per_signal: int = 1,
+        xhs_detail_candidate_n: int = 15,
+        xhs_detail_retry_attempts: int = 2,
+        xhs_use_llm_tags: bool = True,
         parallel: bool = True,
     ) -> List[TrendSignal]:
         """
@@ -176,6 +185,13 @@ class SignalCollector:
                 than N days. Signals with empty/unknown publish_time
                 (e.g. XHS search feeds) are kept regardless — they're
                 marked unknown, not aged-out.
+            download_xhs_images: If True, download enriched XHS cover images
+                to `xhs_image_dir` and put paths on TrendSignal.local_image_paths.
+            xhs_max_images_per_signal: Local download cap per TrendSignal. Remote
+                image_urls still keeps every URL returned by detail.
+            xhs_detail_candidate_n: Search candidates considered for detail
+                enrichment after interaction-score ranking.
+            xhs_detail_retry_attempts: Detail request attempts per candidate.
 
         Returns deduplicated List[TrendSignal] sorted by engagement score.
         Falls back to mock data only if all real sources produce nothing.
@@ -187,11 +203,29 @@ class SignalCollector:
         all_signals: List[TrendSignal] = []
         sources_used: List[str] = []
         tasks: Dict[str, callable] = {}
+        self.rejected_candidates = []
 
         if use_xhs:
             xhs = self._get_xhs_mcp()
-            if xhs.is_available():
-                tasks["xhs"] = lambda: xhs.search(xhs_kws, limit_per_kw=limit_per_kw)
+            if xhs.is_available(force_refresh=refresh_sources):
+
+                def _run_xhs():
+                    results = xhs.search(
+                        xhs_kws,
+                        limit_per_kw=limit_per_kw,
+                        detail_top_n=10,
+                        detail_candidate_n=xhs_detail_candidate_n,
+                        detail_retry_attempts=xhs_detail_retry_attempts,
+                        enrich_detail=True,
+                        use_llm_tags=xhs_use_llm_tags,
+                        download_images=download_xhs_images,
+                        image_dir=xhs_image_dir,
+                        max_images_per_signal=xhs_max_images_per_signal,
+                    )
+                    self.rejected_candidates.extend(xhs.rejected_candidates)
+                    return results
+
+                tasks["xhs"] = _run_xhs
             else:
                 logger.debug("XHS-MCP: Go server not running or not logged in")
 
@@ -213,6 +247,8 @@ class SignalCollector:
             tasks["tikhub"] = lambda: self._get_tikhub().fetch_all(
                 xhs_kws, limit_per_kw=limit_per_kw
             )
+
+        real_sources_attempted = bool(tasks)
 
         # Execute tasks
         # 5 keywords × scroll/source is slow: XHS ~50s, Douyin ~120s, IG ~150s.
@@ -240,13 +276,17 @@ class SignalCollector:
                 except Exception as e:
                     logger.error("Source %s failed: %s", name, e)
 
-        # Fallback to mock only when zero real data
-        if not all_signals and use_mock_fallback:
+        # Fallback to mock only when no real source was available. If a real
+        # source was attempted but returned no detail-enriched signals, surface
+        # that result instead of masking it with mock data.
+        if not all_signals and use_mock_fallback and not real_sources_attempted:
             mock = self._load_mock()
             if mock:
                 all_signals = mock
                 sources_used.append(f"mock({len(mock)})")
                 logger.info("Fallback to mock: %d signals", len(mock))
+        elif not all_signals and real_sources_attempted:
+            logger.warning("Real sources were attempted but returned no usable signals")
 
         # Optional recency filter (publish_time known and within window)
         if since_days is not None and all_signals:

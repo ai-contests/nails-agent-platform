@@ -38,9 +38,12 @@ st.caption("一个 human-in-the-loop pipeline — 在每个关键节点暂停，
 store = chat_state.init(st.session_state)
 
 
-@st.cache_resource
 def _get_runner() -> ChatPipelineRunner:
-    """Runner is cheap, but caching avoids re-initing MemoryStore each rerun."""
+    """Create a fresh stateless runner on each rerun.
+
+    Chat state lives in st.session_state. Recreating the runner keeps source
+    probes fresh, especially when xiaohongshu-mcp starts after Streamlit.
+    """
     return ChatPipelineRunner()
 
 

@@ -18,6 +18,7 @@ from nails_agent.models.schemas import (
     TrendAnalysisResult,
     CampaignStrategyResult,
 )
+from nails_agent.services.trend_presentation import sample_label
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class Summarizer:
                 f" 核心风格规律：{'; '.join(trend.patterns[:2])}" if trend.patterns else ""
             )
         elif trend and trend.top_10:
-            trend_summary = f"Top 关键词：{', '.join(s.keyword for s in trend.top_10[:5])}"
+            trend_summary = f"Top 样本：{', '.join(sample_label(s, i + 1, with_tags=True) for i, s in enumerate(trend.top_10[:5]))}"
         else:
             trend_summary = "暂无趋势数据"
 

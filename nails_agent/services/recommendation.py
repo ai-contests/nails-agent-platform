@@ -242,7 +242,7 @@ class RecommendationService:
     # ── Round 1 ─────────────────────────────────────────────────────────────
 
     def generate_round1(self, session_id: str, user_profile: Dict[str, Any]) -> Dict[str, Any]:
-        styles = self.library.list_styles(try_on_only=True)
+        styles = self.library.list_styles(try_on_only=True, listed_only=True)
         reference_profiles = self.library.reference_profiles()
         features = self.library.features()
 

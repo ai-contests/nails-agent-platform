@@ -21,44 +21,41 @@ from nails_agent.models.schemas import (
     PricingInfo,
     AssetGenerationResult,
 )
+from nails_agent.services.trend_presentation import sample_label, signal_image_url, tag_summary
 
 _TZ8 = timezone(timedelta(hours=8))
 
 # ── Caption templates ─────────────────────────────────────────────────────────
 
 _XHS_TEMPLATES = [
-    "{keyword}绝了！{tags_str}，低调有魅力，通勤约会都能驾驭～ ✨",
-    "最近爱上{keyword}，{tags_str}质感超绝，看一眼就心动 💅",
-    "{keyword}拍照超出片！{tags_str}，美到不像话 🌸",
+    "这组{style_desc}绝了！低调有魅力，通勤约会都能驾驭～ ✨",
+    "最近爱上这种{style_desc}，质感超绝，看一眼就心动 💅",
+    "{style_desc}拍照超出片，美到不像话 🌸",
 ]
 _DOUYIN_TEMPLATES = [
-    "{keyword}，{tags_str}✨ 你值得拥有",
-    "种草{keyword}！{tags_str}，这是今年最美的款式没有之一",
-    "{keyword}实拍，{tags_str}，效果惊艳全场",
+    "{style_desc}✨ 你值得拥有",
+    "种草这组{style_desc}，这是今年很值得试的款式",
+    "{style_desc}实拍，效果惊艳全场",
 ]
 _IG_TEMPLATES = [
-    "{keyword_en} nails with {tags_en} vibes — effortlessly chic ✨",
-    "Obsessed with this {keyword_en} nail look! {tags_en} energy only 💅",
-    "Spring/Summer must-have: {keyword_en} nails featuring {tags_en} elements 🌸",
+    "Nail look with {tags_en} vibes — effortlessly chic ✨",
+    "Obsessed with this nail look! {tags_en} energy only 💅",
+    "Spring/Summer must-have nails featuring {tags_en} elements 🌸",
 ]
 
 
 def _hashtags(sig: TrendSignal, platform: str) -> List[str]:
-    base = ["#美甲", f"#{sig.keyword}"]
-    for tag in sig.style_tags[:2]:
+    base = ["#美甲"]
+    for tag in (sig.style_tags + sig.color_tags + sig.scene_tags)[:4]:
+        if tag in {"美甲", "nail"}:
+            continue
         base.append(f"#{tag}美甲")
     if platform == "xiaohongshu":
         base += ["#美甲推荐", "#美甲日记"]
     elif platform == "douyin":
         base += ["#美甲教程", "#美甲分享"]
     elif platform == "instagram":
-        return [
-            f"#{sig.keyword.replace(' ', '')}",
-            "#nailart",
-            "#nails",
-            "#naildesign",
-            "#nailinspo",
-        ]
+        return ["#nailart", "#nails", "#naildesign", "#nailinspo"]
     return base[:6]
 
 
@@ -90,14 +87,14 @@ def generate(analysis: TrendAnalysisResult) -> AssetGenerationResult:
     drafts: List[StyleCardDraft] = []
 
     for i, sig in enumerate(analysis.top_10):
-        tags_str = "、".join(sig.style_tags[:3]) if sig.style_tags else sig.keyword
+        style_name = sample_label(sig, i + 1, with_tags=True)
+        style_desc = tag_summary(sig, max_tags=4, empty="趋势美甲")
         tags_en = " & ".join(sig.style_tags[:2]) if sig.style_tags else "aesthetic"
-        keyword_en = sig.keyword  # simplified; no translation service needed
 
         tmpl_idx = i % len(_XHS_TEMPLATES)
-        xhs_caption = _XHS_TEMPLATES[tmpl_idx].format(keyword=sig.keyword, tags_str=tags_str)
-        dy_caption = _DOUYIN_TEMPLATES[tmpl_idx].format(keyword=sig.keyword, tags_str=tags_str)
-        ig_caption = _IG_TEMPLATES[tmpl_idx].format(keyword_en=keyword_en, tags_en=tags_en)
+        xhs_caption = _XHS_TEMPLATES[tmpl_idx].format(style_desc=style_desc)
+        dy_caption = _DOUYIN_TEMPLATES[tmpl_idx].format(style_desc=style_desc)
+        ig_caption = _IG_TEMPLATES[tmpl_idx].format(tags_en=tags_en)
 
         variants = {
             "xiaohongshu": PlatformVariant(
@@ -116,9 +113,9 @@ def generate(analysis: TrendAnalysisResult) -> AssetGenerationResult:
 
         draft = StyleCardDraft(
             trend_id=sig.trend_id,
-            style_name=sig.keyword,
+            style_name=style_name,
             style_tags=sig.style_tags,
-            image_url="",  # filled by try-on or style library lookup
+            image_url=signal_image_url(sig),
             platform_variants=variants,
             pricing=_pricing(sig),
         )

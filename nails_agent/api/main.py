@@ -55,6 +55,7 @@ from nails_agent.services.style_library import StyleLibrary
 from nails_agent.services.session_service import SessionService, annotated_image_b64
 from nails_agent.services.recommendation import RecommendationService
 from nails_agent.services.interaction import InteractionService
+from nails_agent.services.trend_presentation import sample_label
 
 app = FastAPI(
     title="Nails Agent Platform",
@@ -332,7 +333,9 @@ def _run_tryon_job(job_id: str, image_b64: str, style_id: str) -> None:
 
         # Resolve style image
         style = get_style_library().get_style(style_id)
-        style_path = style.get("image_url", "") if style else ""
+        style_path = (
+            (style.get("enhanced_image_url") or style.get("image_url", "")) if style else ""
+        )
         if not style_path or not Path(style_path).exists():
             style_path = str(NAIL_REF_PATH)
 
@@ -431,8 +434,9 @@ async def chat(req: ChatRequest, background_tasks: BackgroundTasks):
         orch = get_orchestrator()
         messages = []
         state = orch.run_step1_only(progress_cb=messages.append)
+        top = state.trend_analysis.top_10[:3] if state.trend_analysis else []
         return ChatResponse(
-            reply=f"✅ 趋势分析完成！Top 3：{', '.join(s.keyword for s in (state.trend_analysis.top_10[:3] if state.trend_analysis else []))}",
+            reply=f"✅ 趋势分析完成！Top 3 样本：{', '.join(sample_label(s, i + 1, with_tags=True) for i, s in enumerate(top))}",
             pipeline_id=state.pipeline_id,
         )
 
@@ -442,7 +446,7 @@ async def chat(req: ChatRequest, background_tasks: BackgroundTasks):
         state = orch.run(progress_cb=messages.append)
         top3 = state.report.top_3_keywords if state.report else []
         return ChatResponse(
-            reply=f"✅ 完整流水线完成！Top 3 关键词：{', '.join(top3)}。共 {state.report.total_style_cards if state.report else 0} 张运营卡片。",
+            reply=f"✅ 完整流水线完成！Top 3：{', '.join(top3)}。共 {state.report.total_style_cards if state.report else 0} 张运营卡片。",
             pipeline_id=state.pipeline_id,
             state={"status": state.status, "step": state.step},
         )
@@ -513,18 +517,20 @@ async def memory_insights(limit: int = 20):
     return [r.model_dump() for r in results]
 
 
-# ── Style library (V2 from SQLite, with optional legacy passthrough) ──────────
+# ── Nail style store from SQLite, with optional legacy passthrough ────────────
 
 
 @app.get("/styles")
 async def list_styles(
     try_on_only: bool = False,
     with_visual_feature_only: bool = False,
+    listed_only: bool = False,
 ):
-    """Unified V2 style library backed by SQLite (`nail_styles_v2`)."""
+    """Unified nail style store backed by SQLite (`nail_styles_store`)."""
     return get_style_library().list_styles(
         try_on_only=try_on_only,
         with_visual_feature_only=with_visual_feature_only,
+        listed_only=listed_only,
     )
 
 
@@ -547,16 +553,20 @@ async def tryon(req: TryOnRequest):
 
     # Resolve style image
     style_path = str(NAIL_REF_PATH)
-    lib_path = Path(DATA_DIR) / "style_library.json"
-    if lib_path.exists():
+    for lib_name in ("nail_styles_store.json", "nail_styles_v2.json"):
+        lib_path = Path(DATA_DIR) / lib_name
+        if not lib_path.exists():
+            continue
         with open(lib_path, encoding="utf-8") as f:
             library = json.load(f)
         for item in library:
             if item.get("style_id") == req.style_id:
-                candidate = item.get("image_url", "")
+                candidate = item.get("enhanced_image_url") or item.get("image_url", "")
                 if candidate and Path(candidate).exists():
                     style_path = candidate
                 break
+        if style_path != str(NAIL_REF_PATH):
+            break
 
     # Load workflow
     if not WORKFLOW_PATH.exists():

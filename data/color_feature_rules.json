@@ -48,6 +48,14 @@
     "priority": 25
   },
   {
+    "rule_id": "CFR_FAMILY_YELLOW",
+    "target_type": "color_family",
+    "target_value": "yellow",
+    "display_name": "黄色系",
+    "feature_rules": {"hsv_h": "38-68", "hsv_s": ">= 0.28", "lab_b": ">= 26"},
+    "priority": 27
+  },
+  {
     "rule_id": "CFR_FAMILY_GOLD_SILVER",
     "target_type": "color_family",
     "target_value": "gold_silver",
