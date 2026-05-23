@@ -24,3 +24,19 @@ def test_signal_collector_empty_keywords():
     collector = SignalCollector(mock_data_path="web/data/trend_signals.json")
     signals = collector.collect(keywords=[], limit_per_kw=10)
     assert isinstance(signals, list)
+
+
+def test_signal_collector_marks_mock_fallback():
+    collector = SignalCollector(mock_data_path="web/data/trend_signals.json")
+    signals = collector.collect(
+        keywords=["猫眼"],
+        use_xhs=False,
+        use_douyin=False,
+        use_instagram=False,
+        use_tikhub=False,
+        use_mock_fallback=True,
+    )
+    assert isinstance(signals, list)
+    assert collector.last_collection_used_mock is True
+    assert collector.last_collection_real_sources_attempted is False
+    assert collector.last_collection_sources

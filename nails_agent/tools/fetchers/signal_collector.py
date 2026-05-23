@@ -100,6 +100,9 @@ class SignalCollector:
         self._instagram = None
         self._tikhub = None
         self.rejected_candidates: List[RejectedTrendCandidate] = []
+        self.last_collection_used_mock = False
+        self.last_collection_sources: List[str] = []
+        self.last_collection_real_sources_attempted = False
 
     # ── Lazy fetcher getters ──────────────────────────────────────────────────
 
@@ -204,6 +207,9 @@ class SignalCollector:
         sources_used: List[str] = []
         tasks: Dict[str, callable] = {}
         self.rejected_candidates = []
+        self.last_collection_used_mock = False
+        self.last_collection_sources = []
+        self.last_collection_real_sources_attempted = False
 
         if use_xhs:
             xhs = self._get_xhs_mcp()
@@ -249,6 +255,7 @@ class SignalCollector:
             )
 
         real_sources_attempted = bool(tasks)
+        self.last_collection_real_sources_attempted = real_sources_attempted
 
         # Execute tasks
         # 5 keywords × scroll/source is slow: XHS ~50s, Douyin ~120s, IG ~150s.
@@ -284,6 +291,7 @@ class SignalCollector:
             if mock:
                 all_signals = mock
                 sources_used.append(f"mock({len(mock)})")
+                self.last_collection_used_mock = True
                 logger.info("Fallback to mock: %d signals", len(mock))
         elif not all_signals and real_sources_attempted:
             logger.warning("Real sources were attempted but returned no usable signals")
@@ -303,6 +311,7 @@ class SignalCollector:
         else:
             logger.warning("No data sources available — returning empty")
 
+        self.last_collection_sources = sources_used
         return self._dedup_and_sort(all_signals)
 
     @staticmethod

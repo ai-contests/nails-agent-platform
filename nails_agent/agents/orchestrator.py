@@ -99,9 +99,10 @@ class PipelineOrchestrator:
         """
         state = PipelineState()
         state.status = "running"
-        self._save_state(state)
         self.collector.rejected_candidates = []
         emit = progress_cb or (lambda msg: logger.info(msg))
+        provided_signals = signals is not None
+        persist_enabled = True
 
         try:
             # ── Load inputs ────────────────────────────────────────────────
@@ -111,9 +112,22 @@ class PipelineOrchestrator:
                 emit(f"📡 数据源：{', '.join(live) if live else '📦 mock (无实时源)'}")
                 signals = self.collector.collect(keywords=self.keywords)
                 emit(f"📥 获取信号 {len(signals)} 条")
+            mock_preview = (not provided_signals) and self.collector.last_collection_used_mock
+            persist_enabled = not mock_preview
+            state.meta.update(
+                {
+                    "data_mode": "mock_preview" if mock_preview else "real",
+                    "persist_enabled": persist_enabled,
+                }
+            )
+            if persist_enabled:
+                self._save_state(state)
+            else:
+                emit("📦 Mock 预览模式：不写 memory.db、不覆盖 web/output、不入主库")
             # Persist raw signals so the demo UI can show real data
-            self._persist_signals(signals)
-            self._persist_rejected_candidates(state.pipeline_id)
+            if persist_enabled:
+                self._persist_signals(signals)
+                self._persist_rejected_candidates(state.pipeline_id)
             library = self._load_library()
 
             # ── Step 1: Trend Analysis ─────────────────────────────────────
@@ -130,7 +144,8 @@ class PipelineOrchestrator:
 
                 analysis = trend_analyst.analyse(signals)
             state.trend_analysis = analysis
-            self._persist_trend_analysis(state.pipeline_id, analysis)
+            if persist_enabled:
+                self._persist_trend_analysis(state.pipeline_id, analysis)
             top_tags = [st.tag for st in analysis.style_trends[:3]] or [
                 sample_label(s, i + 1, with_tags=True) for i, s in enumerate(analysis.top_10[:3])
             ]
@@ -147,8 +162,9 @@ class PipelineOrchestrator:
 
             state.value_evaluation = value_result
             state.asset_generation = asset_result
-            self._persist_value_evaluation(state.pipeline_id, value_result)
-            self._persist_asset_generation(state.pipeline_id, asset_result)
+            if persist_enabled:
+                self._persist_value_evaluation(state.pipeline_id, value_result)
+                self._persist_asset_generation(state.pipeline_id, asset_result)
             emit(
                 f"✅ Step 2 完成 — {len(value_result.snapshots)} 条评估, {len(asset_result.drafts)} 张卡片草稿"
             )
@@ -162,9 +178,12 @@ class PipelineOrchestrator:
             else:
                 campaign = campaign_strategist.strategise(value_result, asset_result)
             state.campaign_strategy = campaign
-            self._persist_campaign(state.pipeline_id, campaign)
-            ingestion = ingest_campaign_styles(analysis, campaign, memory=self.memory)
-            state.meta["style_store_ingestion"] = ingestion
+            if persist_enabled:
+                self._persist_campaign(state.pipeline_id, campaign)
+                ingestion = ingest_campaign_styles(analysis, campaign, memory=self.memory)
+                state.meta["style_store_ingestion"] = ingestion
+            else:
+                ingestion = {"summary": "mock 预览模式：跳过真实入库"}
             p0_count = sum(
                 1 for c in campaign.style_cards if c.schedule and c.schedule.priority == "P0"
             )
@@ -178,14 +197,16 @@ class PipelineOrchestrator:
             state.step = 4
             report = summarizer.summarise(state)
             state.report = report
-            self._persist_report(state.pipeline_id, report)
-            self._write_markdown(state.pipeline_id, report.markdown)
+            if persist_enabled:
+                self._persist_report(state.pipeline_id, report)
+                self._write_markdown(state.pipeline_id, report.markdown)
             emit("✅ Step 4 完成 — 报告已生成")
 
             # ── Distill long-term memory ───────────────────────────────────
-            new_insights = self.memory.distill(state.pipeline_id)
-            if new_insights:
-                emit(f"🧠 记忆蒸馏：{len(new_insights)} 条新洞察写入长期记忆")
+            if persist_enabled:
+                new_insights = self.memory.distill(state.pipeline_id)
+                if new_insights:
+                    emit(f"🧠 记忆蒸馏：{len(new_insights)} 条新洞察写入长期记忆")
 
             state.status = "done"
             state.finished_at = datetime.now().isoformat()
@@ -195,7 +216,8 @@ class PipelineOrchestrator:
             state.errors.append(f"Step {state.step}: {exc}")
             state.status = "error"
 
-        self._save_state(state)
+        if persist_enabled:
+            self._save_state(state)
         return state
 
     def run_step1_only(
@@ -206,6 +228,8 @@ class PipelineOrchestrator:
         state = PipelineState()
         state.status = "running"
         emit = progress_cb or (lambda msg: logger.info(msg))
+        provided_signals = signals is not None
+        persist_enabled = provided_signals
         try:
             emit("⏳ Step 1 趋势分析中…")
             if self.use_agents:
@@ -221,13 +245,17 @@ class PipelineOrchestrator:
                 analysis = trend_analyst.analyse(signals)
             state.trend_analysis = analysis
             state.step = 1
-            self._persist_trend_analysis(state.pipeline_id, analysis)
+            if persist_enabled:
+                self._persist_trend_analysis(state.pipeline_id, analysis)
+            else:
+                emit("📦 Mock 预览模式：不写 memory.db、不覆盖 web/output")
             emit("✅ Step 1 完成")
             state.status = "done"
         except Exception as exc:
             state.errors.append(str(exc))
             state.status = "error"
-        self._save_state(state)
+        if persist_enabled:
+            self._save_state(state)
         return state
 
     # ── EventLog-aware pipeline (A3) ────────────────────────────────────────
@@ -247,7 +275,7 @@ class PipelineOrchestrator:
 
         state = PipelineState()
         state.status = "running"
-        self._save_state(state)
+        persist_enabled = True
 
         try:
             # ── Load signals ───────────────────────────────────────────────
@@ -256,8 +284,20 @@ class PipelineOrchestrator:
             emit(f"📡 数据源：{', '.join(live) if live else '📦 mock'}")
             signals = self.collector.collect(keywords=keywords)
             emit(f"📥 获取信号 {len(signals)} 条")
-            self._persist_signals(signals)
-            self._persist_rejected_candidates(state.pipeline_id)
+            mock_preview = self.collector.last_collection_used_mock
+            persist_enabled = not mock_preview
+            state.meta.update(
+                {
+                    "data_mode": "mock_preview" if mock_preview else "real",
+                    "persist_enabled": persist_enabled,
+                }
+            )
+            if persist_enabled:
+                self._save_state(state)
+                self._persist_signals(signals)
+                self._persist_rejected_candidates(state.pipeline_id)
+            else:
+                emit("📦 Mock 预览模式：不写 memory.db、不覆盖 web/output、不入主库")
             library = self._load_library()
 
             # ── Step 1: Trend Analysis ─────────────────────────────────────
@@ -270,7 +310,8 @@ class PipelineOrchestrator:
 
                 analysis = _ta.analyse(signals)
             state.trend_analysis = analysis
-            self._persist_trend_analysis(state.pipeline_id, analysis)
+            if persist_enabled:
+                self._persist_trend_analysis(state.pipeline_id, analysis)
 
             trend_event = TrendEvent(
                 trigger_id=trigger_id,
@@ -293,12 +334,13 @@ class PipelineOrchestrator:
                 ],
                 confidence=min(1.0, len(signals) / 100),
             )
-            self.event_log.write(
-                event_type="TrendEvent",
-                payload=trend_event.model_dump(),
-                trigger_id=trigger_id,
-                agent_id="TrendAnalyst",
-            )
+            if persist_enabled:
+                self.event_log.write(
+                    event_type="TrendEvent",
+                    payload=trend_event.model_dump(),
+                    trigger_id=trigger_id,
+                    agent_id="TrendAnalyst",
+                )
             emit(f"✅ Step 1 完成 — top 样本：{', '.join(trend_event.top_keywords[:3])}")
 
             # ── Step 2: Value Evaluation + Asset Generation (parallel) ─────
@@ -311,8 +353,9 @@ class PipelineOrchestrator:
                 asset_result = f_assets.result()
             state.value_evaluation = value_result
             state.asset_generation = asset_result
-            self._persist_value_evaluation(state.pipeline_id, value_result)
-            self._persist_asset_generation(state.pipeline_id, asset_result)
+            if persist_enabled:
+                self._persist_value_evaluation(state.pipeline_id, value_result)
+                self._persist_asset_generation(state.pipeline_id, asset_result)
             emit(f"✅ Step 2 完成 — {len(value_result.snapshots)} 条评估")
 
             # ── Step 3: Campaign Strategy ──────────────────────────────────
@@ -323,9 +366,12 @@ class PipelineOrchestrator:
             else:
                 campaign = campaign_strategist.strategise(value_result, asset_result)
             state.campaign_strategy = campaign
-            self._persist_campaign(state.pipeline_id, campaign)
-            ingestion = ingest_campaign_styles(analysis, campaign, memory=self.memory)
-            state.meta["style_store_ingestion"] = ingestion
+            if persist_enabled:
+                self._persist_campaign(state.pipeline_id, campaign)
+                ingestion = ingest_campaign_styles(analysis, campaign, memory=self.memory)
+                state.meta["style_store_ingestion"] = ingestion
+            else:
+                ingestion = {"summary": "mock 预览模式：跳过真实入库"}
 
             strategy_event = StrategyEvent(
                 trigger_id=trigger_id,
@@ -336,12 +382,13 @@ class PipelineOrchestrator:
                 if campaign.style_cards and campaign.style_cards[0].schedule
                 else None,
             )
-            self.event_log.write(
-                event_type="StrategyEvent",
-                payload=strategy_event.model_dump(),
-                trigger_id=trigger_id,
-                agent_id="CampaignStrategist",
-            )
+            if persist_enabled:
+                self.event_log.write(
+                    event_type="StrategyEvent",
+                    payload=strategy_event.model_dump(),
+                    trigger_id=trigger_id,
+                    agent_id="CampaignStrategist",
+                )
             emit(f"✅ Step 3 完成 — {len(campaign.style_cards)} 张策略卡片")
             emit(f"✅ 款式入库同步 — {ingestion['summary']}")
 
@@ -350,23 +397,32 @@ class PipelineOrchestrator:
             state.step = 4
             report = summarizer.summarise(state)
             state.report = report
-            self._persist_report(state.pipeline_id, report)
-            self._write_markdown(state.pipeline_id, report.markdown)
+            if persist_enabled:
+                self._persist_report(state.pipeline_id, report)
+                self._write_markdown(state.pipeline_id, report.markdown)
 
             # Build CandidatePackage
-            agent_summarizer = Summarizer(event_log=self.event_log)
-            candidate = agent_summarizer.summarise(trigger_id=trigger_id, state=state)
-            emit(f"✅ Step 4 完成 — CandidatePackage ready (score={candidate.review_score:.2f})")
+            if persist_enabled:
+                agent_summarizer = Summarizer(event_log=self.event_log)
+                candidate = agent_summarizer.summarise(trigger_id=trigger_id, state=state)
+                emit(
+                    f"✅ Step 4 完成 — CandidatePackage ready (score={candidate.review_score:.2f})"
+                )
+            else:
+                candidate = None
+                emit("✅ Step 4 完成 — mock 预览报告已生成")
 
             # ReviewerGuardrail (rules + optional LLM)
-            emit("⏳ ReviewerGuardrail 审查中…")
-            reviewer = ReviewerGuardrail(event_log=self.event_log)
-            review_decision = reviewer.review(candidate)
-            emit(f"✅ 审查完成 — {review_decision.status}: {review_decision.reason[:60]}")
+            if persist_enabled and candidate is not None:
+                emit("⏳ ReviewerGuardrail 审查中…")
+                reviewer = ReviewerGuardrail(event_log=self.event_log)
+                review_decision = reviewer.review(candidate)
+                emit(f"✅ 审查完成 — {review_decision.status}: {review_decision.reason[:60]}")
 
-            new_insights = self.memory.distill(state.pipeline_id)
-            if new_insights:
-                emit(f"🧠 记忆蒸馏：{len(new_insights)} 条新洞察")
+            if persist_enabled:
+                new_insights = self.memory.distill(state.pipeline_id)
+                if new_insights:
+                    emit(f"🧠 记忆蒸馏：{len(new_insights)} 条新洞察")
 
             state.status = "done"
             state.finished_at = datetime.now().isoformat()
@@ -375,14 +431,16 @@ class PipelineOrchestrator:
             logger.exception("run_pipeline error at step %d for trigger %s", state.step, trigger_id)
             state.errors.append(f"Step {state.step}: {exc}")
             state.status = "error"
-            self.event_log.write(
-                event_type="ErrorEvent",
-                payload={"error": str(exc), "step": state.step},
-                trigger_id=trigger_id,
-                agent_id=AGENT_ID,
-            )
+            if persist_enabled:
+                self.event_log.write(
+                    event_type="ErrorEvent",
+                    payload={"error": str(exc), "step": state.step},
+                    trigger_id=trigger_id,
+                    agent_id=AGENT_ID,
+                )
 
-        self._save_state(state)
+        if persist_enabled:
+            self._save_state(state)
         return state
 
     # ── Data loading ────────────────────────────────────────────────────────
