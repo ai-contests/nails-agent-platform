@@ -11,11 +11,27 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-import cv2
-import numpy as np
 from PIL import Image, ImageOps
 
 from . import storage
+
+try:
+    import cv2
+    import numpy as np
+
+    _CV2_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    cv2 = None  # type: ignore[assignment]
+    np = None  # type: ignore[assignment]
+    _CV2_AVAILABLE = False
+
+
+def _require_cv2() -> None:
+    if not _CV2_AVAILABLE:
+        raise ImportError(
+            "cv2 / numpy are required for nail feature extraction. "
+            "Install the consumer extras: pip install -e '.[consumer]'"
+        )
 
 
 EXTRACTOR_VERSION = "opencv_kmeans_v2_focus_roi"
@@ -304,6 +320,7 @@ def extract_nail_visual_features(
     visual_feature_id: str | None = None,
 ) -> dict[str, Any]:
     """Extract a NailVisualFeature dict from an enhanced nail image."""
+    _require_cv2()
     rgb = load_rgb_image(image_path)
     pixels = _sample_pixels(rgb)
     palette = _dominant_colors(pixels)

@@ -20,7 +20,6 @@ from nails_agent.models.schemas import (
     TrendSignal,
 )
 from nails_agent.services import storage
-from nails_agent.services.nail_feature_extractor import extract_nail_visual_features
 from nails_agent.services.trend_presentation import signal_image_url, source_title
 
 LISTING_PRIORITIES = {"P0", "P1"}
@@ -255,6 +254,10 @@ def ingest_campaign_styles(
 
         if extract_visual_features and image_path:
             try:
+                from nails_agent.services.nail_feature_extractor import (  # noqa: PLC0415
+                    extract_nail_visual_features,
+                )
+
                 visual_feature_id = _safe_id(style_id, "NVF")
                 feature = extract_nail_visual_features(
                     image_path,
