@@ -257,6 +257,7 @@ def ingest_campaign_styles(
                 from nails_agent.services.nail_feature_extractor import (  # noqa: PLC0415
                     extract_nail_visual_features,
                 )
+
                 visual_feature_id = _safe_id(style_id, "NVF")
                 feature = extract_nail_visual_features(
                     image_path,

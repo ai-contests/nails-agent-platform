@@ -18,6 +18,7 @@ from . import storage
 try:
     import cv2
     import numpy as np
+
     _CV2_AVAILABLE = True
 except ImportError:  # pragma: no cover
     cv2 = None  # type: ignore[assignment]
