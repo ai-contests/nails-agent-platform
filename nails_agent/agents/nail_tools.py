@@ -34,10 +34,18 @@ def search_xhs(keywords: list[str], limit_per_keyword: int = 20) -> str:
         fetcher = XHSMCPFetcher()
         if not fetcher.is_available():
             return json.dumps({"error": "XHS MCP server not running", "signals": []})
-        signals = []
-        for kw in keywords:
-            batch = fetcher.search(kw, limit=limit_per_keyword)
-            signals.extend(s.model_dump() for s in batch)
+        signals = [
+            s.model_dump()
+            for s in fetcher.search(
+                keywords=keywords,
+                limit_per_kw=limit_per_keyword,
+                detail_top_n=10,
+                detail_candidate_n=15,
+                detail_retry_attempts=2,
+                enrich_detail=True,
+                use_llm_tags=True,
+            )
+        ]
         # Deduplicate
         seen, unique = set(), []
         for s in signals:

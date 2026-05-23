@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from nails_agent.agents.workers.value_evaluator import evaluate
 from nails_agent.models.schemas import (
-    StyleLibraryItem,
+    NailStyleStoreItem,
     StyleTrend,
     TrendAnalysisResult,
     TrendSignal,
 )
 
-_EMPTY_LIBRARY: list[StyleLibraryItem] = []
+_EMPTY_LIBRARY: list[NailStyleStoreItem] = []
 
 
 def _make_signal(keyword: str, score: float, rank: int = 1) -> TrendSignal:
@@ -84,3 +84,17 @@ def test_evaluate_empty_trends():
     result = _make_trend_result([], [])
     eval_result = evaluate(result, _EMPTY_LIBRARY)
     assert eval_result.snapshots == []
+
+
+def test_style_gap_ignores_candidate_styles():
+    result = _make_trend_result(["猫眼"], [75.0])
+    candidate_only = [
+        NailStyleStoreItem(style_id="STYLE_CANDIDATE", style_tags=["猫眼"], status="candidate")
+    ]
+    listed = [NailStyleStoreItem(style_id="STYLE_LISTED", style_tags=["猫眼"], status="listed")]
+
+    candidate_result = evaluate(result, candidate_only)
+    listed_result = evaluate(result, listed)
+
+    assert candidate_result.snapshots[0].style_gap_score == 100.0
+    assert listed_result.snapshots[0].style_gap_score < 100.0

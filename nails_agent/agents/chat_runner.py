@@ -23,6 +23,7 @@ from __future__ import annotations
 import os
 import time
 import traceback
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -54,9 +55,20 @@ from nails_agent.agents.workers import (
 )
 from nails_agent.memory.store import MemoryStore
 from nails_agent.models.schemas import (
+    NailStyleStoreItem,
     PipelineState,
-    StyleLibraryItem,
     TrendSignal,
+)
+from nails_agent.services.pipeline_persistence import PipelinePersistence
+from nails_agent.services.style_store_ingestion import (
+    format_ingestion_markdown,
+    ingest_campaign_styles,
+)
+from nails_agent.services.trend_presentation import (
+    sample_label,
+    signal_image_url,
+    source_title,
+    tag_summary,
 )
 from nails_agent.tools.fetchers.signal_collector import (
     DOUYIN_KEYWORDS,
@@ -97,7 +109,8 @@ class ChatPipelineRunner:
         self,
         collector: Optional[SignalCollector] = None,
         memory: Optional[MemoryStore] = None,
-        library_path: str = "web/data/style_library.json",
+        library_path: str = "data/nail_styles_store.json",
+        output_dir: str = "web/output",
         use_agents: bool = True,
     ):
         self.collector = collector or SignalCollector(
@@ -105,6 +118,7 @@ class ChatPipelineRunner:
         )
         self.memory = memory or MemoryStore()
         self.library_path = library_path
+        self.persistence = PipelinePersistence(memory=self.memory, output_dir=output_dir)
         self.use_agents = use_agents and _AGENTS_AVAILABLE
 
     # ── Public entry ──────────────────────────────────────────────────────────
@@ -119,6 +133,7 @@ class ChatPipelineRunner:
             if action.type == "interrupt":
                 return self._handle_interrupt(action, store)
         except Exception as exc:
+            self._mark_error(store, exc)
             return [
                 make_error(
                     phase=store.get("phase", "idle"),
@@ -135,6 +150,9 @@ class ChatPipelineRunner:
         if store["phase"] != "idle":
             return [make_message("assistant", "⚠️ 当前已经在跑了，先完成或中止再开始新会话。")]
         store["start_time"] = time.time()
+        store["context"] = {}
+        state = self._get_pipeline_state(store)
+        state.status = "waiting_review"
         payload = action.payload or {}
         text = payload.get("text", "").strip() or "开始今日分析"
         # The UI can render the user's own bubble first (better UX during slow
@@ -158,6 +176,7 @@ class ChatPipelineRunner:
                 return [echo, *self._phase_collecting(store), *self._phase_trends_review(store)]
             if choice == "abort":
                 store["phase"] = "idle"
+                self._mark_stopped(store, status="cancelled", phase="plan_review")
                 return [echo, make_message("assistant", "已取消。")]
 
         # ── trends_review (Step 1 → Step 2) ──
@@ -172,6 +191,7 @@ class ChatPipelineRunner:
                 return [echo, *self._phase_collecting(store), *self._phase_trends_review(store)]
             if choice == "abort":
                 store["phase"] = "interrupted"
+                self._mark_stopped(store, status="interrupted", phase="trends_review")
                 return [echo, make_message("assistant", "已中止流程。")]
 
         # ── eval_review (Step 2 → Step 3) ──
@@ -180,6 +200,7 @@ class ChatPipelineRunner:
                 return [echo, *self._phase_strategy_building(store)]
             if choice == "abort":
                 store["phase"] = "interrupted"
+                self._mark_stopped(store, status="interrupted", phase="eval_review")
                 return [echo, make_message("assistant", "已中止流程。")]
 
         # ── strategy_review (Step 3 → Step 4) ──
@@ -188,6 +209,7 @@ class ChatPipelineRunner:
                 return [echo, *self._phase_reporting(store)]
             if choice == "abort":
                 store["phase"] = "interrupted"
+                self._mark_stopped(store, status="interrupted", phase="strategy_review")
                 return [echo, make_message("assistant", "已中止流程。")]
 
         # ── error checkpoints ──
@@ -205,6 +227,7 @@ class ChatPipelineRunner:
             return [echo, make_message("assistant", "未知阶段，无法重试。")]
         if choice == "abort":
             store["phase"] = "interrupted"
+            self._mark_stopped(store, status="interrupted", phase=store.get("phase", "unknown"))
             return [echo, make_message("assistant", "已中止。")]
 
         return [make_message("assistant", f"未处理的 checkpoint 决定：{cp}/{choice}")]
@@ -213,13 +236,14 @@ class ChatPipelineRunner:
         # Graceful interrupt was already flagged by the UI; if we got here
         # the runner is between tool calls. Just acknowledge.
         store["phase"] = "interrupted"
+        self._mark_stopped(store, status="interrupted", phase=store.get("phase", "unknown"))
         return [make_message("assistant", "已中止当前操作。")]
 
     # ── Phase implementations ────────────────────────────────────────────────
 
     def _phase_plan_review(self, store: Dict[str, Any]) -> List[ChatEvent]:
         # Probe sources so the plan reflects reality
-        status = self.collector.source_status()
+        status = self.collector.source_status(refresh=True)
         ready = [k for k, v in status.items() if v]
         ready_str = ", ".join(ready) if ready else "仅 mock"
         mode_line = (
@@ -257,11 +281,14 @@ class ChatPipelineRunner:
 
         # Use custom keywords if user adjusted them, else default
         ctx = store.setdefault("context", {})
+        state = self._get_pipeline_state(store)
+        state.status = "running"
+        state.meta.update({"phase": "collecting", "persisted_at": datetime.now().isoformat()})
         custom = ctx.get("custom_keywords")
         kws = custom if custom else None  # None → collector uses per-platform defaults
 
         # ── Source probing (each becomes a tool_call event) ────────────────
-        status = self.collector.source_status()
+        status = self.collector.source_status(refresh=True)
         for src in ("xhs", "douyin_cdp", "instagram"):
             available = status.get(src, False)
             events.append(
@@ -278,6 +305,7 @@ class ChatPipelineRunner:
         if store.get("pending_interrupt"):
             store["pending_interrupt"] = False
             store["phase"] = "interrupted"
+            self._mark_stopped(store, status="interrupted", phase="collecting")
             events.append(make_message("assistant", "已中止采集。"))
             return events
 
@@ -288,6 +316,7 @@ class ChatPipelineRunner:
                 keywords=kws,
                 use_mock_fallback=True,
                 use_tikhub=False,
+                refresh_sources=True,
             )
         except Exception as exc:
             events.append(
@@ -305,6 +334,15 @@ class ChatPipelineRunner:
         by_platform: Dict[str, int] = {}
         for s in signals:
             by_platform[s.platform] = by_platform.get(s.platform, 0) + 1
+        mock_run = self.collector.last_collection_used_mock
+        ctx["mock_run"] = mock_run
+        ctx["persist_enabled"] = bool(signals and not mock_run)
+        state.meta.update(
+            {
+                "data_mode": "mock_preview" if mock_run else "real",
+                "persist_enabled": ctx["persist_enabled"],
+            }
+        )
 
         events.append(
             make_tool_call(
@@ -316,6 +354,23 @@ class ChatPipelineRunner:
                 + " / ".join(f"{p} {n}" for p, n in by_platform.items()),
             )
         )
+
+        if self._should_persist(store):
+            self.persistence.save_state(state)
+            self.persistence.persist_signals(signals)
+            self.persistence.persist_rejected_candidates(
+                state.pipeline_id,
+                self.collector.rejected_candidates,
+            )
+        elif mock_run:
+            events.append(
+                make_tool_call(
+                    tool="persistence.skip",
+                    args={"reason": "mock_preview"},
+                    status="ok",
+                    result_summary="mock 预览模式：不写主库、不写 memory.db、不覆盖 web/output",
+                )
+            )
 
         if not signals:
             events.append(
@@ -385,6 +440,15 @@ class ChatPipelineRunner:
             )
         )
         ctx["analysis"] = analysis
+        state.step = 1
+        state.trend_analysis = analysis
+        if self._should_persist(store):
+            self.persistence.persist_trend_analysis(state.pipeline_id, analysis)
+            self.persistence.save_checkpoint(
+                state,
+                phase="trends_review",
+                checkpoint_id="trends_review",
+            )
         return events
 
     def _phase_trends_review(self, store: Dict[str, Any]) -> List[ChatEvent]:
@@ -404,7 +468,7 @@ class ChatPipelineRunner:
                 make_phase_output(
                     "trends_review",
                     TableOutput(
-                        title="款式热度（按聚合互动量）",
+                        title="风格/标签热度（按聚合互动量）",
                         columns=["标签", "类别", "出现帖数", "累计互动", "相对热度"],
                         rows=[
                             [
@@ -431,23 +495,49 @@ class ChatPipelineRunner:
                 )
             )
 
-        # ② Top-10 individual posts enriched with matched library styles
-        library = self._load_library()
+        # ② Top-10 individual posts enriched with tags and engagement metrics
         events.append(
             make_phase_output(
                 "trends_review",
                 TableOutput(
-                    title="参考样本 · Top 10 高互动帖（含匹配款式）",
-                    columns=["排名", "关键词", "匹配款式", "平台", "点赞", "综合分"],
+                    title="参考样本 · Top 10 高互动帖（含标签）",
+                    columns=[
+                        "排名",
+                        "样本",
+                        "标题摘要",
+                        "标签组合",
+                        "平台",
+                        "点赞",
+                        "收藏",
+                        "综合分",
+                    ],
                     rows=[
                         [
                             i + 1,
-                            s.keyword,
-                            _matched_style_names(s, library),
+                            sample_label(s, i + 1, with_tags=False),
+                            source_title(s),
+                            tag_summary(s),
                             s.platform,
                             s.likes,
+                            s.collects,
                             round(s.composite_score, 1),
                         ]
+                        for i, s in enumerate(top)
+                    ],
+                ),
+            )
+        )
+        events.append(
+            make_phase_output(
+                "trends_review",
+                ImageGalleryOutput(
+                    title="参考样本图片 · Top 10",
+                    items=[
+                        GalleryItem(
+                            url=signal_image_url(s),
+                            caption=sample_label(s, i + 1, with_tags=True),
+                            badge=f"{s.platform} · 综合分 {s.composite_score:.0f}",
+                        )
                         for i, s in enumerate(top)
                     ],
                 ),
@@ -509,6 +599,11 @@ class ChatPipelineRunner:
     def _phase_evaluating(self, store: Dict[str, Any]) -> List[ChatEvent]:
         ctx = store["context"]
         analysis = ctx["analysis"]
+        state = self._get_pipeline_state(store)
+        state.status = "running"
+        state.meta.update({"phase": "evaluating", "persisted_at": datetime.now().isoformat()})
+        if self._should_persist(store):
+            self.persistence.save_state(state)
         library = self._load_library()
 
         events: List[ChatEvent] = [
@@ -566,8 +661,20 @@ class ChatPipelineRunner:
             )
         )
         ctx["asset_result"] = asset_result
+        state.step = 2
+        state.value_evaluation = value_result
+        state.asset_generation = asset_result
+        if self._should_persist(store):
+            self.persistence.persist_value_evaluation(state.pipeline_id, value_result)
+            self.persistence.persist_asset_generation(state.pipeline_id, asset_result)
+            self.persistence.save_checkpoint(
+                state,
+                phase="eval_review",
+                checkpoint_id="eval_review",
+            )
 
-        # Inline outputs — show all snapshots (up to 10) with style names
+        # Inline outputs — show all snapshots (up to 10) as trend samples, not search keywords.
+        signal_map = {s.trend_id: s for s in analysis.top_10}
         events.append(
             make_phase_output(
                 "evaluating",
@@ -575,8 +682,8 @@ class ChatPipelineRunner:
                     title=f"价值评估 Top {len(value_result.snapshots)}",
                     columns=[
                         "排名",
-                        "款式名称",
-                        "趋势关键词",
+                        "样本",
+                        "标签组合",
                         "外部热度",
                         "新鲜度",
                         "风格缺口",
@@ -585,8 +692,8 @@ class ChatPipelineRunner:
                     rows=[
                         [
                             s.rank,
-                            _trend_to_style_name(s.keyword, library),
-                            s.keyword,
+                            _metric_sample_label(s, signal_map),
+                            _metric_tag_summary(s, signal_map),
                             s.external_heat_score,
                             s.trend_growth_score,
                             s.style_gap_score,
@@ -639,6 +746,13 @@ class ChatPipelineRunner:
     def _phase_strategy_building(self, store: Dict[str, Any]) -> List[ChatEvent]:
         ctx = store["context"]
         analysis = ctx["analysis"]
+        state = self._get_pipeline_state(store)
+        state.status = "running"
+        state.meta.update(
+            {"phase": "strategy_building", "persisted_at": datetime.now().isoformat()}
+        )
+        if self._should_persist(store):
+            self.persistence.save_state(state)
         events: List[ChatEvent] = [
             make_phase_enter("strategy_building", "Step 3/4 运营策略", _elapsed(store)),
         ]
@@ -691,6 +805,15 @@ class ChatPipelineRunner:
             )
         )
         ctx["campaign"] = campaign
+        state.step = 3
+        state.campaign_strategy = campaign
+        if self._should_persist(store):
+            self.persistence.persist_campaign(state.pipeline_id, campaign)
+            self.persistence.save_checkpoint(
+                state,
+                phase="strategy_review",
+                checkpoint_id="strategy_review",
+            )
 
         # Strategy markdown
         p0 = [c for c in campaign.style_cards if c.schedule and c.schedule.priority == "P0"]
@@ -732,12 +855,64 @@ class ChatPipelineRunner:
             make_phase_enter("reporting", "Step 4/4 出报告 + 蒸馏记忆", _elapsed(store)),
         ]
 
-        # Build a PipelineState for summarizer + memory (it's the schema both expect)
-        state = PipelineState()
+        # Reuse the same PipelineState so report, artifacts, and memory share one pipeline_id.
+        state = self._get_pipeline_state(store)
+        state.status = "running"
+        state.step = 4
+        state.meta.update({"phase": "reporting", "persisted_at": datetime.now().isoformat()})
         state.trend_analysis = ctx["analysis"]
         state.value_evaluation = ctx["value_result"]
         state.asset_generation = ctx["asset_result"]
         state.campaign_strategy = ctx["campaign"]
+        if self._should_persist(store):
+            self.persistence.save_state(state)
+
+        if self._should_persist(store):
+            t_ingest = _now_ms()
+            try:
+                ingestion = ingest_campaign_styles(
+                    state.trend_analysis,
+                    state.campaign_strategy,
+                    memory=self.memory,
+                    data_dir=Path(self.library_path).parent,
+                )
+                state.meta["style_store_ingestion"] = ingestion
+                self.persistence.save_state(state)
+                events.append(
+                    make_tool_call(
+                        tool="style_store_ingestion.ingest_campaign_styles",
+                        args={"priorities": ["P0", "P1"]},
+                        status="ok",
+                        duration_ms=_now_ms() - t_ingest,
+                        result_summary=ingestion["summary"],
+                    )
+                )
+                events.append(
+                    make_phase_output(
+                        "reporting",
+                        MarkdownOutput(
+                            title="🧩 款式入库同步", body=format_ingestion_markdown(ingestion)
+                        ),
+                    )
+                )
+            except Exception as exc:
+                events.append(
+                    make_error(
+                        phase="reporting",
+                        message=f"款式入库同步失败: {exc}",
+                        recoverable=True,
+                        traceback_text=traceback.format_exc() if store.get("dev_mode") else None,
+                    )
+                )
+        else:
+            events.append(
+                make_tool_call(
+                    tool="style_store_ingestion.skip",
+                    args={"reason": "mock_preview"},
+                    status="ok",
+                    result_summary="mock 预览模式：跳过真实入库与 memory.db 写入",
+                )
+            )
 
         t0 = _now_ms()
         try:
@@ -763,29 +938,48 @@ class ChatPipelineRunner:
             )
         )
         ctx["report"] = report
+        state.report = report
+        if self._should_persist(store):
+            self.persistence.persist_report(state.pipeline_id, report)
+            self.persistence.write_report_markdown(report.markdown)
 
         # Memory distillation (best-effort; failure shouldn't break the pipeline)
-        try:
-            new_insights = self.memory.distill(state.pipeline_id)
-            events.append(
-                make_tool_call(
-                    tool="memory.distill",
-                    args={"pipeline_id": state.pipeline_id},
-                    status="ok",
-                    result_summary=f"{len(new_insights)} new insights",
+        if self._should_persist(store):
+            try:
+                new_insights = self.memory.distill(state.pipeline_id)
+                events.append(
+                    make_tool_call(
+                        tool="memory.distill",
+                        args={"pipeline_id": state.pipeline_id},
+                        status="ok",
+                        result_summary=f"{len(new_insights)} new insights",
+                    )
                 )
-            )
-        except Exception as exc:
+            except Exception as exc:
+                events.append(
+                    make_tool_call(
+                        tool="memory.distill",
+                        args={},
+                        status="error",
+                        result_summary=str(exc),
+                    )
+                )
+        else:
             events.append(
                 make_tool_call(
-                    tool="memory.distill",
-                    args={},
-                    status="error",
-                    result_summary=str(exc),
+                    tool="memory.distill.skip",
+                    args={"reason": "mock_preview"},
+                    status="ok",
+                    result_summary="mock 预览模式：不写 memory.db",
                 )
             )
 
         # Final report output
+        state.status = "done"
+        state.finished_at = datetime.now().isoformat()
+        state.meta.update({"phase": "done", "persisted_at": datetime.now().isoformat()})
+        if self._should_persist(store):
+            self.persistence.save_state(state)
         events.append(
             make_phase_output(
                 "reporting",
@@ -801,14 +995,69 @@ class ChatPipelineRunner:
 
     # ── Helpers ──────────────────────────────────────────────────────────────
 
-    def _load_library(self) -> List[StyleLibraryItem]:
+    def _get_pipeline_state(self, store: Dict[str, Any]) -> PipelineState:
+        ctx = store.setdefault("context", {})
+        state = ctx.get("pipeline_state")
+        if isinstance(state, PipelineState):
+            return state
+        if isinstance(state, dict):
+            state = PipelineState(**state)
+        else:
+            state = PipelineState()
+        ctx["pipeline_state"] = state
+        return state
+
+    def _mark_stopped(self, store: Dict[str, Any], status: str, phase: str) -> None:
+        try:
+            if not self._should_persist(store):
+                return
+            state = self._get_pipeline_state(store)
+            state.status = status
+            state.finished_at = datetime.now().isoformat()
+            state.meta.update({"phase": phase, "persisted_at": datetime.now().isoformat()})
+            self.persistence.save_state(state)
+        except Exception:
+            # Stopping should never raise a second UI error.
+            pass
+
+    def _mark_error(self, store: Dict[str, Any], exc: Exception) -> None:
+        try:
+            if not self._should_persist(store):
+                return
+            state = self._get_pipeline_state(store)
+            state.status = "error"
+            state.errors.append(str(exc))
+            state.meta.update(
+                {
+                    "phase": store.get("phase", "unknown"),
+                    "persisted_at": datetime.now().isoformat(),
+                }
+            )
+            self.persistence.save_state(state)
+        except Exception:
+            pass
+
+    def _load_library(self) -> List[NailStyleStoreItem]:
         import json
 
-        try:
-            with open(self.library_path, encoding="utf-8") as f:
-                return [StyleLibraryItem(**item) for item in json.load(f)]
-        except Exception:
-            return []
+        paths = [
+            Path(self.library_path),
+            Path("data/nail_styles_store.json"),
+            Path("data/nail_styles_v2.json"),
+        ]
+        for path in paths:
+            if not path.exists():
+                continue
+            try:
+                with open(path, encoding="utf-8") as f:
+                    return [NailStyleStoreItem(**item) for item in json.load(f)]
+            except Exception:
+                continue
+        return []
+
+    @staticmethod
+    def _should_persist(store: Dict[str, Any]) -> bool:
+        return bool(store.get("context", {}).get("persist_enabled"))
 
 
 def _elapsed(store: Dict[str, Any]) -> int:
@@ -818,22 +1067,17 @@ def _elapsed(store: Dict[str, Any]) -> int:
     return int((time.time() - t0) * 1000)
 
 
-def _matched_style_names(signal: TrendSignal, library: List[StyleLibraryItem]) -> str:
-    """Return comma-joined names of library styles that share tags with signal."""
-    sig_tags = set(signal.style_tags or [])
-    if not sig_tags:
-        return "—"
-    matched = [item.style_name for item in library if sig_tags & set(item.style_tags or [])]
-    if not matched:
-        return "（空白机会）"
-    return "、".join(matched[:3]) + ("…" if len(matched) > 3 else "")
+def _metric_sample_label(metric: Any, signal_map: Dict[str, TrendSignal]) -> str:
+    sig = signal_map.get(metric.trend_id)
+    if sig:
+        return sample_label(sig, metric.rank, with_tags=False)
+    if getattr(metric, "display_label", ""):
+        return metric.display_label
+    return f"样本 {metric.rank:02d}" if getattr(metric, "rank", 0) else "趋势样本"
 
 
-def _trend_to_style_name(keyword: str, library: List[StyleLibraryItem]) -> str:
-    """Best-matching library style name for a trend keyword (exact name match first)."""
-    # Try exact match first
-    for item in library:
-        if item.style_name == keyword:
-            return item.style_name
-    # Fall back to keyword itself (may not be in library yet)
-    return keyword
+def _metric_tag_summary(metric: Any, signal_map: Dict[str, TrendSignal]) -> str:
+    sig = signal_map.get(metric.trend_id)
+    if sig:
+        return tag_summary(sig)
+    return getattr(metric, "tag_summary", "") or "待补充标签"

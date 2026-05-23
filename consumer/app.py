@@ -42,6 +42,7 @@ st.markdown(
       .result-value { color: var(--ink); font-size: 1.45rem; font-weight: 780; margin-bottom: 0.32rem; }
       .result-reason { color: #c8d0dc; font-size: 0.84rem; line-height: 1.45; }
       .style-title { color: var(--ink); font-weight: 750; font-size: 1rem; margin-top: 0.55rem; }
+      .style-tags { margin-top: 0.42rem; margin-bottom: 0.2rem; }
       .style-meta { color: var(--muted); font-size: 0.78rem; margin-bottom: 0.38rem; }
       .score { color: var(--good); font-weight: 780; }
       .pill { display: inline-block; border: 1px solid var(--line); border-radius: 999px;
@@ -134,7 +135,7 @@ def api_post(path: str, json_body: dict | None = None, files: dict | None = None
 @st.cache_data(ttl=60)
 def fetch_styles_map() -> dict[str, dict[str, Any]]:
     try:
-        return {s["style_id"]: s for s in api_get("/styles")}
+        return {s["style_id"]: s for s in api_get("/styles", params={"listed_only": True})}
     except Exception:
         return {}
 
@@ -142,6 +143,29 @@ def fetch_styles_map() -> dict[str, dict[str, Any]]:
 def pill_html(values: list[str], hot: bool = False) -> str:
     cls = "pill pill-hot" if hot else "pill"
     return " ".join(f'<span class="{cls}">{escape(str(v))}</span>' for v in values)
+
+
+def first_tag(values: Any) -> str:
+    if isinstance(values, list):
+        return str(values[0]).strip() if values else ""
+    return str(values).strip() if values else ""
+
+
+def style_primary_tag_html(style: dict[str, Any]) -> str:
+    chips = []
+    for field, label in (
+        ("style_tags", "风格"),
+        ("color_tags", "颜色"),
+        ("material_tags", "材质"),
+    ):
+        value = first_tag(style.get(field))
+        if value:
+            chips.append(f"{label}: {value}")
+    return f'<div class="style-tags">{pill_html(chips)}</div>' if chips else ""
+
+
+def style_image_url(style: dict[str, Any]) -> str:
+    return style.get("enhanced_image_url") or style.get("image_url", "")
 
 
 def result_card(label: str, value: str, confidence: float | None, reason: str) -> None:
@@ -184,7 +208,7 @@ def style_card(
     styles_map: dict[str, dict[str, Any]],
 ) -> None:
     style = styles_map.get(item["style_id"], {})
-    image = resolve_image(style.get("image_url", ""))
+    image = resolve_image(style_image_url(style))
     primary_color = item.get("primary_color_name") or item.get("main_color_name") or "未知"
     family_label = COLOR_FAMILY_LABELS.get(item.get("primary_color_family", "unknown"), "未知色系")
     temp_label = COLOR_TEMP_LABELS.get(item.get("color_temperature", "unknown"), "未知")
@@ -197,13 +221,15 @@ def style_card(
             f'<div class="small-muted">视觉相似：<span class="score">{visual_score}</span> · '
             f"调色板 {item.get('palette_similarity_score', 0)}</div>"
         )
+    style_label = style.get("style_id", item["style_id"])
 
     with st.container(border=True):
         if image:
             st.image(image, width="stretch")
         st.markdown(
-            f'<div class="style-title">#{item["rank"]} {escape(style.get("title", item["style_id"]))}</div>'
-            f'<div class="style-meta">{escape(style.get("style_id", ""))} · '
+            f'<div class="style-title">#{item["rank"]}</div>'
+            f"{style_primary_tag_html(style)}"
+            f'<div class="style-meta">{escape(style_label)} · '
             f'<span class="score">{item["total_score"]}</span> 分</div>'
             f"{pill_html(item.get('reason_tags', []), hot=True)}"
             f'<div class="small-muted">主色：{escape(primary_color)} · {escape(family_label)} · {escape(temp_label)}</div>'
@@ -224,7 +250,7 @@ def style_card(
                     "source_snapshot_id": snapshot_id,
                 },
             )
-            st.toast(f"已记录点击：{style.get('title', '')}")
+            st.toast(f"已记录点击：{style_label}")
             st.rerun()
         if c2.button(
             "试戴", key=f"{button_prefix}_try_{snapshot_id}_{item['style_id']}", width="stretch"
@@ -242,7 +268,7 @@ def style_card(
                     st.error(f"试戴失败：{exc}")
                     return
             if job.get("status") == "success":
-                st.toast(f"试戴完成：{style.get('title', '')}")
+                st.toast(f"试戴完成：{style_label}")
             else:
                 st.warning(f"试戴未成功：{job.get('error_message', '')}")
             st.rerun()
@@ -428,7 +454,11 @@ with tab_tryon:
         with c2:
             result_url = try_on_job.get("result_image_url")
             if result_url:
-                st.image(result_url, caption=f"试戴结果：{style.get('title', '')}", width="stretch")
+                st.image(
+                    result_url,
+                    caption=f"试戴结果：{style.get('style_id', try_on_job['style_id'])}",
+                    width="stretch",
+                )
             else:
                 st.warning(
                     f"试戴未完成：{try_on_job.get('status')} · {try_on_job.get('error_message') or ''}"

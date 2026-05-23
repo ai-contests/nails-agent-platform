@@ -1,511 +1,407 @@
 [
   {
-    "trend_id": "TREND_20260504_001",
+    "trend_id": "TREND_20260520_XHS_E829B9",
     "platform": "小红书",
-    "keyword": "猫眼美甲",
-    "caption": "暗黑猫眼太绝了！磁铁石流动感，通勤约会都好搭",
-    "image_urls": [
-      "demo/images/trend_001.jpg"
-    ],
-    "likes": 72000,
-    "comments": 5800,
-    "shares": 2100,
-    "collects": 14200,
-    "publish_time": "2026-05-03T10:00:00+08:00",
-    "captured_at": "2026-05-04T08:00:00+08:00",
+    "keyword": "法式美甲",
+    "display_label": "样本 01",
+    "source_title": "多巴胺法式🫧🍧丨夏日美甲",
+    "caption": "多巴胺法式🫧🍧丨夏日美甲 #法式美甲[话题]# #夏日小清新美甲[话题]# #彩虹美甲[话题]# #美甲夏天[话题]# #彩色美甲[话题]# #夏季显白美甲[话题]# #糖果色美甲[话题]# #甜美美甲[话题]# #马卡龙美甲[话题]#",
+    "likes": 54000,
+    "comments": 319,
+    "shares": 12211,
+    "collects": 34000,
+    "publish_time": "2025-06-24T03:34:17+08:00",
+    "captured_at": "2026-05-20T16:27:52.063909+08:00",
     "style_tags": [
-      "猫眼",
-      "磁铁",
-      "暗黑"
+      "法式",
+      "美甲"
     ],
     "color_tags": [
-      "深蓝",
-      "黑色"
+      "多巴胺"
     ],
-    "material_tags": [
-      "猫眼",
-      "磁铁石"
-    ],
+    "material_tags": [],
     "scene_tags": [
-      "通勤",
+      "夏日"
+    ],
+    "image_urls": [
+      "http://sns-webpic-qc.xhscdn.com/202605201627/7c9d31ca375893e80406a209c615307b/notes_pre_post/1040g3k831j38fj68hge04bdjs9rd7pcpolggqv8!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201627/f9fe4fd1cd3ddd15e1920718777b2b6d/1040g00831j38fj66hg004bdjs9rd7pcpq9k8f00!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201627/7453b0512d538cef770ee98e82aa090b/notes_pre_post/1040g3k831j38fj68hgeg4bdjs9rd7pcpba6jsco!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201627/a3b65072c34db4a8b9fdfb0c8539f4e6/notes_pre_post/1040g3k831j38fj68hgf04bdjs9rd7pcpmj604po!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201627/75bbb0311044c8cd30cfe860ebcfe47c/notes_pre_post/1040g3k831j38fj68hgfg4bdjs9rd7pcpsap148o!nd_dft_wlteh_webp_3"
+    ],
+    "local_image_paths": [
+      "web/data/images/mock/raw/TREND_20260520_XHS_E829B9_1.webp"
+    ],
+    "image_download_status": "success",
+    "image_content_type": "image/webp",
+    "detail_enriched": true,
+    "source_note_id": "6859ac39000000002400be64",
+    "tag_source": "rules:detail",
+    "tag_confidence": 0.71,
+    "composite_score": 100.0,
+    "rank": 1
+  },
+  {
+    "trend_id": "TREND_20260520_XHS_6B3A3B",
+    "platform": "小红书",
+    "keyword": "法式美甲",
+    "display_label": "样本 02",
+    "source_title": "好仙的法式美甲！一整个温柔~",
+    "caption": "好仙的法式美甲！一整个温柔~ #百搭美甲[话题]# #气质美甲[话题]# #超好看的美甲[话题]# #温柔美甲[话题]# #约会美甲[话题]# #美甲[话题]# #穿戴甲[话题]# #亲手晒美甲[话题]# #显白美甲[话题]# #仙女美甲[话题]#",
+    "likes": 36000,
+    "comments": 153,
+    "shares": 7448,
+    "collects": 25000,
+    "publish_time": "2025-10-02T12:11:28+08:00",
+    "captured_at": "2026-05-20T16:27:52.063934+08:00",
+    "style_tags": [
+      "法式",
+      "温柔",
+      "美甲"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [
       "约会"
     ],
-    "composite_score": 67300.0
-  },
-  {
-    "trend_id": "TREND_20260504_002",
-    "platform": "抖音",
-    "keyword": "冰透蓝猫眼",
-    "caption": "夏天一定要试的冰透猫眼美甲，显白显手细",
     "image_urls": [
-      "demo/images/trend_002.jpg"
+      "http://sns-webpic-qc.xhscdn.com/202605201628/19aa1bae53e284310a611692b5d08db5/1040g2sg31n4f5ppd6ge05orsggk7rkgseejbaio!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/694222abe026749e26dd12acec58ab3e/1040g2sg31n4f5ppd6geg5orsggk7rkgsgkta3u8!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/b32d40eea0fafa2dca588960bd0fbb03/1040g2sg31n4f5ppd6gf05orsggk7rkgsdeprgt8!nd_dft_wlteh_webp_3"
     ],
-    "likes": 58000,
-    "comments": 4200,
-    "shares": 3100,
-    "collects": 9800,
-    "publish_time": "2026-05-04T09:00:00+08:00",
-    "captured_at": "2026-05-04T10:00:00+08:00",
-    "style_tags": [
-      "冰透",
-      "猫眼",
-      "显白"
+    "local_image_paths": [
+      "web/data/images/mock/raw/TREND_20260520_XHS_6B3A3B_1.webp"
     ],
-    "color_tags": [
-      "蓝色",
-      "冰蓝"
-    ],
-    "material_tags": [
-      "猫眼",
-      "冰透"
-    ],
-    "scene_tags": [
-      "夏季",
-      "约会",
-      "显白"
-    ],
-    "composite_score": 54100.0
+    "image_download_status": "success",
+    "image_content_type": "image/webp",
+    "detail_enriched": true,
+    "source_note_id": "68ddfb70000000000302dbd9",
+    "tag_source": "rules:detail",
+    "tag_confidence": 0.71,
+    "composite_score": 62.44,
+    "rank": 2
   },
   {
-    "trend_id": "TREND_20260504_003",
+    "trend_id": "TREND_20260520_XHS_FBF32E",
     "platform": "小红书",
-    "keyword": "法式渐变美甲",
-    "caption": "春夏必做！法式渐变，简约高级感拉满",
-    "image_urls": [
-      "demo/images/trend_003.jpg"
-    ],
-    "likes": 45000,
-    "comments": 3600,
-    "shares": 1800,
-    "collects": 12000,
-    "publish_time": "2026-05-02T14:00:00+08:00",
-    "captured_at": "2026-05-04T08:30:00+08:00",
-    "style_tags": [
-      "法式",
-      "渐变",
-      "高级感"
-    ],
-    "color_tags": [
-      "裸粉",
-      "白色"
-    ],
-    "material_tags": [
-      "甲油胶"
-    ],
-    "scene_tags": [
-      "通勤",
-      "商务",
-      "日常"
-    ],
-    "composite_score": 47700.0
-  },
-  {
-    "trend_id": "TREND_20260504_004",
-    "platform": "Instagram",
-    "keyword": "3D立体美甲",
-    "caption": "3D floral nail art is having a moment! Spring vibes only 🌸",
-    "image_urls": [
-      "demo/images/trend_004.jpg"
-    ],
-    "likes": 38000,
-    "comments": 2900,
-    "shares": 4200,
-    "collects": 7600,
-    "publish_time": "2026-05-03T18:00:00+08:00",
-    "captured_at": "2026-05-04T09:00:00+08:00",
-    "style_tags": [
-      "3D立体",
-      "浮雕",
-      "花卉"
-    ],
-    "color_tags": [
-      "粉色",
-      "白色"
-    ],
-    "material_tags": [
-      "3D雕花",
-      "硬胶"
-    ],
-    "scene_tags": [
-      "春季",
-      "约会",
-      "拍照"
-    ],
-    "composite_score": 41700.0
-  },
-  {
-    "trend_id": "TREND_20260504_005",
-    "platform": "抖音",
-    "keyword": "奶油美甲",
-    "caption": "奶油质感美甲，哑光柔雾感太治愈了",
-    "image_urls": [
-      "demo/images/trend_005.jpg"
-    ],
-    "likes": 35000,
-    "comments": 2100,
-    "shares": 1500,
-    "collects": 8900,
-    "publish_time": "2026-05-04T07:00:00+08:00",
-    "captured_at": "2026-05-04T10:30:00+08:00",
-    "style_tags": [
-      "奶油",
-      "哑光",
-      "柔雾"
-    ],
-    "color_tags": [
-      "裸色",
-      "米白"
-    ],
-    "material_tags": [
-      "哑光",
-      "凝胶"
-    ],
-    "scene_tags": [
-      "日常",
-      "通勤",
-      "治愈"
-    ],
-    "composite_score": 35950.0
-  },
-  {
-    "trend_id": "TREND_20260504_006",
-    "platform": "小红书",
-    "keyword": "星月美甲",
-    "caption": "星月主题美甲，梦幻浪漫，和男友约会必做款",
-    "image_urls": [
-      "demo/images/trend_006.jpg"
-    ],
-    "likes": 29000,
-    "comments": 1800,
-    "shares": 2400,
-    "collects": 6200,
-    "publish_time": "2026-05-03T20:00:00+08:00",
-    "captured_at": "2026-05-04T08:00:00+08:00",
-    "style_tags": [
-      "星月",
-      "浪漫",
-      "梦幻"
-    ],
-    "color_tags": [
-      "深蓝",
-      "金色",
-      "银色"
-    ],
-    "material_tags": [
-      "亮片",
-      "碎钻"
-    ],
-    "scene_tags": [
-      "约会",
-      "晚宴",
-      "节日"
-    ],
-    "composite_score": 30400.0
-  },
-  {
-    "trend_id": "TREND_20260504_007",
-    "platform": "抖音",
-    "keyword": "镜面美甲",
-    "caption": "镜面金属光泽，科技感超强！2026最火款",
-    "image_urls": [
-      "demo/images/trend_007.jpg"
-    ],
-    "likes": 26000,
-    "comments": 1600,
-    "shares": 1900,
-    "collects": 5800,
-    "publish_time": "2026-05-02T19:00:00+08:00",
-    "captured_at": "2026-05-04T09:30:00+08:00",
-    "style_tags": [
-      "镜面",
-      "金属",
-      "科技感"
-    ],
-    "color_tags": [
-      "银色",
-      "金色",
-      "玫瑰金"
-    ],
-    "material_tags": [
-      "镜面粉",
-      "铝箔"
-    ],
-    "scene_tags": [
-      "派对",
-      "拍照",
-      "晚宴"
-    ],
-    "composite_score": 27100.0
-  },
-  {
-    "trend_id": "TREND_20260504_008",
-    "platform": "Instagram",
-    "keyword": "渐变美甲",
-    "caption": "Summer ombre nails hitting different 🌈 lavender to coral gradient",
-    "image_urls": [
-      "demo/images/trend_008.jpg"
-    ],
-    "likes": 22000,
-    "comments": 1400,
-    "shares": 2600,
-    "collects": 4900,
-    "publish_time": "2026-05-03T15:00:00+08:00",
-    "captured_at": "2026-05-04T10:00:00+08:00",
-    "style_tags": [
-      "渐变",
-      "彩色",
-      "夏季"
-    ],
-    "color_tags": [
-      "紫色",
-      "粉色",
-      "珊瑚色"
-    ],
-    "material_tags": [
-      "甲油胶",
-      "海绵晕染"
-    ],
-    "scene_tags": [
-      "夏季",
-      "度假",
-      "拍照"
-    ],
-    "composite_score": 24950.0
-  },
-  {
-    "trend_id": "TREND_20260504_009",
-    "platform": "小红书",
-    "keyword": "贴片美甲",
-    "caption": "免去美甲店！自己贴贴片，5分钟搞定",
-    "image_urls": [
-      "demo/images/trend_009.jpg"
-    ],
-    "likes": 18000,
-    "comments": 3200,
-    "shares": 5600,
-    "collects": 11000,
-    "publish_time": "2026-05-01T12:00:00+08:00",
-    "captured_at": "2026-05-04T08:00:00+08:00",
-    "style_tags": [
-      "贴片",
-      "DIY",
-      "便捷"
-    ],
-    "color_tags": [
-      "多色"
-    ],
-    "material_tags": [
-      "甲片",
-      "贴片"
-    ],
-    "scene_tags": [
-      "日常",
-      "出游",
-      "DIY"
-    ],
-    "composite_score": 39900.0
-  },
-  {
-    "trend_id": "TREND_20260504_010",
-    "platform": "抖音",
-    "keyword": "大理石纹美甲",
-    "caption": "大理石纹美甲教程，高级感爆棚，步骤超简单",
-    "image_urls": [
-      "demo/images/trend_010.jpg"
-    ],
-    "likes": 16000,
-    "comments": 1200,
-    "shares": 980,
-    "collects": 4200,
-    "publish_time": "2026-05-02T16:00:00+08:00",
-    "captured_at": "2026-05-04T09:00:00+08:00",
-    "style_tags": [
-      "大理石纹",
-      "高级感",
-      "纹理"
-    ],
-    "color_tags": [
-      "白色",
-      "灰色",
-      "米色"
-    ],
-    "material_tags": [
-      "甲油胶",
-      "拉线笔"
-    ],
-    "scene_tags": [
-      "通勤",
-      "商务",
-      "日常"
-    ],
-    "composite_score": 17460.0
-  },
-  {
-    "trend_id": "TREND_20260504_011",
-    "platform": "小红书",
-    "keyword": "彩绘美甲",
-    "caption": "手绘小花美甲，超级可爱，显手白❤️",
-    "image_urls": [
-      "demo/images/trend_011.jpg"
-    ],
-    "likes": 14000,
-    "comments": 980,
-    "shares": 760,
-    "collects": 3800,
-    "publish_time": "2026-05-03T11:00:00+08:00",
-    "captured_at": "2026-05-04T08:30:00+08:00",
-    "style_tags": [
-      "彩绘",
-      "手绘",
-      "花卉"
-    ],
-    "color_tags": [
-      "粉色",
-      "白色"
-    ],
-    "material_tags": [
-      "彩绘胶",
-      "细笔"
-    ],
-    "scene_tags": [
-      "约会",
-      "春季",
-      "少女"
-    ],
-    "composite_score": 15200.0
-  },
-  {
-    "trend_id": "TREND_20260504_012",
-    "platform": "Instagram",
-    "keyword": "极简纯色美甲",
-    "caption": "Clean girl aesthetic: minimalist solid nails never go out of style",
-    "image_urls": [
-      "demo/images/trend_012.jpg"
-    ],
-    "likes": 12000,
-    "comments": 680,
-    "shares": 890,
-    "collects": 3200,
-    "publish_time": "2026-05-01T20:00:00+08:00",
-    "captured_at": "2026-05-04T10:00:00+08:00",
-    "style_tags": [
-      "纯色",
-      "极简",
-      "百搭"
-    ],
-    "color_tags": [
-      "裸色",
-      "奶白"
-    ],
-    "material_tags": [
-      "甲油胶"
-    ],
-    "scene_tags": [
-      "日常",
-      "通勤",
-      "百搭"
-    ],
-    "composite_score": 13260.0
-  },
-  {
-    "trend_id": "TREND_20260504_013",
-    "platform": "抖音",
-    "keyword": "碎钻美甲",
-    "caption": "碎钻铺满整片甲，超级闪，婚礼伴娘必做款",
-    "image_urls": [
-      "demo/images/trend_013.jpg"
-    ],
-    "likes": 10000,
-    "comments": 820,
-    "shares": 1100,
-    "collects": 2600,
-    "publish_time": "2026-05-02T13:00:00+08:00",
-    "captured_at": "2026-05-04T09:30:00+08:00",
-    "style_tags": [
-      "碎钻",
-      "闪耀",
-      "婚礼"
-    ],
-    "color_tags": [
-      "透明",
-      "裸粉"
-    ],
-    "material_tags": [
-      "碎钻",
-      "水钻"
-    ],
-    "scene_tags": [
-      "婚礼",
-      "晚宴",
-      "节日"
-    ],
-    "composite_score": 11920.0
-  },
-  {
-    "trend_id": "TREND_20260504_014",
-    "platform": "小红书",
-    "keyword": "浮雕美甲",
-    "caption": "浮雕立体玫瑰，艺术感满分！高端美甲店同款",
-    "image_urls": [
-      "demo/images/trend_014.jpg"
-    ],
-    "likes": 8500,
-    "comments": 620,
-    "shares": 480,
-    "collects": 2100,
-    "publish_time": "2026-05-03T16:00:00+08:00",
-    "captured_at": "2026-05-04T08:00:00+08:00",
-    "style_tags": [
-      "浮雕",
-      "立体",
-      "玫瑰"
-    ],
-    "color_tags": [
-      "白色",
-      "裸粉"
-    ],
-    "material_tags": [
-      "硬胶",
-      "雕花"
-    ],
-    "scene_tags": [
-      "约会",
-      "晚宴",
-      "高端"
-    ],
-    "composite_score": 8980.0
-  },
-  {
-    "trend_id": "TREND_20260504_015",
-    "platform": "Instagram",
     "keyword": "法式美甲",
-    "caption": "Classic French tip is back and better than ever — timeless elegance ✨",
-    "image_urls": [
-      "demo/images/trend_015.jpg"
-    ],
-    "likes": 7200,
-    "comments": 540,
-    "shares": 620,
-    "collects": 1900,
-    "publish_time": "2026-05-01T18:00:00+08:00",
-    "captured_at": "2026-05-04T10:00:00+08:00",
+    "display_label": "样本 03",
+    "source_title": "💅极简法式美甲，太干净了！极限三选一 又到了每月换美甲大关 美甲的尽头是裸色 是法式呀 哪个姐妹做过给点返图",
+    "caption": "💅极简法式美甲，太干净了！极限三选一 又到了每月换美甲大关\n美甲的尽头是裸色\n是法式呀\n哪个姐妹做过给点返图\n#简约法式美甲[话题]# #美甲款式推荐[话题]# #极简美甲[话题]# #中长款美甲[话题]# #耐看美甲[话题]# #美甲的尽头[话题]# #法式渐变美甲[话题]# #白月光美甲[话题]# #干净美甲[话题]# #气质高级感美甲[话题]#",
+    "likes": 21000,
+    "comments": 125,
+    "shares": 2541,
+    "collects": 14000,
+    "publish_time": "2025-12-19T19:01:42+08:00",
+    "captured_at": "2026-05-20T16:27:52.063988+08:00",
     "style_tags": [
       "法式",
-      "经典",
-      "简约"
+      "渐变",
+      "极简",
+      "高级",
+      "美甲"
     ],
     "color_tags": [
-      "白色",
       "裸色"
     ],
-    "material_tags": [
-      "甲油胶"
+    "material_tags": [],
+    "scene_tags": [],
+    "image_urls": [
+      "http://sns-webpic-qc.xhscdn.com/202605201628/d06464fc8a68030d71467d3c3e29b15c/notes_pre_post/1040g3k031q9873780a005oseuebnqt97et3vmto!nd_dft_wgth_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/d15d338567cdc3156117f9ee50a77be4/notes_pre_post/1040g3k031q9873780a0g5oseuebnqt97o5r0qng!nd_dft_wgth_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/93354b448b3a7ad6efa078e4a2df007f/notes_pre_post/1040g3k031q9873780a105oseuebnqt97658nth8!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/5a5d536d2d8fa86d9b792e3fef1d8c86/notes_pre_post/1040g3k031q9873780a1g5oseuebnqt97ia89e38!nd_dft_wlteh_webp_3"
     ],
+    "local_image_paths": [
+      "web/data/images/mock/raw/TREND_20260520_XHS_FBF32E_1.webp"
+    ],
+    "image_download_status": "success",
+    "image_content_type": "image/webp",
+    "detail_enriched": true,
+    "source_note_id": "69453096000000001e03aa9b",
+    "tag_source": "rules:detail",
+    "tag_confidence": 0.8,
+    "composite_score": 24.67,
+    "rank": 3
+  },
+  {
+    "trend_id": "TREND_20260520_XHS_5416D7",
+    "platform": "小红书",
+    "keyword": "显白美甲",
+    "display_label": "样本 04",
+    "source_title": "蝴蝶结💫冰透猫眼⚗️再发一遍原图无滤镜 好多人问这款细节图所以我再发一遍~原图无滤镜蝴蝶结💫冰透猫眼⚗️宁波美甲",
+    "caption": "蝴蝶结💫冰透猫眼⚗️再发一遍原图无滤镜 好多人问这款细节图所以我再发一遍~原图无滤镜蝴蝶结💫冰透猫眼⚗️宁波美甲#美甲分享[话题]# #美甲💅[话题]# #夏天美甲[话题]# #爆闪美甲[话题]# #显白美甲[话题]# #宁波美甲[话题]# #百搭美甲[话题]# #刚做的指甲盖子[话题]# #仙气蝴蝶美甲[话题]#",
+    "likes": 20000,
+    "comments": 77,
+    "shares": 3161,
+    "collects": 11000,
+    "publish_time": "2026-01-15T19:18:34+08:00",
+    "captured_at": "2026-05-20T16:27:41.305521+08:00",
+    "style_tags": [
+      "猫眼",
+      "冰透",
+      "蝴蝶",
+      "美甲"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [],
+    "image_urls": [
+      "http://sns-webpic-qc.xhscdn.com/202605201628/f00cca3e7e34fefc8da3d72cce1700c9/1040g00831rbvg8cj0a0g416ubcm59ea2b57utdo!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/4c5f8f22c5a405e626b8ddee540560bb/notes_pre_post/1040g3k031rc14k5b0a0g416ubcm59ea23a4e5j0!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/7e227373f69a85b142f995f4d7a5fd89/notes_pre_post/1040g3k031rc14k5b0a10416ubcm59ea2jp673no!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/648c58b06f109c843c9203944b64d751/notes_pre_post/1040g3k031rc14k5b0a1g416ubcm59ea2sjc5dd8!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/ea3c7763931eac66c759bc37b4eaee82/notes_pre_post/1040g3k031rc14k5b0a20416ubcm59ea2kg03rk8!nd_dft_wlteh_webp_3"
+    ],
+    "local_image_paths": [
+      "web/data/images/mock/raw/TREND_20260520_XHS_5416D7_1.webp"
+    ],
+    "image_download_status": "success",
+    "image_content_type": "image/webp",
+    "detail_enriched": true,
+    "source_note_id": "6968cd0a000000001a02e786",
+    "tag_source": "rules:detail",
+    "tag_confidence": 0.71,
+    "composite_score": 20.76,
+    "rank": 4
+  },
+  {
+    "trend_id": "TREND_20260520_XHS_8A1AD7",
+    "platform": "小红书",
+    "keyword": "美甲教程",
+    "display_label": "样本 05",
+    "source_title": "新手小美甲详细步骤",
+    "caption": "新手小美甲详细步骤 #新手美甲[话题]#",
+    "likes": 17000,
+    "comments": 52,
+    "shares": 826,
+    "collects": 13000,
+    "publish_time": "2025-07-08T16:12:46+08:00",
+    "captured_at": "2026-05-20T16:27:57.538583+08:00",
+    "style_tags": [
+      "美甲"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [],
+    "image_urls": [
+      "http://sns-webpic-qc.xhscdn.com/202605201628/22c6b8c3f1b8498377ca3a2c29d04dfe/1040g2sg31jlv00u132dg5pjsrqd0u3lsp75ukf0!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/3f5cff4ff4695f51760a4cc66cb49c98/1040g2sg31jlv00u132cg5pjsrqd0u3lsf1j39jg!nd_dft_wlteh_webp_3"
+    ],
+    "local_image_paths": [
+      "web/data/images/mock/raw/TREND_20260520_XHS_8A1AD7_1.webp"
+    ],
+    "image_download_status": "success",
+    "image_content_type": "image/webp",
+    "detail_enriched": true,
+    "source_note_id": "686cd2fe000000002201cce0",
+    "tag_source": "rules:detail",
+    "tag_confidence": 0.2,
+    "composite_score": 16.48,
+    "rank": 5
+  },
+  {
+    "trend_id": "TREND_20260520_XHS_3D5880",
+    "platform": "小红书",
+    "keyword": "法式美甲",
+    "display_label": "样本 06",
+    "source_title": "近期超爱的美甲合集💅长款美甲",
+    "caption": "近期超爱的美甲合集💅长款美甲 #美甲[话题]# #猫眼美甲[话题]# #蝴蝶结美甲[话题]# #长款美甲[话题]# #高级显白美甲[话题]# #美甲款式分享[话题]# #巨好看显白美甲[话题]# #星星美甲[话题]# #法式美甲[话题]#",
+    "likes": 15000,
+    "comments": 101,
+    "shares": 1546,
+    "collects": 9591,
+    "publish_time": "2025-11-30T19:59:07+08:00",
+    "captured_at": "2026-05-20T16:27:52.063892+08:00",
+    "style_tags": [
+      "猫眼",
+      "法式",
+      "蝴蝶",
+      "高级",
+      "美甲"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [],
+    "image_urls": [
+      "http://sns-webpic-qc.xhscdn.com/202605201628/4f6bd3ba4852c14afe7fe40554dc481f/notes_pre_post/1040g3k031pgr9b8hig005nlhv5b089itn46vof0!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/8437f6f7bd8026d74295450a680b7e4f/note_pre_post_uhdr/1040g3r031pgr93v32s005nlhv5b089it9quhhg0!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/5e63125a3fc4f5fb1a6ddb652a27ed59/note_pre_post_uhdr/1040g3r031pgr93v32s0g5nlhv5b089itmok6bg0!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/51ac29b2ac35966daa0e365273104830/note_pre_post_uhdr/1040g3r031pgr93v32s105nlhv5b089itt20aq9o!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/3c59418f4c92026dfb616baedea4560a/note_pre_post_uhdr/1040g3r031pgr93v32s1g5nlhv5b089it7ef8dfo!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/ac5921142a5fb7c107d4d5edd899003e/note_pre_post_uhdr/1040g3r031pgr93v32s205nlhv5b089it47k0128!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/b31ec32ed0e5fe0467b5d5a08bd77bca/note_pre_post_uhdr/1040g3r031pgr93v32s2g5nlhv5b089iti9db3q8!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/6c4a23f8bd1e188b422581f0d39e34cf/note_pre_post_uhdr/1040g3r031pgr93v32s305nlhv5b089it7mdtbv0!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/2a83966c451f24c67bc7ba11daa1bf31/note_pre_post_uhdr/1040g3r031pgr93v32s3g5nlhv5b089itpiamero!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201628/a755e2ed67a7421c672e51064fb654ce/note_pre_post_uhdr/1040g3r031pgr93v32s405nlhv5b089itve82058!nd_dft_wlteh_webp_3"
+    ],
+    "local_image_paths": [
+      "web/data/images/mock/raw/TREND_20260520_XHS_3D5880_1.webp"
+    ],
+    "image_download_status": "success",
+    "image_content_type": "image/webp",
+    "detail_enriched": true,
+    "source_note_id": "692c318b000000001e0321e2",
+    "tag_source": "rules:detail",
+    "tag_confidence": 0.8,
+    "composite_score": 11.32,
+    "rank": 6
+  },
+  {
+    "trend_id": "TREND_20260520_XHS_AADC46",
+    "platform": "小红书",
+    "keyword": "美甲教程",
+    "display_label": "样本 07",
+    "source_title": "大家都在催的教程来啦 这辈子剪视频最快的一次[睡觉R] 如果还有任何问题直接在评论区问我！",
+    "caption": "大家都在催的教程来啦 这辈子剪视频最快的一次[睡觉R]\n如果还有任何问题直接在评论区问我！",
+    "likes": 12000,
+    "comments": 94,
+    "shares": 1796,
+    "collects": 6792,
+    "publish_time": "2025-05-22T19:20:03+08:00",
+    "captured_at": "2026-05-20T16:27:57.538656+08:00",
+    "style_tags": [],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [],
+    "image_urls": [
+      "http://sns-webpic-qc.xhscdn.com/202605201628/08e43fc1ca00493ab486177c92308fc1/1040g2sg31hpjrouv4qe05n7fcb55u1i5sek235o!nd_dft_wlteh_webp_3"
+    ],
+    "local_image_paths": [
+      "web/data/images/mock/raw/TREND_20260520_XHS_AADC46_1.webp"
+    ],
+    "image_download_status": "success",
+    "image_content_type": "image/webp",
+    "detail_enriched": true,
+    "source_note_id": "682f08630000000023000b07",
+    "tag_source": "rules:detail",
+    "tag_confidence": 0.2,
+    "composite_score": 5.19,
+    "rank": 7
+  },
+  {
+    "trend_id": "TREND_20260520_XHS_D1E261",
+    "platform": "小红书",
+    "keyword": "美甲灵感",
+    "display_label": "样本 08",
+    "source_title": "💅🏻2025的N个我｜之我的年度美甲合集 又是一年要结束惹 今年也做了不少漂亮美甲！ 其实现在手上还有的新的雪花美甲但还没来得及拍！ 这几天一定安排上！！ 最最",
+    "caption": "💅🏻2025的N个我｜之我的年度美甲合集 又是一年要结束惹\n今年也做了不少漂亮美甲！\n其实现在手上还有的新的雪花美甲但还没来得及拍！\n这几天一定安排上！！\n最最满意的还是图2的紫色美甲温温柔柔的！\n#美甲[话题]# #美甲分享[话题]# #ins美甲[话题]# #2025怪不一样[话题]# #我的2025[话题]# #美甲推荐[话题]# #美甲款式[话题]#",
+    "likes": 11000,
+    "comments": 105,
+    "shares": 1019,
+    "collects": 6171,
+    "publish_time": "2025-12-24T15:52:02+08:00",
+    "captured_at": "2026-05-20T16:27:46.678377+08:00",
+    "style_tags": [
+      "温柔",
+      "美甲"
+    ],
+    "color_tags": [
+      "紫色"
+    ],
+    "material_tags": [],
+    "scene_tags": [],
+    "image_urls": [
+      "http://sns-webpic-qc.xhscdn.com/202605201629/ad10685ad5f50bd57b9e8b6ebcf4e9f3/notes_pre_post/1040g3k031qfgiv0t0m5049mgt34s3bbdp3fvs7g!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201629/91367e56fcd8a87da6b40bbcb953dd96/notes_pre_post/1040g3k031qfgiv0t0m5g49mgt34s3bbdtj4jt1g!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201629/e522df87e88b8525a4b6903a5d9d1bb4/notes_pre_post/1040g3k031qfgrc8bmu0049mgt34s3bbd6h3quno!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201629/15ba1b7a89233b1d15fd4dfbea9e1f65/notes_pre_post/1040g3k031qfgiv0t0m6049mgt34s3bbdair3b2o!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201629/06d871721b95621df4995d0374194a09/1040g2sg31qfgj0ebn20049mgt34s3bbdsdbtfqg!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201629/bd3cdd67942582c4928e3b36713e1ba3/1040g2sg31qfgj0ebn20g49mgt34s3bbdhdoaeq8!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201629/dc0442684365fd1c866749631b14df05/notes_pre_post/1040g3k031qfgiv0t0m6g49mgt34s3bbdearkpj0!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201629/d76608fa69b261d750295523e03fc816/notes_pre_post/1040g3k031qfgrc8bmu0g49mgt34s3bbd6830ggo!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201629/e074d49a7aa7253d6237b9b1f5231543/notes_pre_post/1040g3k031qfgrc8bmu1049mgt34s3bbd84a5fdo!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201629/babc0ef3425071dfb0b0b34ec8df40c6/notes_pre_post/1040g3k031qfgrc8bmu1g49mgt34s3bbd0r2l93o!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201629/5498d1a0d7c176b974a561d478d1df54/notes_pre_post/1040g3k031qfgrc8bmu2049mgt34s3bbdqlr53fg!nd_dft_wlteh_webp_3"
+    ],
+    "local_image_paths": [
+      "web/data/images/mock/raw/TREND_20260520_XHS_D1E261_1.webp"
+    ],
+    "image_download_status": "success",
+    "image_content_type": "image/webp",
+    "detail_enriched": true,
+    "source_note_id": "694b9ba2000000001e00ed2d",
+    "tag_source": "rules:detail",
+    "tag_confidence": 0.59,
+    "composite_score": 2.01,
+    "rank": 8
+  },
+  {
+    "trend_id": "TREND_20260520_XHS_EF8AFC",
+    "platform": "小红书",
+    "keyword": "法式美甲",
+    "display_label": "样本 09",
+    "source_title": "新美甲look ♡♩miu系氛围感芭蕾法式少女",
+    "caption": "新美甲look ♡♩miu系氛围感芭蕾法式少女 #ins美甲[话题]# #氛围感美甲[话题]# #超嫩少女心美甲[话题]# #约会美甲[话题]# #芭蕾舞鞋美甲[话题]# #百搭美甲[话题]# #蝴蝶结美甲[话题]# #甜美美甲[话题]# #公主美甲[话题]# #冰透美甲[话题]#",
+    "likes": 8270,
+    "comments": 25,
+    "shares": 1479,
+    "collects": 6380,
+    "publish_time": "2025-09-21T18:37:15+08:00",
+    "captured_at": "2026-05-20T16:27:52.063966+08:00",
+    "style_tags": [
+      "法式",
+      "冰透",
+      "蝴蝶",
+      "美甲"
+    ],
+    "color_tags": [],
+    "material_tags": [],
     "scene_tags": [
-      "通勤",
-      "商务",
-      "日常"
+      "约会"
     ],
-    "composite_score": 8230.0
+    "image_urls": [
+      "http://sns-webpic-qc.xhscdn.com/202605201629/f1128c7fe2ea1fc781dc1d530d4873d6/1040g2sg31mmkrjakkqkg5puqpt2inl5gkfb0c10!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201629/7d74123855db72a303b5b96acfc1c3c2/1040g2sg31mmkrjakkqk05puqpt2inl5gslugu5g!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201629/c8db2aae99c32fde081bfaf1f081ffbc/1040g2sg31mmkrjakkqig5puqpt2inl5gr9f6keg!nd_dft_wlteh_webp_3"
+    ],
+    "local_image_paths": [
+      "web/data/images/mock/raw/TREND_20260520_XHS_EF8AFC_1.webp"
+    ],
+    "image_download_status": "success",
+    "image_content_type": "image/webp",
+    "detail_enriched": true,
+    "source_note_id": "68cfd55b000000001201f9e7",
+    "tag_source": "rules:detail",
+    "tag_confidence": 0.8,
+    "composite_score": 0.61,
+    "rank": 9
+  },
+  {
+    "trend_id": "TREND_20260520_XHS_88279F",
+    "platform": "小红书",
+    "keyword": "美甲推荐",
+    "display_label": "样本 10",
+    "source_title": "做了半年的短甲，长甲还是一如既往的美丽",
+    "caption": "做了半年的短甲，长甲还是一如既往的美丽#氛围感美甲[话题]# #美甲分享[话题]# #温柔美甲[话题]#",
+    "likes": 9334,
+    "comments": 64,
+    "shares": 1037,
+    "collects": 5802,
+    "publish_time": "2026-02-27T22:19:56+08:00",
+    "captured_at": "2026-05-20T16:26:20.786017+08:00",
+    "style_tags": [
+      "温柔",
+      "美甲"
+    ],
+    "color_tags": [],
+    "material_tags": [],
+    "scene_tags": [],
+    "image_urls": [
+      "http://sns-webpic-qc.xhscdn.com/202605201629/d4aff400705cfa295268a9a659ce86dd/note_pre_post_uhdr/1040g3r031t3hvpct56005n29krqk7vkcootuda0!nd_dft_wlteh_webp_3",
+      "http://sns-webpic-qc.xhscdn.com/202605201629/aecf895dacaa620c81c6a2197754ee26/note_pre_post_uhdr/1040g3r031t3i3oebl8005n29krqk7vkcs3949q0!nd_dft_wlteh_webp_3"
+    ],
+    "local_image_paths": [
+      "web/data/images/mock/raw/TREND_20260520_XHS_88279F_1.webp"
+    ],
+    "image_download_status": "success",
+    "image_content_type": "image/webp",
+    "detail_enriched": true,
+    "source_note_id": "69a1a80c000000002603f90a",
+    "tag_source": "rules:detail",
+    "tag_confidence": 0.47,
+    "composite_score": 0.0,
+    "rank": 10
   }
 ]

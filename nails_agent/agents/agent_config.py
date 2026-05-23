@@ -10,36 +10,26 @@ ModelScope and OpenRouter both expose OpenAI-compatible endpoints.
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
 from functools import lru_cache
 
-from dotenv import load_dotenv
-
-# Load env files once at import
-load_dotenv(Path(__file__).parent.parent.parent / ".env")
-load_dotenv(Path.home() / ".hermes" / ".env", override=False)
-
-# ── ModelScope constants ──────────────────────────────────────────────────────
-
-MODELSCOPE_BASE_URL = os.environ.get(
-    "MODELSCOPE_BASE_URL", "https://api-inference.modelscope.cn/v1"
+from nails_agent.services.llm_config import (
+    modelscope_config,
+    openrouter_config,
+    openrouter_referer,
 )
-MODELSCOPE_MODEL = os.environ.get("NAILS_MODELSCOPE_MODEL", "Qwen/Qwen3-235B-A22B-Instruct-2507")
 
-# ── OpenRouter constants ──────────────────────────────────────────────────────
-
-OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-OPENROUTER_MODEL = os.environ.get("NAILS_OPENROUTER_MODEL", "anthropic/claude-sonnet-4-5")
+_DUMMY_BASE_URL = "http://localhost/v1"
 
 
 def get_model_string() -> str:
     """Return the model identifier for the active backend."""
-    if os.environ.get("MODELSCOPE_API_KEY"):
-        return MODELSCOPE_MODEL
-    if os.environ.get("OPENROUTER_API_KEY"):
-        return OPENROUTER_MODEL
-    return MODELSCOPE_MODEL  # default; will fail gracefully if no key
+    ms = modelscope_config()
+    if ms.api_key:
+        return ms.model
+    router = openrouter_config()
+    if router.api_key:
+        return router.model
+    return ms.model or router.model
 
 
 @lru_cache(maxsize=1)
@@ -50,19 +40,22 @@ def get_openai_client():
     """
     from agents import AsyncOpenAI
 
-    ms_key = os.environ.get("MODELSCOPE_API_KEY")
-    or_key = os.environ.get("OPENROUTER_API_KEY")
+    ms = modelscope_config()
+    router = openrouter_config()
 
-    if ms_key:
-        return AsyncOpenAI(api_key=ms_key, base_url=MODELSCOPE_BASE_URL)
-    if or_key:
+    if ms.api_key:
+        return AsyncOpenAI(api_key=ms.api_key, base_url=ms.base_url or None)
+    if router.api_key:
+        headers = {}
+        if referer := openrouter_referer():
+            headers["HTTP-Referer"] = referer
         return AsyncOpenAI(
-            api_key=or_key,
-            base_url=OPENROUTER_BASE_URL,
-            default_headers={"HTTP-Referer": "https://github.com/neverbiasu/nails-agent-platform"},
+            api_key=router.api_key,
+            base_url=router.base_url or None,
+            default_headers=headers or None,
         )
     # No key — return a dummy client (agents will error gracefully)
-    return AsyncOpenAI(api_key="no-key", base_url=MODELSCOPE_BASE_URL)
+    return AsyncOpenAI(api_key="no-key", base_url=_DUMMY_BASE_URL)
 
 
 def make_model():
@@ -76,4 +69,4 @@ def make_model():
 
 
 def is_available() -> bool:
-    return bool(os.environ.get("MODELSCOPE_API_KEY") or os.environ.get("OPENROUTER_API_KEY"))
+    return bool(modelscope_config().api_key or openrouter_config().api_key)

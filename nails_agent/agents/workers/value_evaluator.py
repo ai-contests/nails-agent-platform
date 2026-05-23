@@ -1,6 +1,6 @@
 """
 Worker 2a: Value Evaluator
-Input:  TrendAnalysisResult + List[StyleLibraryItem]
+Input:  TrendAnalysisResult + List[NailStyleStoreItem]
 Output: ValueEvaluationResult
 
 Scores each top-trend on three independent dimensions, then combines them
@@ -19,8 +19,9 @@ from nails_agent.models.schemas import (
     TrendSignal,
     MetricSnapshot,
     ValueEvaluationResult,
-    StyleLibraryItem,
+    NailStyleStoreItem,
 )
+from nails_agent.services.trend_presentation import sample_label, signal_image_url, tag_summary
 
 
 _TZ8 = timezone(timedelta(hours=8))
@@ -112,7 +113,10 @@ def _recency(publish_time: str, all_signals: List[TrendSignal]) -> float:
 # ── Dimension 3: Style Gap ─────────────────────────────────────────────────────
 
 
-def _style_gap_score(sig: TrendSignal, library: List[StyleLibraryItem]) -> float:
+_SUPPLY_STATUSES = {"enhanced", "listed"}
+
+
+def _style_gap_score(sig: TrendSignal, library: List[NailStyleStoreItem]) -> float:
     """
     Market saturation gap score (0-100). High = low competition / large opportunity.
 
@@ -136,6 +140,7 @@ def _style_gap_score(sig: TrendSignal, library: List[StyleLibraryItem]) -> float
     sig_tags = set(sig.style_tags or [])
     if not sig_tags:
         return 50.0  # unknown tags: neutral
+    library = [item for item in library if item.status in _SUPPLY_STATUSES]
     if not library:
         return 100.0
 
@@ -171,7 +176,7 @@ def _priority_score(heat: float, freshness: float, gap: float) -> float:
 
 def evaluate(
     analysis: TrendAnalysisResult,
-    library: List[StyleLibraryItem],
+    library: List[NailStyleStoreItem],
 ) -> ValueEvaluationResult:
     all_signals = list(analysis.top_10)  # already ranked by composite score
     snapshots: List[MetricSnapshot] = []
@@ -186,6 +191,9 @@ def evaluate(
             MetricSnapshot(
                 trend_id=sig.trend_id,
                 keyword=sig.keyword,
+                display_label=sample_label(sig, sig.rank, with_tags=False),
+                tag_summary=tag_summary(sig),
+                image_url=signal_image_url(sig),
                 external_heat_score=heat,
                 trend_growth_score=freshness,
                 style_gap_score=gap,
@@ -209,5 +217,5 @@ def from_files(analysis_path: str, library_path: str) -> ValueEvaluationResult:
     with open(analysis_path, encoding="utf-8") as f:
         analysis = TrendAnalysisResult(**json.load(f))
     with open(library_path, encoding="utf-8") as f:
-        library = [StyleLibraryItem(**item) for item in json.load(f)]
+        library = [NailStyleStoreItem(**item) for item in json.load(f)]
     return evaluate(analysis, library)

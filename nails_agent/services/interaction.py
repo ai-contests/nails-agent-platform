@@ -102,7 +102,7 @@ class InteractionService:
             "session_id": session_id,
             "style_id": style["style_id"],
             "user_hand_image_id": user_image["user_hand_image_id"],
-            "nail_image_url": style.get("image_url", ""),
+            "nail_image_url": style.get("enhanced_image_url") or style.get("image_url", ""),
             "status": "pending",
             "comfyui_prompt_id": None,
             "request_payload": {"workflow": wf_path.name},
@@ -174,8 +174,8 @@ class InteractionService:
     # ── Helpers ──────────────────────────────────────────────────────────────
 
     def _resolve_style_image_path(self, style: Dict[str, Any]) -> str:
-        """Resolve relative image_url under repo root or consumer/."""
-        raw = style.get("image_url", "")
+        """Resolve relative enhanced/original style image under repo root or consumer/."""
+        raw = style.get("enhanced_image_url") or style.get("image_url", "")
         if not raw:
             return ""
         p = Path(raw)

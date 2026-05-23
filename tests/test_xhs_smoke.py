@@ -13,7 +13,9 @@ import pytest
 
 from nails_agent.tools.fetchers.xhs_mcp_fetcher import (
     XHSMCPFetcher,
+    _extract_topics,
     _feed_to_signal,
+    _merge_detail_to_signal,
 )
 from nails_agent.models.schemas import TrendSignal
 
@@ -35,6 +37,151 @@ _SAMPLE_FEED = {
         "cover": {"urlDefault": "https://sns-img.xhscdn.com/example.jpg"},
     },
 }
+
+
+class _FakeResponse:
+    def __init__(self, payload, ok=True, status_code=200):
+        self._payload = payload
+        self.ok = ok
+        self.status_code = status_code
+
+    def json(self):
+        return self._payload
+
+
+class _FakeSession:
+    trust_env = False
+
+    def __init__(self):
+        self.post_calls = {}
+
+    def get(self, url, params=None, timeout=None):
+        feeds = []
+        for idx, likes in (("a", "1000"), ("b", "900"), ("c", "800")):
+            feeds.append(
+                {
+                    "id": idx,
+                    "xsecToken": f"token-{idx}",
+                    "noteCard": {
+                        "displayTitle": f"{idx} 美甲",
+                        "interactInfo": {
+                            "likedCount": likes,
+                            "collectedCount": "10",
+                            "commentCount": "1",
+                            "sharedCount": "1",
+                        },
+                    },
+                }
+            )
+        return _FakeResponse({"success": True, "data": {"feeds": feeds}})
+
+    def post(self, url, json=None, timeout=None):
+        feed_id = json["feed_id"]
+        self.post_calls[feed_id] = self.post_calls.get(feed_id, 0) + 1
+        if feed_id == "a":
+            return _FakeResponse({"success": False}, ok=False, status_code=500)
+        return _FakeResponse(
+            {
+                "success": True,
+                "data": {
+                    "data": {
+                        "note": {
+                            "noteId": feed_id,
+                            "title": f"{feed_id} detail",
+                            "desc": "#裸色美甲[话题]# #约会美甲[话题]#",
+                            "time": 1758533953000,
+                            "interactInfo": {"likedCount": "900", "collectedCount": "10"},
+                        }
+                    }
+                },
+            }
+        )
+
+
+class _FakeWeakTagSession:
+    trust_env = False
+
+    def get(self, url, params=None, timeout=None):
+        feeds = []
+        for idx, likes in (("a", "1000"), ("b", "900"), ("c", "800")):
+            feeds.append(
+                {
+                    "id": idx,
+                    "xsecToken": f"token-{idx}",
+                    "noteCard": {
+                        "displayTitle": f"{idx} 美甲",
+                        "interactInfo": {"likedCount": likes},
+                    },
+                }
+            )
+        return _FakeResponse({"success": True, "data": {"feeds": feeds}})
+
+    def post(self, url, json=None, timeout=None):
+        feed_id = json["feed_id"]
+        return _FakeResponse(
+            {
+                "success": True,
+                "data": {
+                    "data": {
+                        "note": {
+                            "noteId": feed_id,
+                            "title": f"{feed_id} detail",
+                            "desc": "#美甲分享[话题]#",
+                            "interactInfo": {"likedCount": "900"},
+                        }
+                    }
+                },
+            }
+        )
+
+
+class _FakeQuotaBackfillSession:
+    trust_env = False
+
+    def __init__(self):
+        self.post_calls = {}
+
+    def get(self, url, params=None, timeout=None):
+        feeds = []
+        for offset, idx in enumerate("abcdefghijklmno"):
+            feeds.append(
+                {
+                    "id": idx,
+                    "xsecToken": f"token-{idx}",
+                    "noteCard": {
+                        "displayTitle": f"{idx} 美甲",
+                        "interactInfo": {
+                            "likedCount": str(1500 - offset * 50),
+                            "collectedCount": "10",
+                            "commentCount": "1",
+                            "sharedCount": "1",
+                        },
+                    },
+                }
+            )
+        return _FakeResponse({"success": True, "data": {"feeds": feeds}})
+
+    def post(self, url, json=None, timeout=None):
+        feed_id = json["feed_id"]
+        self.post_calls[feed_id] = self.post_calls.get(feed_id, 0) + 1
+        if feed_id in {"a", "b"}:
+            return _FakeResponse({"success": False}, ok=False, status_code=500)
+        return _FakeResponse(
+            {
+                "success": True,
+                "data": {
+                    "data": {
+                        "note": {
+                            "noteId": feed_id,
+                            "title": f"{feed_id} detail",
+                            "desc": "#裸色美甲[话题]# #约会美甲[话题]#",
+                            "time": 1758533953000,
+                            "interactInfo": {"likedCount": "900", "collectedCount": "10"},
+                        }
+                    }
+                },
+            }
+        )
 
 
 # ──────────────────────────────────────────────
@@ -84,6 +231,131 @@ def test_feed_to_signal_nail_tags_classified():
     # Should have at least one tag classified from nail keywords in caption
     has_tags = bool(sig.style_tags or sig.color_tags or sig.material_tags or sig.scene_tags)
     assert has_tags, f"Expected tags from nail caption, got none. Signal: {sig}"
+
+
+def test_extract_topics_from_xhs_desc():
+    desc = "出去玩必须安排上💅！！！#帮我选美甲[话题]# #裸色美甲[话题]#"
+    assert _extract_topics(desc) == ["帮我选美甲", "裸色美甲"]
+
+
+def test_merge_detail_enriches_signal():
+    sig = _feed_to_signal(_SAMPLE_FEED, "美甲推荐")
+    assert sig is not None
+    detail = {
+        "feed_id": "abc123xyz",
+        "data": {
+            "note": {
+                "noteId": "abc123xyz",
+                "title": "国庆旅游美甲九选一！",
+                "desc": "快到国庆了，出去玩必须安排上💅！！！#裸色美甲[话题]# #美甲推荐[话题]#",
+                "time": 1758533953000,
+                "interactInfo": {
+                    "likedCount": "1056",
+                    "collectedCount": "480",
+                    "commentCount": "23",
+                    "sharedCount": "12",
+                },
+            }
+        },
+    }
+
+    enriched = _merge_detail_to_signal(sig, detail, _SAMPLE_FEED, "美甲推荐")
+    assert enriched.detail_enriched is True
+    assert enriched.publish_time
+    assert "国庆旅游美甲" in enriched.caption
+    assert enriched.likes == 1056
+    assert "裸色" in enriched.color_tags
+    assert "国庆" in enriched.scene_tags
+    assert "旅游" in enriched.scene_tags
+
+
+def test_search_retries_detail_and_backfills_failed_top_candidate():
+    fetcher = XHSMCPFetcher()
+    fake = _FakeSession()
+    fetcher._session = fake
+
+    signals = fetcher.search(
+        keywords=["美甲"],
+        limit_per_kw=3,
+        detail_top_n=2,
+        detail_candidate_n=3,
+        detail_retry_attempts=2,
+        enrich_detail=True,
+        download_images=False,
+    )
+
+    assert fake.post_calls["a"] == 2
+    assert len(signals) == 2
+    assert all(s.detail_enriched for s in signals)
+    assert {s.source_note_id for s in signals} == {"b", "c"}
+    assert fetcher.rejected_candidates == []
+
+
+def test_search_backfills_only_missing_quota_after_detail_failures():
+    fetcher = XHSMCPFetcher()
+    fake = _FakeQuotaBackfillSession()
+    fetcher._session = fake
+
+    signals = fetcher.search(
+        keywords=["美甲"],
+        limit_per_kw=15,
+        detail_top_n=10,
+        detail_candidate_n=15,
+        detail_retry_attempts=2,
+        enrich_detail=True,
+        download_images=False,
+    )
+
+    assert len(signals) == 10
+    assert fake.post_calls["a"] == 2
+    assert fake.post_calls["b"] == 2
+    assert "k" in fake.post_calls
+    assert "l" in fake.post_calls
+    assert "m" not in fake.post_calls
+    assert "n" not in fake.post_calls
+    assert "o" not in fake.post_calls
+    assert fetcher.rejected_candidates == []
+
+
+def test_search_batches_llm_tag_extraction(monkeypatch):
+    import nails_agent.tools.fetchers.xhs_mcp_fetcher as xhs_mod
+
+    calls = []
+
+    class DummyBatchEnricher:
+        model = "dummy-tag-model"
+
+        def extract_batch(self, signals):
+            calls.append([s.source_note_id for s in signals])
+            return {
+                s.source_note_id: {
+                    "style_tags": ["法式"],
+                    "color_tags": ["裸色"],
+                    "material_tags": [],
+                    "scene_tags": [],
+                }
+                for s in signals
+            }
+
+    monkeypatch.setattr(xhs_mod, "QwenTagEnricher", DummyBatchEnricher)
+
+    fetcher = XHSMCPFetcher()
+    fetcher._session = _FakeWeakTagSession()
+    signals = fetcher.search(
+        keywords=["美甲"],
+        limit_per_kw=3,
+        detail_top_n=2,
+        detail_candidate_n=3,
+        detail_retry_attempts=2,
+        enrich_detail=True,
+        use_llm_tags=True,
+        download_images=False,
+    )
+
+    assert len(signals) == 2
+    assert len(calls) == 1
+    assert calls[0] == ["a", "b"]
+    assert all(s.tag_source.endswith("+llm:dummy-tag-model") for s in signals)
 
 
 # ──────────────────────────────────────────────

@@ -119,13 +119,20 @@ curl "http://localhost:8000/api/v1/tryon/$JID"   # poll until status=done
 | Var | Default | Notes |
 |-----|---------|-------|
 | `COMFYUI_API_KEY` | — | Required for real try-on rendering |
+| `OPENAI_API_KEY` | — | OpenAI-compatible key for tag extraction (DashScope compatible mode) |
+| `OPENAI_BASE_URL` | `https://dashscope.aliyuncs.com/compatible-mode/v1` | OpenAI-compatible endpoint for tag extraction |
+| `NAILS_TAG_LLM_MODEL` | `qwen3-max` | LLM model used by XHS tag extraction |
 | `ANTHROPIC_API_KEY` | — | LLM review in ReviewerGuardrail layer 2 |
+| `NAILS_REVIEWER_LLM_MODEL` | `claude-haiku-4-5-20251001` | ReviewerGuardrail LLM model |
 | `MODELSCOPE_API_KEY` | — | Primary LLM (Qwen3-235B) |
+| `NAILS_MODELSCOPE_BASE_URL` | `https://api-inference.modelscope.cn/v1` | ModelScope OpenAI-compatible endpoint |
 | `OPENROUTER_API_KEY` | — | Fallback LLM (Claude Sonnet) |
+| `NAILS_OPENROUTER_BASE_URL` | `https://openrouter.ai/api/v1` | OpenRouter endpoint |
 | `XHS_GO_BASE_URL` | `http://localhost:18060` | XHS Go service for draft creation |
 | `OPENCLAW_WEBHOOK_URL` | — | OpenClaw message platform webhook |
 | `NAILS_DATA_DIR` | `web/data` | Trend signals + style library JSON |
 | `NAILS_OUTPUT_DIR` | `web/output` | Pipeline artifact output directory |
+| `NAILS_MEMORY_DB_PATH` | `~/.nails_agent/memory.db` | Optional SQLite runtime DB override |
 
 Without any LLM key, the pipeline runs in rule-based mode (no external API calls, CI-safe).
 

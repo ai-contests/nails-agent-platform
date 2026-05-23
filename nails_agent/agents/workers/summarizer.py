@@ -20,6 +20,7 @@ from nails_agent.models.schemas import (
     SummaryReport,
     ReportSection,
 )
+from nails_agent.services.trend_presentation import sample_label, tag_summary
 
 _TZ8 = timezone(timedelta(hours=8))
 
@@ -39,6 +40,7 @@ def summarise(state: PipelineState) -> SummaryReport:
     value = state.value_evaluation
     campaign = state.campaign_strategy
     assets = state.asset_generation
+    signal_map = {s.trend_id: s for s in trend.top_10} if trend else {}
 
     # ── Section 1: What's hot ─────────────────────────────────────────────────
     if trend:
@@ -85,14 +87,17 @@ def summarise(state: PipelineState) -> SummaryReport:
     # ── Section 2: Value evaluation ──────────────────────────────────────────
     if value and value.snapshots:
         lines = [
-            "_注：本表按单帖排序，「来源关键词」是发现该帖时所用的搜索词，不代表风格名。_",
+            "_注：本表按趋势样本排序，样本名仅用于区分本轮抓取结果。_",
             "",
-            "| 排名 | 来源关键词 | 外部热度 | 新鲜度 | 风格缺口 | 上线优先级 |",
-            "|------|------------|---------:|-------:|---------:|-----------:|",
+            "| 排名 | 样本 | 标签组合 | 外部热度 | 新鲜度 | 风格缺口 | 上线优先级 |",
+            "|------|------|----------|---------:|-------:|---------:|-----------:|",
         ]
         for s in value.snapshots[:5]:
+            sig = signal_map.get(s.trend_id)
+            label = sample_label(sig, s.rank, with_tags=False) if sig else s.display_label
+            tags = tag_summary(sig) if sig else (s.tag_summary or "待补充标签")
             lines.append(
-                f"| {s.rank} | {s.keyword} | {s.external_heat_score:.0f} "
+                f"| {s.rank} | {label or f'样本 {s.rank:02d}'} | {tags} | {s.external_heat_score:.0f} "
                 f"| {s.trend_growth_score:.0f} | {s.style_gap_score:.0f} "
                 f"| **{s.launch_priority_score:.0f}** |"
             )
@@ -162,7 +167,7 @@ def summarise(state: PipelineState) -> SummaryReport:
     if trend and trend.style_trends:
         top_3_tags = [t.tag for t in trend.style_trends[:3]]
     elif value and value.snapshots:
-        top_3_tags = [s.keyword for s in value.snapshots[:3]]
+        top_3_tags = [s.display_label or f"样本 {s.rank:02d}" for s in value.snapshots[:3]]
 
     return SummaryReport(
         pipeline_id=state.pipeline_id,

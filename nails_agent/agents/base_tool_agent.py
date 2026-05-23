@@ -24,22 +24,13 @@ import json
 import logging
 import os
 import time
-from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
-from dotenv import load_dotenv
-
-# Auto-load API keys: project .env first, then hermes .env as fallback
-load_dotenv(Path(__file__).parent.parent.parent / ".env")
-load_dotenv(Path.home() / ".hermes" / ".env", override=False)
+from nails_agent.services.llm_config import anthropic_model, modelscope_config, openrouter_config
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_MODEL = os.environ.get("NAILS_AGENT_MODEL", "claude-sonnet-4-5")
-_OPENROUTER_BASE = "https://openrouter.ai/api/v1"
-_OPENROUTER_MODEL = os.environ.get("NAILS_OPENROUTER_MODEL", "anthropic/claude-sonnet-4-5")
-_MODELSCOPE_BASE = os.environ.get("MODELSCOPE_BASE_URL", "https://api-inference.modelscope.cn/v1")
-_MODELSCOPE_MODEL = os.environ.get("NAILS_MODELSCOPE_MODEL", "Qwen/Qwen3-235B-A22B-Instruct-2507")
+_DEFAULT_MODEL = anthropic_model()
 
 
 # ── Result ─────────────────────────────────────────────────────────────────────
@@ -112,8 +103,8 @@ class ToolAgent:
         self.max_tokens = max_tokens
 
         anthropic_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
-        modelscope_key = os.environ.get("MODELSCOPE_API_KEY")
-        openrouter_key = os.environ.get("OPENROUTER_API_KEY")
+        modelscope = modelscope_config()
+        openrouter = openrouter_config()
 
         if anthropic_key:
             import anthropic as _ant
@@ -121,23 +112,23 @@ class ToolAgent:
             self._backend = "anthropic"
             self.model = model
             self._client = _ant.Anthropic(api_key=anthropic_key)
-        elif modelscope_key:
+        elif modelscope.api_key:
             import openai as _oai
 
             self._backend = "openai"
-            self.model = _MODELSCOPE_MODEL
+            self.model = modelscope.model
             self._client = _oai.OpenAI(
-                api_key=modelscope_key,
-                base_url=_MODELSCOPE_BASE,
+                api_key=modelscope.api_key,
+                base_url=modelscope.base_url or None,
             )
-        elif openrouter_key:
+        elif openrouter.api_key:
             import openai as _oai
 
             self._backend = "openai"
-            self.model = _OPENROUTER_MODEL
+            self.model = openrouter.model
             self._client = _oai.OpenAI(
-                api_key=openrouter_key,
-                base_url=_OPENROUTER_BASE,
+                api_key=openrouter.api_key,
+                base_url=openrouter.base_url or None,
             )
         else:
             # No key available — run will fail gracefully

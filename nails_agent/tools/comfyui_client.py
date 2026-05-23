@@ -11,19 +11,41 @@ from __future__ import annotations
 import os
 import time
 import uuid
+import mimetypes
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 import requests
+
+try:
+    from dotenv import load_dotenv
+except Exception:  # pragma: no cover - dotenv is optional at runtime
+    load_dotenv = None
+
+
+if load_dotenv:
+    _PROJECT_ROOT = Path(__file__).resolve().parents[2]
+    load_dotenv(_PROJECT_ROOT / ".env", override=False)
+    if not os.environ.get("COMFYUI_API_KEY"):
+        load_dotenv(Path.home() / ".hermes" / ".env", override=False)
 
 
 class ComfyUIClient:
     BASE_URL = "https://cloud.comfy.org"
 
     def __init__(self, api_key: Optional[str] = None):
-        raw = api_key or os.environ.get("COMFYUI_API_KEY", "")
-        self.api_key = f"comfyui-{raw}"
+        raw = (api_key or os.environ.get("COMFYUI_API_KEY", "")).strip().strip('"').strip("'")
+        self.api_key = raw if raw.startswith("comfyui-") else f"comfyui-{raw}" if raw else ""
         self.client_id = str(uuid.uuid4())
+        self.last_error = ""
+        self.session = requests.Session()
+        # Local proxy chains can break multipart uploads to ComfyUI Cloud.  Keep
+        # direct mode as the demo default; set COMFYUI_USE_SYSTEM_PROXY=1 if needed.
+        self.session.trust_env = os.environ.get("COMFYUI_USE_SYSTEM_PROXY", "0").lower() in {
+            "1",
+            "true",
+            "yes",
+        }
 
     @property
     def _headers(self) -> Dict[str, str]:
@@ -33,21 +55,42 @@ class ComfyUIClient:
 
     def upload_image(self, image_path: str) -> Optional[str]:
         """Upload local image; returns cloud filename for LoadImage nodes."""
-        with open(image_path, "rb") as f:
-            resp = requests.post(
-                f"{self.BASE_URL}/api/upload/image",
-                headers={"X-API-Key": self.api_key},
-                files={"image": (Path(image_path).name, f, "image/jpeg")},
-                timeout=60,
-            )
+        self.last_error = ""
+        if not self.api_key:
+            self.last_error = "COMFYUI_API_KEY is missing"
+            return None
+        path = Path(image_path)
+        mime = mimetypes.guess_type(path.name)[0] or "image/jpeg"
+        try:
+            with open(path, "rb") as f:
+                resp = self.session.post(
+                    f"{self.BASE_URL}/api/upload/image",
+                    headers={"X-API-Key": self.api_key},
+                    files={"image": (path.name, f, mime)},
+                    timeout=60,
+                )
+        except requests.RequestException as exc:
+            self.last_error = f"{type(exc).__name__}: {exc}"
+            return None
+        except OSError as exc:
+            self.last_error = f"{type(exc).__name__}: {exc}"
+            return None
         if resp.status_code == 200:
-            return resp.json().get("name")
+            try:
+                name = resp.json().get("name")
+            except ValueError:
+                name = None
+            if name:
+                return name
+            self.last_error = f"HTTP 200 but response has no name: {resp.text[:300]}"
+            return None
+        self.last_error = f"HTTP {resp.status_code}: {resp.text[:300]}"
         return None
 
     # ── Submit ───────────────────────────────────────────────────────────────
 
     def submit_workflow(self, workflow: Dict[str, Any]) -> Dict[str, Any]:
-        resp = requests.post(
+        resp = self.session.post(
             f"{self.BASE_URL}/api/prompt",
             json={"prompt": workflow, "client_id": self.client_id},
             headers=self._headers,
@@ -60,7 +103,7 @@ class ComfyUIClient:
     # ── Poll ─────────────────────────────────────────────────────────────────
 
     def get_job_status(self, prompt_id: str) -> Dict[str, Any]:
-        resp = requests.get(
+        resp = self.session.get(
             f"{self.BASE_URL}/api/job/{prompt_id}/status",
             headers=self._headers,
             timeout=10,
@@ -69,7 +112,7 @@ class ComfyUIClient:
 
     def get_job_detail(self, prompt_id: str) -> Optional[Dict[str, Any]]:
         """Full detail including outputs — uses plural /api/jobs/ endpoint."""
-        resp = requests.get(
+        resp = self.session.get(
             f"{self.BASE_URL}/api/jobs/{prompt_id}",
             headers=self._headers,
             timeout=10,
@@ -100,7 +143,7 @@ class ComfyUIClient:
 
     def get_public_image_url(self, filename: str) -> str:
         """Follow 302 redirect → signed GCS CDN URL (valid ~6 h)."""
-        resp = requests.get(
+        resp = self.session.get(
             f"{self.BASE_URL}/api/view?filename={filename}",
             headers=self._headers,
             allow_redirects=False,
@@ -141,9 +184,10 @@ class ComfyUIClient:
                 return {"success": False, "error": f"Image node '{node_id}' missing in workflow"}
             name = self.upload_image(path)
             if not name:
+                detail = f" ({self.last_error})" if self.last_error else ""
                 return {
                     "success": False,
-                    "error": f"Failed to upload image for node {node_id}: {path}",
+                    "error": f"Failed to upload image for node {node_id}: {path}{detail}",
                 }
             wf[node_id].setdefault("inputs", {})["image"] = name
 

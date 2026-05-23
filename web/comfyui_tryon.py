@@ -49,7 +49,7 @@ def _patch_workflow(workflow: dict, hand_name: str, style_name: str) -> dict:
 
 def _resolve_style_image(style_item: dict) -> str:
     """Resolve the local image path for a style. Falls back to nail_reference.jpg."""
-    img = style_item.get("image_url", "")
+    img = style_item.get("enhanced_image_url") or style_item.get("image_url", "")
     if img and Path(img).exists():
         return img
     return NAIL_REF_PATH

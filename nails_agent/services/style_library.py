@@ -1,5 +1,5 @@
 """
-Style library access — reads merged nail_styles_v2 + reference_hand_profiles
+Style store access — reads merged nail_styles_store + reference_hand_profiles
 + nail_visual_features from SQLite.
 
 Service-layer wrapper around MemoryStore: callers get plain dicts and don't
@@ -24,8 +24,11 @@ class StyleLibrary:
         *,
         try_on_only: bool = False,
         with_visual_feature_only: bool = False,
+        listed_only: bool = False,
     ) -> List[Dict[str, Any]]:
         styles = self.store.list_styles()
+        if listed_only:
+            styles = [s for s in styles if s.get("status", "listed") == "listed"]
         if try_on_only:
             styles = [s for s in styles if s.get("is_available_for_try_on", True)]
         if with_visual_feature_only:
