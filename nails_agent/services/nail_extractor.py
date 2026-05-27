@@ -5,19 +5,23 @@ nail regions from a hand/nail photo.  The cropped images are written to a
 caller-specified (or temp) directory and their paths are returned.
 
 Dependencies:
-    pip install inference-sdk opencv-contrib-python numpy
+    pip install opencv-contrib-python numpy requests
 
-All heavy imports (``cv2``, ``numpy``, ``inference_sdk``) are lazy so this
-module can be imported safely in environments that lack them (e.g. CI).
+All heavy imports (``cv2``, ``numpy``) are lazy so this module can be
+imported safely in environments that lack them (e.g. CI).  The Roboflow
+API is called via ``requests`` (already a project dependency).
 """
 
 from __future__ import annotations
 
+import base64
 import logging
 import os
 import tempfile
 from pathlib import Path
 from typing import Any
+
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +35,7 @@ _DEFAULT_API_URL = "https://detect.roboflow.com"
 
 
 def _require_deps() -> None:
-    """Raise a clear error if cv2 / numpy / inference_sdk are missing."""
+    """Raise a clear error if cv2 / numpy are missing."""
     try:
         import cv2 as _cv2  # noqa: F401
         import numpy as _np  # noqa: F401
@@ -39,13 +43,6 @@ def _require_deps() -> None:
         raise ImportError(
             "cv2 and numpy are required for nail extraction. "
             "Install via: pip install -e '.[consumer]'"
-        ) from exc
-    try:
-        import inference_sdk as _sdk  # noqa: F401
-    except ImportError as exc:
-        raise ImportError(
-            "inference-sdk is required for Roboflow nail extraction. "
-            "Install via: pip install inference-sdk"
         ) from exc
 
 
@@ -168,20 +165,27 @@ def extract_nail_crops(
         return []
 
     _require_deps()
-    from inference_sdk import InferenceHTTPClient
 
     image = _imread_unicode(str(src))
     if image is None:
         logger.warning("Failed to read image: %s", src)
         return []
 
-    # Call Roboflow
-    client = InferenceHTTPClient(
-        api_url=api_url or _DEFAULT_API_URL,
-        api_key=resolved_key,
-    )
+    # Call Roboflow REST API directly (avoids inference-sdk Python 3.13 issue)
+    resolved_model = model_id or _DEFAULT_MODEL_ID
+    resolved_url = api_url or _DEFAULT_API_URL
+    infer_url = f"{resolved_url}/{resolved_model}"
+    img_b64 = base64.b64encode(src.read_bytes()).decode("utf-8")
     try:
-        result = client.infer(str(src), model_id=model_id or _DEFAULT_MODEL_ID)
+        resp = requests.post(
+            infer_url,
+            params={"api_key": resolved_key},
+            data=img_b64,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            timeout=60,
+        )
+        resp.raise_for_status()
+        result = resp.json()
     except Exception:
         logger.exception("Roboflow inference failed for %s", src)
         return []
@@ -214,3 +218,35 @@ def extract_nail_crops(
 
     logger.info("Extracted %d nail crops from %s", len(paths), src)
     return paths
+
+
+def classify_nail_length(nail_crop: str | Path) -> str:
+    """Classify nail length from a cropped nail image.
+
+    Computes height/width ratio of the non-transparent bounding box
+    (or full image if opaque).
+
+    Returns "长甲" (ratio > 1.8), "中甲" (1.2–1.8), or "短甲" (< 1.2).
+    """
+    try:
+        from PIL import Image
+
+        with Image.open(nail_crop) as img:
+            if img.mode == "RGBA":
+                alpha = img.getchannel("A")
+                bbox = alpha.getbbox()
+                if bbox:
+                    img = img.crop(bbox)
+            w, h = img.size
+            if w == 0:
+                return "短甲"
+            ratio = h / w
+    except Exception:
+        return "短甲"
+
+    if ratio > 1.8:
+        return "长甲"
+    elif ratio >= 1.2:
+        return "中甲"
+    else:
+        return "短甲"

@@ -57,45 +57,30 @@ def _fake_roboflow_response(w: int = 200, h: int = 300):
 
 
 def test_extract_nail_crops_with_mock_roboflow(tmp_path: Path):
-    """Full round-trip: image → Roboflow (mocked) → crop files."""
-    import sys
-    import types
-
-    # Create a test image with a red rectangle (simulating a nail)
-    img = Image.new("RGB", (200, 300), (220, 200, 190))
+    """Full round-trip: image → Roboflow REST (mocked) → crop files."""
     from PIL import ImageDraw
 
+    img = Image.new("RGB", (200, 300), (220, 200, 190))
     draw = ImageDraw.Draw(img)
     draw.rectangle([50, 30, 150, 270], fill=(200, 20, 30))
     src = tmp_path / "hand.jpg"
     img.save(src)
 
-    mock_client = MagicMock()
-    mock_client.infer.return_value = _fake_roboflow_response()
-    mock_class = MagicMock(return_value=mock_client)
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = _fake_roboflow_response()
+    mock_resp.raise_for_status = MagicMock()
 
-    # Inject a fake inference_sdk module so the lazy import succeeds
-    fake_sdk = types.ModuleType("inference_sdk")
-    fake_sdk.InferenceHTTPClient = mock_class  # type: ignore[attr-defined]
-    sys.modules["inference_sdk"] = fake_sdk
-    try:
-        # Force re-import to pick up the fake module
-        import importlib
-        import nails_agent.services.nail_extractor as mod
-
-        importlib.reload(mod)
-
-        crops = mod.extract_nail_crops(
+    with patch("nails_agent.services.nail_extractor.requests") as mock_requests:
+        mock_requests.post.return_value = mock_resp
+        crops = extract_nail_crops(
             src,
             output_dir=tmp_path / "crops",
             api_key="fake_key",
         )
-    finally:
-        sys.modules.pop("inference_sdk", None)
 
     assert len(crops) >= 1
     assert all(p.exists() for p in crops)
-    # Crop should be smaller than original
     crop_img = Image.open(crops[0])
     assert crop_img.width < 200 or crop_img.height < 300
 

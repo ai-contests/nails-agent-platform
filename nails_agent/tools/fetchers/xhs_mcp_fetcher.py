@@ -711,6 +711,21 @@ class XHSMCPFetcher:
             deduped.append((sig, feed, kw))
         return deduped
 
+    @staticmethod
+    def _is_grid_image(path: Path) -> bool:
+        """Detect 9-grid collage images by aspect ratio."""
+        try:
+            from PIL import Image
+
+            with Image.open(path) as img:
+                w, h = img.size
+                if w == 0 or h == 0:
+                    return False
+                ratio = w / h
+                return ratio > 2.5 or ratio < 0.4
+        except Exception:
+            return False
+
     def _download_signal_images(
         self,
         signal: TrendSignal,
@@ -744,6 +759,10 @@ class XHSMCPFetcher:
                     suffix = ".jpg"
                 path = out_dir / f"{signal.trend_id}_{idx}{suffix}"
                 path.write_bytes(r.content)
+                if self._is_grid_image(path):
+                    logger.info("Skipping grid image: %s", path.name)
+                    path.unlink(missing_ok=True)
+                    continue
                 local_paths.append(str(path))
             except Exception as exc:
                 logger.debug("XHS image download failed for %s: %s", url, exc)
