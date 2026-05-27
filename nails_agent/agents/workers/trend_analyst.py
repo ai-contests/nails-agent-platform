@@ -15,7 +15,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List
 
 from nails_agent.models.schemas import TrendSignal, TrendAnalysisResult, StyleTrend
-from nails_agent.services.trend_presentation import sample_label
+from nails_agent.services.trend_presentation import generate_display_label, sample_label
 
 
 _TZ8 = timezone(timedelta(hours=8))
@@ -128,7 +128,7 @@ def analyse(signals: List[TrendSignal]) -> TrendAnalysisResult:
     for i, sig in enumerate(ranked, 1):
         sig.rank = i
         if not sig.display_label:
-            sig.display_label = sample_label(sig, i, with_tags=False)
+            sig.display_label = generate_display_label(sig) or sample_label(sig, i, with_tags=False)
     top_10 = ranked[:10]
 
     # 3. Aggregated style trends (the real signal, not echoed search keywords)
