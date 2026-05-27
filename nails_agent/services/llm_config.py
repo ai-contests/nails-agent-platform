@@ -81,3 +81,49 @@ def hermes_model() -> str:
 
 def openrouter_referer() -> str:
     return env_value("NAILS_OPENROUTER_REFERER")
+
+
+def vision_tag_config() -> LLMEndpointConfig:
+    """Config for vision-based tag extraction.
+
+    Priority:
+      1. NAILS_VISION_TAG_API_KEY / NAILS_VISION_TAG_BASE_URL / NAILS_VISION_TAG_MODEL
+         (dedicated override — set these if you want a specific VL endpoint)
+      2. DashScope with qwen-vl-max  (same key as tag LLM, different model)
+      3. OpenRouter with a vision-capable model (qwen/qwen-vl or claude-3-haiku)
+
+    Returns an empty config if no key is found (caller should skip VL enrichment).
+    """
+    # Explicit override
+    dedicated = LLMEndpointConfig(
+        model=env_value("NAILS_VISION_TAG_MODEL"),
+        api_key=env_value("NAILS_VISION_TAG_API_KEY"),
+        base_url=env_value("NAILS_VISION_TAG_BASE_URL").rstrip("/"),
+    )
+    if dedicated.available:
+        return dedicated
+
+    # Reuse DashScope key with qwen-vl-max
+    dashscope_key = env_value("NAILS_TAG_LLM_API_KEY", "OPENAI_API_KEY")
+    dashscope_url = env_value("NAILS_TAG_LLM_BASE_URL", "OPENAI_BASE_URL").rstrip("/")
+    if dashscope_key and dashscope_url:
+        return LLMEndpointConfig(
+            model=env_value("NAILS_VISION_TAG_MODEL", default="qwen-vl-max"),
+            api_key=dashscope_key,
+            base_url=dashscope_url,
+        )
+
+    # Fallback: OpenRouter (supports vision via many models)
+    router_key = env_value("OPENROUTER_API_KEY")
+    router_url = env_value(
+        "NAILS_OPENROUTER_BASE_URL", "OPENROUTER_BASE_URL",
+        default="https://openrouter.ai/api/v1",
+    ).rstrip("/")
+    if router_key:
+        return LLMEndpointConfig(
+            model="qwen/qwen2.5-vl-72b-instruct:free",
+            api_key=router_key,
+            base_url=router_url,
+        )
+
+    return LLMEndpointConfig()

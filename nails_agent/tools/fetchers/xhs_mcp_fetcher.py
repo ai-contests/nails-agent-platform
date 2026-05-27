@@ -27,6 +27,7 @@ import requests
 from nails_agent.models.schemas import RejectedTrendCandidate, TrendSignal
 from nails_agent.services.tag_enricher import (
     QwenTagEnricher,
+    VisionTagEnricher,
     apply_tags,
     clean_tag_dict,
     merge_tag_dict,
@@ -496,6 +497,7 @@ class XHSMCPFetcher:
 
         signals: List[TrendSignal] = []
         tag_enricher = QwenTagEnricher() if use_llm_tags else None
+        vision_enricher = VisionTagEnricher() if use_llm_tags else None
 
         if not enrich_detail:
             for sig, _feed, _kw in selected:
@@ -506,6 +508,14 @@ class XHSMCPFetcher:
                         image_dir=image_dir,
                         max_images=max_images_per_signal,
                     )
+                    # Vision VL fallback: fill missing tags from the downloaded image
+                    if use_llm_tags and vision_enricher and vision_enricher.available:
+                        first_img = (enriched.local_image_paths or [None])[0]
+                        if first_img and should_call_llm(signal_tag_dict(enriched), enriched.tag_confidence):
+                            vision_tags = vision_enricher.extract_from_image(first_img)
+                            if any(vision_tags.values()):
+                                merged = merge_tag_dict(signal_tag_dict(enriched), vision_tags)
+                                enriched = apply_tags(enriched, merged, f"{enriched.tag_source}+vision:{vision_enricher.model}")
                 signals.append(enriched)
             return signals
 
@@ -555,6 +565,8 @@ class XHSMCPFetcher:
 
             for enriched in detailed:
                 key = enriched.source_note_id or enriched.trend_id
+
+                # Step 1: merge text-LLM tags
                 llm_tags = batch_tags.get(key, {})
                 if llm_tags:
                     merged = merge_tag_dict(signal_tag_dict(enriched), llm_tags)
@@ -564,6 +576,34 @@ class XHSMCPFetcher:
                         else enriched.tag_source
                     )
                     enriched = apply_tags(enriched, merged, source)
+
+                # Step 2: download image first so vision enrichment can run before rejection
+                if download_images:
+                    enriched = self._download_signal_images(
+                        enriched,
+                        image_dir=image_dir,
+                        max_images=max_images_per_signal,
+                    )
+
+                # Step 3: vision enrichment — fill missing tags from the image
+                if (
+                    use_llm_tags
+                    and vision_enricher
+                    and vision_enricher.available
+                    and should_call_llm(signal_tag_dict(enriched), enriched.tag_confidence)
+                ):
+                    first_img = (enriched.local_image_paths or [None])[0]
+                    if first_img:
+                        vision_tags = vision_enricher.extract_from_image(first_img)
+                        if any(vision_tags.values()):
+                            merged = merge_tag_dict(signal_tag_dict(enriched), vision_tags)
+                            enriched = apply_tags(
+                                enriched,
+                                merged,
+                                f"{enriched.tag_source}+vision:{vision_enricher.model}",
+                            )
+
+                # Step 4: reject if still no usable tags after all enrichment
                 reason = rejection_reason(signal_tag_dict(enriched))
                 if reason:
                     reason_code, reason_text = reason
@@ -575,12 +615,7 @@ class XHSMCPFetcher:
                         )
                     )
                     continue
-                if download_images:
-                    enriched = self._download_signal_images(
-                        enriched,
-                        image_dir=image_dir,
-                        max_images=max_images_per_signal,
-                    )
+
                 signals.append(enriched)
                 accepted += 1
                 if len(signals) >= detail_top_n:
