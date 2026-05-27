@@ -81,21 +81,22 @@ def run_trend_scout(
 async def _run_with_progress(agent, user_msg: str, progress_cb, max_turns: int):
     from agents import Runner
 
-    async with Runner.run_streamed(agent, user_msg, max_turns=max_turns) as stream:
-        async for event in stream.stream_events():
-            if hasattr(event, "type"):
-                if event.type == "agent_updated_stream_event":
-                    if progress_cb:
-                        progress_cb(f"🔄 {event.new_agent.name} 接管")
-                elif event.type == "run_item_stream_event":
-                    item = event.item
-                    # Tool call progress
-                    if hasattr(item, "type") and item.type == "tool_call_item":
-                        if progress_cb and hasattr(item, "raw_item"):
-                            ri = item.raw_item
-                            name = getattr(ri, "name", "") if hasattr(ri, "name") else ""
-                            if name:
-                                progress_cb(f"🔧 {name}(…)")
+    # run_streamed() returns RunResultStreaming directly (not a context manager)
+    stream = Runner.run_streamed(agent, user_msg, max_turns=max_turns)
+    async for event in stream.stream_events():
+        if hasattr(event, "type"):
+            if event.type == "agent_updated_stream_event":
+                if progress_cb:
+                    progress_cb(f"🔄 {event.new_agent.name} 接管")
+            elif event.type == "run_item_stream_event":
+                item = event.item
+                # Tool call progress
+                if hasattr(item, "type") and item.type == "tool_call_item":
+                    if progress_cb and hasattr(item, "raw_item"):
+                        ri = item.raw_item
+                        name = getattr(ri, "name", "") if hasattr(ri, "name") else ""
+                        if name:
+                            progress_cb(f"🔧 {name}(…)")
     return stream.final_output
 
 

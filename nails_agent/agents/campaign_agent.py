@@ -73,15 +73,15 @@ def run_campaign_agent(
 async def _run_with_progress(agent, user_msg: str, progress_cb, max_turns: int):
     from agents import Runner
 
-    async with Runner.run_streamed(agent, user_msg, max_turns=max_turns) as stream:
-        async for event in stream.stream_events():
-            if hasattr(event, "type") and event.type == "run_item_stream_event":
-                item = event.item
-                if hasattr(item, "raw_item"):
-                    ri = item.raw_item
-                    name = getattr(ri, "name", "") if hasattr(ri, "name") else ""
-                    if name and progress_cb:
-                        progress_cb(f"🔧 {name}(…)")
+    stream = Runner.run_streamed(agent, user_msg, max_turns=max_turns)
+    async for event in stream.stream_events():
+        if hasattr(event, "type") and event.type == "run_item_stream_event":
+            item = event.item
+            if hasattr(item, "raw_item"):
+                ri = item.raw_item
+                name = getattr(ri, "name", "") if hasattr(ri, "name") else ""
+                if name and progress_cb:
+                    progress_cb(f"🔧 {name}(…)")
     return stream.final_output
 
 

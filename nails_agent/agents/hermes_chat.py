@@ -120,8 +120,8 @@ class HermesNailsAgent:
             from nails_agent.agents.nail_agents import get_orchestrator_agent
 
             agent = get_orchestrator_agent()
-            async with Runner.run_streamed(agent, message, max_turns=30) as stream:
-                async for event in stream.stream_events():
+            stream = Runner.run_streamed(agent, message, max_turns=30)
+            async for event in stream.stream_events():
                     if hasattr(event, "type"):
                         if event.type == "run_item_stream_event":
                             item = event.item

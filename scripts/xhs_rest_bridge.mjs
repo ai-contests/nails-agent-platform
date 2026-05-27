@@ -124,9 +124,13 @@ async function handle(req, res) {
         db
       );
       // mcpResult.content[0].text is JSON: { count: N, items: [...] }
+      // If the tool returns an error string (e.g. "Search failed: ..."), treat as empty.
       const text = (mcpResult.content?.[0]?.text) || '{}';
       let parsed;
-      try { parsed = JSON.parse(text); } catch { parsed = {}; }
+      try { parsed = JSON.parse(text); } catch {
+        console.error(`[xhs-bridge] search non-JSON response: ${text.substring(0, 200)}`);
+        parsed = {};
+      }
       const items = parsed.items || [];
       const feeds = items.map(toFeed);
       return json(res, 200, {
