@@ -1,7 +1,14 @@
 """Centralised LLM environment configuration.
 
-Keep model names, OpenAI-compatible base URLs, and optional routing metadata in
-`.env` instead of scattering them across workers and agents.
+Provider priority (first available wins):
+  1. ModelScope  — MODELSCOPE_API_KEY  (https://api-inference.modelscope.cn/v1)
+  2. DashScope   — NAILS_TAG_LLM_API_KEY / OPENAI_API_KEY
+  3. OpenRouter  — OPENROUTER_API_KEY
+
+Both ModelScope and DashScope expose OpenAI-compatible `/v1/chat/completions`.
+ModelScope vision models: Qwen/Qwen2.5-VL-72B-Instruct
+DashScope vision models:  qwen-vl-max
+OpenRouter vision models: qwen/qwen2.5-vl-72b-instruct:free
 """
 
 from __future__ import annotations
@@ -38,33 +45,134 @@ class LLMEndpointConfig:
         return bool(self.api_key and self.base_url and self.model)
 
 
+# ── Per-provider helpers ───────────────────────────────────────────────────────
+
+def modelscope_config() -> LLMEndpointConfig:
+    """ModelScope API-Inference (OpenAI-compatible, bearer auth)."""
+    return LLMEndpointConfig(
+        model=env_value("NAILS_MODELSCOPE_MODEL", default="Qwen/Qwen3-235B-A22B-Instruct-2507"),
+        api_key=env_value("MODELSCOPE_API_KEY"),
+        base_url=env_value(
+            "NAILS_MODELSCOPE_BASE_URL", "MODELSCOPE_BASE_URL",
+            default="https://api-inference.modelscope.cn/v1",
+        ).rstrip("/"),
+    )
+
+
+def dashscope_config() -> LLMEndpointConfig:
+    """DashScope (Alibaba Cloud) OpenAI-compatible endpoint."""
+    return LLMEndpointConfig(
+        model=env_value("NAILS_TAG_LLM_MODEL", default="qwen3-max"),
+        api_key=env_value("NAILS_TAG_LLM_API_KEY", "OPENAI_API_KEY"),
+        base_url=env_value(
+            "NAILS_TAG_LLM_BASE_URL", "OPENAI_BASE_URL",
+            default="https://dashscope.aliyuncs.com/compatible-mode/v1",
+        ).rstrip("/"),
+    )
+
+
+def openrouter_config() -> LLMEndpointConfig:
+    """OpenRouter (multi-provider proxy, OpenAI-compatible)."""
+    return LLMEndpointConfig(
+        model=env_value(
+            "NAILS_OPENROUTER_MODEL",
+            default="anthropic/claude-sonnet-4-5",
+        ),
+        api_key=env_value("OPENROUTER_API_KEY"),
+        base_url=env_value(
+            "NAILS_OPENROUTER_BASE_URL", "OPENROUTER_BASE_URL",
+            default="https://openrouter.ai/api/v1",
+        ).rstrip("/"),
+    )
+
+
+# ── Composite config selectors ─────────────────────────────────────────────────
+
 def tag_llm_config(
     *,
     model: str | None = None,
     api_key: str | None = None,
     base_url: str | None = None,
 ) -> LLMEndpointConfig:
-    return LLMEndpointConfig(
-        model=model or env_value("NAILS_TAG_LLM_MODEL"),
-        api_key=api_key or env_value("NAILS_TAG_LLM_API_KEY", "OPENAI_API_KEY"),
-        base_url=(base_url or env_value("NAILS_TAG_LLM_BASE_URL", "OPENAI_BASE_URL")).rstrip("/"),
+    """Text-only LLM for tag extraction.
+
+    Explicit params > NAILS_TAG_LLM_* env vars > ModelScope > DashScope > OpenRouter.
+    """
+    # Explicit caller override
+    if model or api_key or base_url:
+        return LLMEndpointConfig(
+            model=model or env_value("NAILS_TAG_LLM_MODEL"),
+            api_key=api_key or env_value("NAILS_TAG_LLM_API_KEY", "OPENAI_API_KEY"),
+            base_url=(base_url or env_value("NAILS_TAG_LLM_BASE_URL", "OPENAI_BASE_URL")).rstrip("/"),
+        )
+
+    # Env-configured dedicated tag endpoint (covers both ModelScope and DashScope
+    # when NAILS_TAG_LLM_* vars are set — as done in .env)
+    dedicated = LLMEndpointConfig(
+        model=env_value("NAILS_TAG_LLM_MODEL"),
+        api_key=env_value("NAILS_TAG_LLM_API_KEY"),
+        base_url=env_value("NAILS_TAG_LLM_BASE_URL").rstrip("/"),
     )
+    if dedicated.available:
+        return dedicated
+
+    # Provider auto-detect: ModelScope → DashScope → OpenRouter
+    for cfg in (modelscope_config(), dashscope_config(), openrouter_config()):
+        if cfg.available:
+            return cfg
+
+    return LLMEndpointConfig()
 
 
-def modelscope_config() -> LLMEndpointConfig:
-    return LLMEndpointConfig(
-        model=env_value("NAILS_MODELSCOPE_MODEL"),
-        api_key=env_value("MODELSCOPE_API_KEY"),
-        base_url=env_value("NAILS_MODELSCOPE_BASE_URL", "MODELSCOPE_BASE_URL"),
+def vision_tag_config() -> LLMEndpointConfig:
+    """Vision LLM for image-based tag extraction.
+
+    Priority:
+      1. NAILS_VISION_TAG_* env vars (explicit override)
+      2. ModelScope  — Qwen/Qwen2.5-VL-72B-Instruct
+      3. DashScope   — qwen-vl-max  (same key as tag LLM)
+      4. OpenRouter  — qwen/qwen2.5-vl-72b-instruct:free
+    """
+    # Explicit dedicated override
+    dedicated = LLMEndpointConfig(
+        model=env_value("NAILS_VISION_TAG_MODEL"),
+        api_key=env_value("NAILS_VISION_TAG_API_KEY"),
+        base_url=env_value("NAILS_VISION_TAG_BASE_URL").rstrip("/"),
     )
+    if dedicated.available:
+        return dedicated
 
+    # ModelScope vision
+    ms = modelscope_config()
+    if ms.api_key:
+        return LLMEndpointConfig(
+            model="Qwen/Qwen2.5-VL-72B-Instruct",
+            api_key=ms.api_key,
+            base_url=ms.base_url or "https://api-inference.modelscope.cn/v1",
+        )
 
-def openrouter_config() -> LLMEndpointConfig:
-    return LLMEndpointConfig(
-        model=env_value("NAILS_OPENROUTER_MODEL"),
-        api_key=env_value("OPENROUTER_API_KEY"),
-        base_url=env_value("NAILS_OPENROUTER_BASE_URL", "OPENROUTER_BASE_URL"),
-    )
+    # DashScope vision
+    ds = dashscope_config()
+    if ds.api_key:
+        return LLMEndpointConfig(
+            model="qwen-vl-max",
+            api_key=ds.api_key,
+            base_url=ds.base_url or "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        )
+
+    # OpenRouter vision (free tier)
+    router_key = env_value("OPENROUTER_API_KEY")
+    if router_key:
+        return LLMEndpointConfig(
+            model="qwen/qwen2.5-vl-72b-instruct:free",
+            api_key=router_key,
+            base_url=env_value(
+                "NAILS_OPENROUTER_BASE_URL", "OPENROUTER_BASE_URL",
+                default="https://openrouter.ai/api/v1",
+            ).rstrip("/"),
+        )
+
+    return LLMEndpointConfig()
 
 
 def anthropic_model() -> str:
@@ -81,49 +189,3 @@ def hermes_model() -> str:
 
 def openrouter_referer() -> str:
     return env_value("NAILS_OPENROUTER_REFERER")
-
-
-def vision_tag_config() -> LLMEndpointConfig:
-    """Config for vision-based tag extraction.
-
-    Priority:
-      1. NAILS_VISION_TAG_API_KEY / NAILS_VISION_TAG_BASE_URL / NAILS_VISION_TAG_MODEL
-         (dedicated override — set these if you want a specific VL endpoint)
-      2. DashScope with qwen-vl-max  (same key as tag LLM, different model)
-      3. OpenRouter with a vision-capable model (qwen/qwen-vl or claude-3-haiku)
-
-    Returns an empty config if no key is found (caller should skip VL enrichment).
-    """
-    # Explicit override
-    dedicated = LLMEndpointConfig(
-        model=env_value("NAILS_VISION_TAG_MODEL"),
-        api_key=env_value("NAILS_VISION_TAG_API_KEY"),
-        base_url=env_value("NAILS_VISION_TAG_BASE_URL").rstrip("/"),
-    )
-    if dedicated.available:
-        return dedicated
-
-    # Reuse DashScope key with qwen-vl-max
-    dashscope_key = env_value("NAILS_TAG_LLM_API_KEY", "OPENAI_API_KEY")
-    dashscope_url = env_value("NAILS_TAG_LLM_BASE_URL", "OPENAI_BASE_URL").rstrip("/")
-    if dashscope_key and dashscope_url:
-        return LLMEndpointConfig(
-            model=env_value("NAILS_VISION_TAG_MODEL", default="qwen-vl-max"),
-            api_key=dashscope_key,
-            base_url=dashscope_url,
-        )
-
-    # Fallback: OpenRouter (supports vision via many models)
-    router_key = env_value("OPENROUTER_API_KEY")
-    router_url = env_value(
-        "NAILS_OPENROUTER_BASE_URL", "OPENROUTER_BASE_URL",
-        default="https://openrouter.ai/api/v1",
-    ).rstrip("/")
-    if router_key:
-        return LLMEndpointConfig(
-            model="qwen/qwen2.5-vl-72b-instruct:free",
-            api_key=router_key,
-            base_url=router_url,
-        )
-
-    return LLMEndpointConfig()
