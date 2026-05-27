@@ -62,7 +62,9 @@ def run_trend_scout(
             progress_cb("🤖 TrendScoutAgent 启动 (Qwen3)…")
 
         # Run synchronously; stream events for progress (result written to disk)
-        asyncio.get_event_loop().run_until_complete(
+        # Use asyncio.run() so this works in threads that have no running event loop
+        # (e.g. Streamlit's ScriptRunner.scriptThread).
+        asyncio.run(
             _run_with_progress(agent, user_msg, progress_cb, max_turns)
         )
 

@@ -65,8 +65,12 @@ function json(res, code, body) {
 function toFeed(item) {
   return {
     id: item.id || '',
+    // xsecToken is required by get_feed_detail; xhs-mcp search returns it at
+    // the top level (item.xsecToken) — must be forwarded or detail calls fail.
+    xsecToken: item.xsecToken || item.xsec_token || '',
     noteCard: {
       displayTitle: item.title || '',
+      // 'description' is not in search results; populated by detail enrichment.
       desc: item.description || '',
       interactInfo: {
         likedCount: String(item.likes || '0'),

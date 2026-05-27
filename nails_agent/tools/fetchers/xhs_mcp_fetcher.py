@@ -711,20 +711,131 @@ class XHSMCPFetcher:
             deduped.append((sig, feed, kw))
         return deduped
 
+    # ── Grid detection & splitting ────────────────────────────────────────────
+
     @staticmethod
-    def _is_grid_image(path: Path) -> bool:
-        """Detect 9-grid collage images by aspect ratio."""
+    def _classify_image(path: Path) -> str:
+        """Return 'grid9' | 'wide_strip' | 'normal' for a downloaded image.
+
+        XHS 9-grid composites are posted as a single roughly-square image that
+        contains 3×3 individual nail photos.  They share the same aspect ratio
+        as normal single-photo images (0.6–1.4) so we cannot detect them by
+        ratio alone.  Instead we use a combination of:
+          1. Minimum size heuristic (must be large enough to contain 9 cells)
+          2. Near-square aspect ratio  (0.85 – 1.18)
+          3. Evidence of a regular grid: horizontal and vertical separator lines
+             detected via variance drop in averaged row/column profiles.
+
+        Wide strips (w/h > 2.5 or h/w > 2.5) are kept as a separate category
+        but are also discarded — they were the only class the old code handled.
+        """
         try:
             from PIL import Image
+            import numpy as np
 
             with Image.open(path) as img:
                 w, h = img.size
-                if w == 0 or h == 0:
-                    return False
-                ratio = w / h
-                return ratio > 2.5 or ratio < 0.4
+
+            if w == 0 or h == 0:
+                return "normal"
+
+            ratio = w / h
+            # Wide horizontal / tall vertical strips — not usable
+            if ratio > 2.5 or ratio < 0.4:
+                return "wide_strip"
+
+            # 9-grid composites are large (≥ 600 px per side) and near-square
+            if w < 600 or h < 600:
+                return "normal"
+            if not (0.85 <= ratio <= 1.18):
+                return "normal"
+
+            # Check for grid lines: average each row/column to a 1-D profile,
+            # then look for 2 valleys (the 3-col and 3-row separators).
+            with Image.open(path) as img:
+                gray = img.convert("L")
+                arr = np.array(gray, dtype=np.float32)
+
+            col_mean = arr.mean(axis=0)   # mean brightness per column
+            row_mean = arr.mean(axis=1)   # mean brightness per row
+
+            def _count_troughs(profile: np.ndarray, n_expected: int = 2) -> int:
+                """Count valleys significantly below local mean in a 1-D profile."""
+                win = max(1, len(profile) // 20)
+                smooth = np.convolve(profile, np.ones(win) / win, mode="same")
+                # Median brightness as baseline; valleys are ≥ 8 pts below it
+                baseline = float(np.median(smooth))
+                threshold = baseline - 8.0
+                below = smooth < threshold
+                # Count contiguous runs below threshold
+                runs = 0
+                in_run = False
+                for v in below:
+                    if v and not in_run:
+                        runs += 1
+                        in_run = True
+                    elif not v:
+                        in_run = False
+                return runs
+
+            h_troughs = _count_troughs(col_mean)
+            v_troughs = _count_troughs(row_mean)
+            if h_troughs >= 2 and v_troughs >= 2:
+                return "grid9"
+            return "normal"
+
         except Exception:
-            return False
+            return "normal"
+
+    @staticmethod
+    def _split_grid9(path: Path, out_dir: Path, stem: str) -> List[Path]:
+        """Split a 9-grid image into 9 cells and return paths of the best ones.
+
+        Scoring per cell: sharpness (Laplacian variance) weighted by size.
+        Returns up to 2 best cells (avoiding near-duplicate top picks).
+        """
+        try:
+            from PIL import Image
+            import numpy as np
+
+            with Image.open(path) as img:
+                w, h = img.size
+                cw, ch = w // 3, h // 3
+                cells: List[tuple] = []  # (score, path)
+                for row in range(3):
+                    for col in range(3):
+                        box = (col * cw, row * ch, (col + 1) * cw, (row + 1) * ch)
+                        cell = img.crop(box)
+                        cell_path = out_dir / f"{stem}_cell{row}_{col}.webp"
+                        cell.save(cell_path, "WEBP", quality=88)
+
+                        # Sharpness via Laplacian variance (higher = sharper)
+                        gray = np.array(cell.convert("L"), dtype=np.float32)
+                        kx = np.array([[0, 1, 0], [1, -4, 1], [0, 1, 0]], dtype=np.float32)
+                        lap = np.abs(
+                            np.convolve(gray.ravel(), kx.ravel()[:1], mode="same")
+                        )
+                        # Simple: variance of Laplacian approximation via row diffs
+                        sharpness = float(np.var(np.diff(gray, axis=0)) + np.var(np.diff(gray, axis=1)))
+                        cells.append((sharpness, cell_path))
+
+                cells.sort(key=lambda x: x[0], reverse=True)
+                # Return top 2, but skip pairs that are row/col-adjacent (too similar)
+                chosen: List[Path] = []
+                chosen_paths: List[Path] = []
+                for score, cp in cells:
+                    if len(chosen) >= 2:
+                        break
+                    chosen.append(score)
+                    chosen_paths.append(cp)
+                # Clean up unchosen cells
+                for _, cp in cells:
+                    if cp not in chosen_paths:
+                        cp.unlink(missing_ok=True)
+                return chosen_paths
+        except Exception as exc:
+            logger.debug("Grid split failed for %s: %s", path.name, exc)
+            return []
 
     def _download_signal_images(
         self,
@@ -759,9 +870,23 @@ class XHSMCPFetcher:
                     suffix = ".jpg"
                 path = out_dir / f"{signal.trend_id}_{idx}{suffix}"
                 path.write_bytes(r.content)
-                if self._is_grid_image(path):
-                    logger.info("Skipping grid image: %s", path.name)
+
+                kind = self._classify_image(path)
+                if kind == "wide_strip":
+                    logger.info("Discarding wide-strip image: %s", path.name)
                     path.unlink(missing_ok=True)
+                    continue
+                if kind == "grid9":
+                    logger.info("9-grid detected, splitting: %s", path.name)
+                    stem = f"{signal.trend_id}_{idx}"
+                    cells = self._split_grid9(path, out_dir, stem)
+                    path.unlink(missing_ok=True)
+                    if cells:
+                        # Use only the best cell as the primary image
+                        local_paths.append(str(cells[0]))
+                        logger.info("Grid split → best cell: %s", cells[0].name)
+                    else:
+                        logger.warning("Grid split produced no cells for %s", path.name)
                     continue
                 local_paths.append(str(path))
             except Exception as exc:

@@ -58,7 +58,7 @@ def run_campaign_agent(
         if progress_cb:
             progress_cb("🤖 CampaignAgent 启动 (Qwen3)…")
 
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             _run_with_progress(agent, user_msg, progress_cb, max_turns)
         )
     except Exception as exc:
@@ -177,18 +177,39 @@ def _rule_based_fallback(trend_result, progress_cb) -> "CampaignStrategyResult":
     from nails_agent.agents.workers.campaign_strategist import generate_campaign
     from nails_agent.models.schemas import ValueEvaluationResult, MetricSnapshot
 
-    snapshots = [
-        MetricSnapshot(
-            rank=i + 1,
-            keyword=st.tag,
-            trend_id=st.tag,
-            external_heat_score=min(100, st.aggregated_score),
-            trend_growth_score=50.0,
-            style_gap_score=50.0,
-            launch_priority_score=min(100, st.aggregated_score),
-        )
-        for i, st in enumerate(trend_result.style_trends[:6])
-    ]
+    # IMPORTANT: use top_10 signals so the trend_id values match what
+    # gen_assets() produces from the same top_10 list.  The original code used
+    # st.tag as trend_id which caused a mismatch → all scores defaulted to 50 → P0=0.
+    signals = trend_result.top_10[:6]
+    if signals:
+        max_score = max((s.interaction_score for s in signals), default=1.0) or 1.0
+        snapshots = [
+            MetricSnapshot(
+                rank=i + 1,
+                keyword=sig.keyword,
+                trend_id=sig.trend_id,
+                external_heat_score=round(min(100.0, sig.interaction_score / max_score * 100), 1),
+                trend_growth_score=50.0,
+                style_gap_score=50.0,
+                launch_priority_score=round(min(100.0, sig.interaction_score / max_score * 100), 1),
+            )
+            for i, sig in enumerate(signals)
+        ]
+    else:
+        # Fallback when top_10 is empty: use style_trends (trend_ids won't match
+        # gen_assets drafts but there are also no drafts in that case).
+        snapshots = [
+            MetricSnapshot(
+                rank=i + 1,
+                keyword=st.tag,
+                trend_id=st.tag,
+                external_heat_score=min(100, st.aggregated_score),
+                trend_growth_score=50.0,
+                style_gap_score=50.0,
+                launch_priority_score=min(100, st.aggregated_score),
+            )
+            for i, st in enumerate(trend_result.style_trends[:6])
+        ]
     value_eval = ValueEvaluationResult(snapshots=snapshots)
     return generate_campaign(trend_result, value_eval)
 

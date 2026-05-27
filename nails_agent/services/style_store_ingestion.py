@@ -7,9 +7,12 @@ TrendSignal + StyleCard -> nail_styles_store -> visual/reference profiles -> mem
 from __future__ import annotations
 
 import json
+import logging
 import re
 from pathlib import Path
 from typing import Any, Iterable
+
+logger = logging.getLogger(__name__)
 
 from nails_agent.memory.store import MemoryStore
 from nails_agent.models.schemas import (
@@ -112,6 +115,7 @@ def _initial_style_item(card: Any, signal: TrendSignal | None, now: str) -> dict
         "color_tags": _tags(signal, "color_tags"),
         "material_tags": _tags(signal, "material_tags"),
         "scene_tags": _tags(signal, "scene_tags"),
+        "shape_tags": [],
         "is_trend_generated": True,
         "status": "candidate",
         "created_at": getattr(card, "created_at", "") or now,
@@ -236,14 +240,30 @@ def ingest_campaign_styles(
     reference_profile_count = 0
     now = _now()
 
+    logger.info(
+        "ingest_campaign_styles: %d cards total, allowed_priorities=%s, data_dir=%s",
+        len(campaign.style_cards),
+        allowed_priorities,
+        data_path,
+    )
+
     for card in campaign.style_cards:
         priority = _priority(card)
         if priority not in allowed_priorities:
+            logger.debug("Skipping card %s with priority=%s", getattr(card, "trend_id", "?"), priority)
             continue
 
         signal = signals.get(card.trend_id)
+        if signal is None:
+            logger.warning(
+                "Card trend_id=%s not found in analysis signals (available: %s…)",
+                card.trend_id,
+                list(signals.keys())[:3],
+            )
         style_item = _initial_style_item(card, signal, now)
         style_id = style_item["style_id"]
+
+        logger.info("Ingesting style_id=%s priority=%s image_url=%s", style_id, priority, style_item.get("image_url", ""))
 
         # Phase 1: write the candidate style as soon as the strategy says P0/P1.
         _upsert_table_row(data_path, "nail_styles_store", "style_id", style_item)
@@ -317,7 +337,11 @@ def ingest_campaign_styles(
                 "updated_at": _now(),
             }
         )
-        style_item = NailStyleStoreItem(**style_item).model_dump()
+        try:
+            style_item = NailStyleStoreItem(**style_item).model_dump()
+        except Exception as exc:
+            logger.warning("NailStyleStoreItem validation failed for %s: %s", style_id, exc)
+            # keep the raw dict so we still write back updated linkage fields
         _upsert_table_row(data_path, "nail_styles_store", "style_id", style_item)
         memory_store.put_style(style_item)
 
