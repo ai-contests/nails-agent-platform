@@ -36,23 +36,67 @@ logger = logging.getLogger(__name__)
 # Chinese terms work best on XHS (cover scene + intent + style).
 # XHS now search-enriches only the highest-engagement candidates with detail calls,
 # so keep the per-keyword search page shallow to reduce runtime and account risk.
+# ── XHS keyword pool ──────────────────────────────────────────────────────────
+# Organised by dimension so each search run samples across different axes.
+# Each category contributes different signals — avoids top-10 converging on
+# the same posts.
+
+XHS_KEYWORD_POOL: dict[str, list[str]] = {
+    # 色系 — colour-family searches surface colour trends first
+    "色系": ["猫眼美甲", "渐变色美甲", "法式美甲", "奶油色美甲", "多巴胺美甲"],
+    # 场景 — context/occasion-driven posts skew toward real-use nail photos
+    "场景": ["夏日美甲", "约会美甲", "日常美甲", "通勤美甲", "婚礼美甲"],
+    # 风格 — aesthetic style keywords
+    "风格": ["简约美甲", "ins风美甲", "复古美甲", "甜酷美甲", "高级感美甲"],
+    # 甲型 — nail shape/length
+    "甲型": ["长甲美甲设计", "短甲美甲", "方形甲"],
+    # 工艺 — technique/material
+    "工艺": ["猫眼甲", "亮片美甲", "光疗甲推荐", "镭射美甲"],
+}
+
+# Default 7-keyword set sampled across all dimensions (one per bucket).
+# Rotated each run via collect_signals; override via keywords= param.
 XHS_KEYWORDS = [
-    "美甲款式",
-    "热门美甲",
-    "美甲推荐",
-    "春夏新款美甲",
-    "氛围感日常美甲",
-    "气质美甲",
-    "百搭美甲",
+    "猫眼美甲",       # 色系
+    "夏日美甲",       # 场景
+    "简约美甲",       # 风格
+    "短甲美甲",       # 甲型
+    "光疗甲推荐",     # 工艺
+    "法式美甲",       # 色系 — second colour pick
+    "约会美甲",       # 场景 — second scene pick
 ]
 
-# Douyin: keep similar but lean toward tutorial / show-off content
+
+def sample_xhs_keywords(n: int = 7, *, seed: int | None = None) -> list[str]:
+    """Return *n* XHS keywords sampled one-per-dimension, then filling with
+    remaining pool entries.  Pass *seed* for reproducible results in tests."""
+    import random as _random
+
+    rng = _random.Random(seed)
+    chosen: list[str] = []
+    buckets = list(XHS_KEYWORD_POOL.values())
+    # One from each bucket first
+    for bucket in buckets:
+        chosen.append(rng.choice(bucket))
+        if len(chosen) >= n:
+            return chosen
+    # Fill remaining slots from pool (excluding already chosen)
+    remaining = [kw for kws in buckets for kw in kws if kw not in chosen]
+    rng.shuffle(remaining)
+    for kw in remaining:
+        if len(chosen) >= n:
+            break
+        chosen.append(kw)
+    return chosen[:n]
+
+
+# Douyin: lean toward tutorial/showcase content
 DOUYIN_KEYWORDS = [
-    "美甲",
     "美甲教程",
-    "美甲推荐",
+    "猫眼美甲",
+    "法式美甲",
     "夏日美甲",
-    "高级美甲",
+    "高级感美甲",
 ]
 
 # Instagram hashtags (no #) — mix style + general nail tags
@@ -199,7 +243,9 @@ class SignalCollector:
         Returns deduplicated List[TrendSignal] sorted by engagement score.
         Falls back to mock data only if all real sources produce nothing.
         """
-        xhs_kws = keywords or XHS_KEYWORDS
+        # Sample diverse keywords every run so top-10 results span different
+        # colour / scene / style / technique dimensions.
+        xhs_kws = keywords or sample_xhs_keywords(n=len(XHS_KEYWORDS))
         douyin_kws = keywords or DOUYIN_KEYWORDS
         ig_tags = IG_NAIL_TAGS  # english hashtags — not parametrised
 
