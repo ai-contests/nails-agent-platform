@@ -2,13 +2,13 @@
 SignalCollector — unified entry point for trend signal collection.
 
 Active sources (all FREE):
-  1. XHS-MCP      — local Go xiaohongshu-mcp server (port 18060, REST API)
-  2. Douyin CDP   — reuses logged-in Chrome tab  (requires --remote-debugging-port=9222)
-  3. Instagram    — playwright CDP or instaloader session
-  4. Mock         — web/data/trend_signals.json  (always available as fallback)
+  1. XHS CDP      — real Chrome via CDP (primary; requires --remote-debugging-port=9222)
+  2. XHS-MCP      — local Go xiaohongshu-mcp server (port 18060, REST API; fallback)
+  3. Douyin CDP   — reuses logged-in Chrome tab  (requires --remote-debugging-port=9222)
+  4. Instagram    — playwright CDP or instaloader session
+  5. Mock         — web/data/trend_signals.json  (always available as fallback)
 
 Disabled / suspended sources:
-  - XHSCDPFetcher    — direct CDP scraping, suspended after automation warning
   - XHSSkillsFetcher — Node.js xhs-mcp wrapper; replaced by Go xhs-mcp
   - TikHub           — paid API; enable by setting TIKHUB_API_KEY
 
@@ -140,6 +140,7 @@ class SignalCollector:
 
         # Lazy instances
         self._xhs_mcp = None
+        self._xhs_cdp = None
         self._douyin = None
         self._instagram = None
         self._tikhub = None
@@ -156,6 +157,13 @@ class SignalCollector:
 
             self._xhs_mcp = XHSMCPFetcher(base_url=self._xhs_mcp_url)
         return self._xhs_mcp
+
+    def _get_xhs_cdp(self):
+        if self._xhs_cdp is None:
+            from nails_agent.tools.fetchers.xhs_cdp_fetcher import XHSCDPFetcher
+
+            self._xhs_cdp = XHSCDPFetcher(cdp_url=self._cdp_url)
+        return self._xhs_cdp
 
     def _get_douyin(self):
         if self._douyin is None:
@@ -183,6 +191,10 @@ class SignalCollector:
     def source_status(self, refresh: bool = False) -> Dict[str, bool]:
         """Non-blocking check of which sources are ready."""
         status: Dict[str, bool] = {}
+        try:
+            status["xhs_cdp"] = self._get_xhs_cdp().is_available()
+        except Exception:
+            status["xhs_cdp"] = False
         try:
             status["xhs"] = self._get_xhs_mcp().is_available(force_refresh=refresh)
         except Exception:
@@ -258,11 +270,26 @@ class SignalCollector:
         self.last_collection_real_sources_attempted = False
 
         if use_xhs:
-            xhs = self._get_xhs_mcp()
-            if xhs.is_available(force_refresh=refresh_sources):
+            # Prefer real Chrome via CDP (avoids Playwright bot-detection rate-limits).
+            # Falls back to XHS-MCP (Go bridge + Playwright) when CDP is unavailable.
+            xhs_cdp = self._get_xhs_cdp()
+            xhs_mcp = self._get_xhs_mcp()
+            cdp_ready = False
+            try:
+                cdp_ready = xhs_cdp.is_available()
+            except Exception:
+                pass
+
+            if cdp_ready:
+                def _run_xhs_cdp():
+                    return xhs_cdp.search_many(xhs_kws, target_per_kw=limit_per_kw)
+
+                tasks["xhs"] = _run_xhs_cdp
+                logger.info("XHS: using CDP fetcher (real Chrome, no bot-detection)")
+            elif xhs_mcp.is_available(force_refresh=refresh_sources):
 
                 def _run_xhs():
-                    results = xhs.search(
+                    results = xhs_mcp.search(
                         xhs_kws,
                         limit_per_kw=limit_per_kw,
                         detail_top_n=10,
@@ -274,12 +301,13 @@ class SignalCollector:
                         image_dir=xhs_image_dir,
                         max_images_per_signal=xhs_max_images_per_signal,
                     )
-                    self.rejected_candidates.extend(xhs.rejected_candidates)
+                    self.rejected_candidates.extend(xhs_mcp.rejected_candidates)
                     return results
 
                 tasks["xhs"] = _run_xhs
+                logger.info("XHS: using MCP fetcher (Playwright bridge)")
             else:
-                logger.debug("XHS-MCP: Go server not running or not logged in")
+                logger.debug("XHS: neither CDP nor MCP available")
 
         if use_douyin:
             dy = self._get_douyin()

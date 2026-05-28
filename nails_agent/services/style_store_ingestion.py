@@ -288,21 +288,11 @@ def ingest_campaign_styles(
                 memory_store.put_visual_feature(feature)
                 visual_feature_count += 1
 
-                # TASK-5: classify nail length from Roboflow crop
-                if feature.get("nail_crop_used"):
-                    try:
-                        from nails_agent.services.nail_extractor import (  # noqa: PLC0415
-                            classify_nail_length,
-                            extract_nail_crops,
-                        )
-
-                        crops = extract_nail_crops(image_path)
-                        if crops:
-                            shape_tag = classify_nail_length(crops[0])
-                            if shape_tag not in (style_item.get("shape_tags") or []):
-                                style_item.setdefault("shape_tags", []).append(shape_tag)
-                    except Exception:
-                        pass  # non-critical — shape_tags are optional
+                # Use nail_shape_tag already computed inside extract_nail_visual_features
+                # (same Roboflow crop — no extra API call needed)
+                shape_tag = feature.get("nail_shape_tag", "")
+                if shape_tag and shape_tag not in (style_item.get("shape_tags") or []):
+                    style_item.setdefault("shape_tags", []).append(shape_tag)
             except Exception as exc:  # pragma: no cover - defensive runtime guard
                 warnings.append(f"{style_id}: 视觉特征提取失败，原因：{exc}")
         elif extract_visual_features:

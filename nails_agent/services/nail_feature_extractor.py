@@ -336,14 +336,20 @@ def extract_nail_visual_features(
 
     effective_path: str | Path = image_path
     nail_crop_used = False
+    nail_shape_tag: str = ""  # 长甲 / 中甲 / 短甲, empty if crop failed
     if use_nail_crop:
         try:
-            from nails_agent.services.nail_extractor import extract_nail_crops
+            from nails_agent.services.nail_extractor import (
+                classify_nail_length,
+                extract_nail_crops,
+            )
 
             crops = extract_nail_crops(image_path)
             if crops:
                 effective_path = crops[0]
                 nail_crop_used = True
+                # Compute length classification from the same crop — no extra API call
+                nail_shape_tag = classify_nail_length(crops[0])
         except ImportError:
             pass  # inference-sdk not installed — fall back to whole image
         except Exception:
@@ -401,6 +407,7 @@ def extract_nail_visual_features(
         "needs_manual_review": confidence < 0.62 or primary["color_family"] == "unknown",
         "feature_source": "nail_crop_extract" if nail_crop_used else "auto_color_extract",
         "nail_crop_used": nail_crop_used,
+        "nail_shape_tag": nail_shape_tag,
         "created_at": now,
         "updated_at": None,
     }
