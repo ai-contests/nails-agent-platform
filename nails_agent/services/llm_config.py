@@ -6,7 +6,7 @@ Provider priority (first available wins):
   3. OpenRouter  — OPENROUTER_API_KEY
 
 Both ModelScope and DashScope expose OpenAI-compatible `/v1/chat/completions`.
-ModelScope vision models: Qwen/Qwen2.5-VL-72B-Instruct
+ModelScope vision models: Qwen/Qwen3-VL-8B-Instruct  (only VL model available via API inference)
 DashScope vision models:  qwen-vl-max
 OpenRouter vision models: qwen/qwen2.5-vl-72b-instruct:free
 """
@@ -129,7 +129,7 @@ def vision_tag_config() -> LLMEndpointConfig:
 
     Priority:
       1. NAILS_VISION_TAG_* env vars (explicit override)
-      2. ModelScope  — Qwen/Qwen2.5-VL-72B-Instruct
+      2. ModelScope  — Qwen/QVQ-72B-Preview (visual reasoning)
       3. DashScope   — qwen-vl-max  (same key as tag LLM)
       4. OpenRouter  — qwen/qwen2.5-vl-72b-instruct:free
     """
@@ -142,11 +142,11 @@ def vision_tag_config() -> LLMEndpointConfig:
     if dedicated.available:
         return dedicated
 
-    # ModelScope vision
+    # ModelScope vision — Qwen3-VL-8B is the currently available VL model via API inference
     ms = modelscope_config()
     if ms.api_key:
         return LLMEndpointConfig(
-            model="Qwen/Qwen2.5-VL-72B-Instruct",
+            model="Qwen/Qwen3-VL-8B-Instruct",
             api_key=ms.api_key,
             base_url=ms.base_url or "https://api-inference.modelscope.cn/v1",
         )
