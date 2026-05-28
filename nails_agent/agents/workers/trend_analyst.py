@@ -127,8 +127,8 @@ def analyse(signals: List[TrendSignal]) -> TrendAnalysisResult:
     ranked = sorted(signals, key=lambda s: s.composite_score, reverse=True)
     for i, sig in enumerate(ranked, 1):
         sig.rank = i
-        if not sig.display_label:
-            sig.display_label = generate_display_label(sig) or sample_label(sig, i, with_tags=False)
+        # Always try generate_display_label first so meaningful tags override stale placeholders
+        sig.display_label = generate_display_label(sig) or sig.display_label or sample_label(sig, i, with_tags=False)
     top_10 = ranked[:10]
 
     # 3. Aggregated style trends (the real signal, not echoed search keywords)

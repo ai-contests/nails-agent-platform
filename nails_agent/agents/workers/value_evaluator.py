@@ -191,7 +191,7 @@ def evaluate(
             MetricSnapshot(
                 trend_id=sig.trend_id,
                 keyword=sig.keyword,
-                display_label=sig.display_label or generate_display_label(sig) or sample_label(sig, sig.rank, with_tags=False),
+                display_label=generate_display_label(sig) or sig.display_label or sample_label(sig, sig.rank, with_tags=False),
                 tag_summary=tag_summary(sig),
                 image_url=signal_image_url(sig),
                 external_heat_score=heat,
