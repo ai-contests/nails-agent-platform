@@ -132,11 +132,28 @@ def _load_trend_result(output_dir: str, progress_cb) -> "TrendAnalysisResult":
         except Exception:
             pass
 
+    # Load original raw signals to restore fields that the LLM may have dropped
+    # (e.g. display_label, source_title, local_image_paths).
+    raw_signals_path = os.path.join(output_dir, "trend_signals.json")
+    raw_signal_map: dict = {}
+    try:
+        with open(raw_signals_path, encoding="utf-8") as _f:
+            for sig in json.load(_f):
+                tid = sig.get("trend_id") or sig.get("source_note_id")
+                if tid:
+                    raw_signal_map[tid] = sig
+    except Exception:
+        pass
+
     top_10: List[TrendSignal] = []
     for raw in data.get("top_10", [])[:10]:
         try:
+            # Merge: original signal data is the base, LLM output overrides where present
+            tid = raw.get("trend_id") or raw.get("source_note_id")
+            base = dict(raw_signal_map.get(tid or "", {}))
+            base.update({k: v for k, v in raw.items() if v not in (None, "", [], {})})
             top_10.append(
-                TrendSignal(**{k: raw.get(k, "") for k in TrendSignal.model_fields if k in raw})
+                TrendSignal(**{k: base.get(k, "") for k in TrendSignal.model_fields if k in base})
             )
         except Exception:
             pass

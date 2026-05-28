@@ -100,21 +100,26 @@ def _format_trend_context(result: "TrendAnalysisResult", max_styles: int) -> str
 
     lines = ["## 趋势数据（按热度排序）"]
 
-    # Deduplicate: cap same-tag style_trends to 2 to avoid repetitive cards
+    # Deduplicate by display_label to avoid repeating the same signal; also
+    # cap same style-tag to 2 entries to ensure diversity.
+    seen_labels: set = set()
     tag_card_count: dict = {}
     shown = 0
     for st in result.style_trends:
         if shown >= max_styles:
             break
-        count = tag_card_count.get(st.tag, 0)
-        if count >= 2:  # ← max 2 cards per tag
-            continue
-        tag_card_count[st.tag] = count + 1
-        shown += 1
-
-        # Enrich with signal data if available
         sig = tag_to_signal.get(st.tag)
         display = sig.display_label if sig and sig.display_label else st.tag
+        # Skip if this display_label was already emitted
+        if display in seen_labels:
+            continue
+        # Skip if this raw tag has hit its card cap
+        if tag_card_count.get(st.tag, 0) >= 2:
+            continue
+        seen_labels.add(display)
+        tag_card_count[st.tag] = tag_card_count.get(st.tag, 0) + 1
+        shown += 1
+
         colors = ", ".join(sig.color_tags) if sig and sig.color_tags else ""
         color_str = f" | 颜色: {colors}" if colors else ""
         lines.append(
