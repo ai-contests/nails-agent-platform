@@ -533,18 +533,23 @@ class XHSMCPFetcher:
                 )
                 if not detail:
                     logger.info(
-                        "XHS-MCP detail skipped after retries: feed_id=%s keyword=%s",
+                        "XHS-MCP detail unavailable — using search-level data: feed_id=%s keyword=%s",
                         feed.get("id") or sig.source_note_id,
                         kw,
                     )
+                    # Fall back to search-level signal rather than skipping entirely.
+                    enriched = apply_tags(sig, signal_tag_dict(sig), sig.tag_source or "rules:title")
+                    detailed.append(enriched)
                     continue
                 enriched = _merge_detail_to_signal(sig, detail, feed, kw)
                 if not enriched.detail_enriched:
                     logger.info(
-                        "XHS-MCP detail parse skipped: feed_id=%s keyword=%s",
+                        "XHS-MCP detail parse skipped — using search-level data: feed_id=%s keyword=%s",
                         feed.get("id") or sig.source_note_id,
                         kw,
                     )
+                    enriched = apply_tags(sig, signal_tag_dict(sig), sig.tag_source or "rules:title")
+                    detailed.append(enriched)
                     continue
                 enriched = apply_tags(
                     enriched,
