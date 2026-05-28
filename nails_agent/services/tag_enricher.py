@@ -82,7 +82,7 @@ def clean_tag(tag: Any) -> str:
     if any(part in raw for part in _DROP_CONTAINS):
         return ""
     # Tags should be compact concepts, not phrases/sentences.
-    if len(raw) > 8:
+    if len(raw) > 12:
         return ""
     return raw
 
@@ -125,6 +125,11 @@ def tag_confidence(tags: Dict[str, List[str]]) -> float:
 
 
 def should_call_llm(tags: Dict[str, List[str]], confidence: float) -> bool:
+    cleaned = clean_tag_dict(tags)
+    # Always enrich when color_tags is empty — color is critical for display and
+    # rule-based extraction misses it most of the time.
+    if not cleaned.get("color_tags"):
+        return True
     return confidence <= 0.7 or empty_tag_category_count(tags) >= 2
 
 
@@ -263,24 +268,25 @@ class QwenTagEnricher:
     def _batch_prompt(self, signals: List[TrendSignal]) -> str:
         items = [
             {
-                "source_note_id": s.source_note_id or s.trend_id,
-                "source_title": s.source_title or "",
-                "caption": s.caption or "",
+                “source_note_id”: s.source_note_id or s.trend_id,
+                “source_title”: s.source_title or “”,
+                “caption”: s.caption or “”,
             }
             for s in signals
         ]
         return (
-            "请为 items 中每条美甲内容分别抽取四类标签。\n"
-            "字段固定为 style_tags、color_tags、material_tags、scene_tags。\n"
-            "要求：\n"
-            "1. 只抽取每条原文明确提到或强相关的短标签，不要创造新概念。\n"
-            "2. 不要输出“美甲、好看、显白、推荐、教程、分享、合集、爆款、种草”等泛词。\n"
-            "3. 如果某类没有明确依据，返回空数组。\n"
-            "4. 每个标签尽量为 2-4 个汉字的短词，例如“法式、猫眼、裸色、亮片、约会”。\n"
-            "5. 必须保留每条输入的 source_note_id，用它对齐结果；不要靠顺序。\n"
-            "6. 只返回 JSON，格式如下：\n"
-            '{"items":[{"source_note_id":"xxx","style_tags":[],"color_tags":[],"material_tags":[],"scene_tags":[]}]}\n\n'
-            f"items:\n{json.dumps(items, ensure_ascii=False, indent=2)}"
+            “请为 items 中每条美甲内容分别抽取四类标签。\n”
+            “字段固定为 style_tags、color_tags、material_tags、scene_tags。\n”
+            “要求：\n”
+            “1. color_tags 重点关注：根据标题和文案中提到的颜色词填写，如”裸粉、奶油白、蓝色、莫兰迪”等。\n”
+            “2. 只抽取每条原文明确提到或强相关的短标签，不要创造新概念。\n”
+            “3. 不要输出”美甲、好看、显白、推荐、教程、分享、合集、爆款、种草”等泛词。\n”
+            “4. 如果某类没有明确依据，返回空数组。\n”
+            “5. 每个标签为 2-6 个汉字的短词，例如”法式、猫眼、裸色、奶油白、亮片、约会”。\n”
+            “6. 必须保留每条输入的 source_note_id，用它对齐结果；不要靠顺序。\n”
+            “7. 只返回 JSON，格式如下：\n”
+            '{“items”:[{“source_note_id”:”xxx”,”style_tags”:[],”color_tags”:[],”material_tags”:[],”scene_tags”:[]}]}\n\n'
+            f”items:\n{json.dumps(items, ensure_ascii=False, indent=2)}”
         )
 
     @staticmethod
@@ -338,11 +344,12 @@ _VISION_SYSTEM = (
     "提取四类标签：style_tags（款式）、color_tags（颜色）、"
     "material_tags（材料/工艺）、scene_tags（适用场景）。\n"
     "要求：\n"
-    "1. 只描述图片中明确可见的特征，不要臆测。\n"
-    "2. 每个标签为 2-4 个汉字短词（例如：猫眼、法式、裸粉、亮片、约会）。\n"
-    "3. 不要输出「美甲」「好看」「显白」「推荐」等泛词。\n"
-    "4. 不确定的类别返回空数组。\n"
-    "5. 只输出 JSON，格式：\n"
+    "1. color_tags 必须填写，描述图片中指甲的实际颜色，例如：裸粉、奶油白、蓝色、莫兰迪灰、豆沙色。\n"
+    "2. 只描述图片中明确可见的特征，不要臆测。\n"
+    "3. 每个标签为 2-6 个汉字短词（例如：猫眼、法式、裸粉、深蓝色、莫兰迪、亮片、约会）。\n"
+    "4. 不要输出「美甲」「好看」「显白」「推荐」等泛词。\n"
+    "5. 不确定的类别返回空数组，但 color_tags 必须至少填一个。\n"
+    "6. 只输出 JSON，格式：\n"
     '{"style_tags":[],"color_tags":[],"material_tags":[],"scene_tags":[]}'
 )
 

@@ -46,8 +46,11 @@ def run_campaign_agent(
     context = _format_trend_context(trend_result, max_cards)
     user_msg = (
         f"为以下热门美甲款式生成完整运营策略。\n\n{context}\n\n"
-        f"生成最多 {max_cards} 款的风格卡片，每款都要有三平台文案。"
-        "完成后调用 finalise_campaign。"
+        f"要求：\n"
+        f"1. 生成最多 {max_cards} 款不同风格的卡片，每款都要有三平台文案。\n"
+        f"2. style_name 必须具体，使用'颜色·风格'或'工艺·场景'格式，例如"蓝色猫眼·夏日"、"裸粉渐变·通勤"、"极简法式·约会"，禁止用"法式甲"、"猫眼"这类泛名。\n"
+        f"3. 同一 tag 类型（如猫眼）最多出现 2 张卡片，确保整体多样性。\n"
+        f"完成后调用 finalise_campaign。"
     )
 
     try:
@@ -86,14 +89,53 @@ async def _run_with_progress(agent, user_msg: str, progress_cb, max_turns: int):
 
 
 def _format_trend_context(result: "TrendAnalysisResult", max_styles: int) -> str:
+    # Build a map from style tag → best matching signal (for display_label / color info)
+    tag_to_signal: dict = {}
+    for sig in result.top_10:
+        for tag in (sig.style_tags or []):
+            if tag and tag not in tag_to_signal:
+                tag_to_signal[tag] = sig
+
     lines = ["## 趋势数据（按热度排序）"]
-    for st in result.style_trends[:max_styles]:
+
+    # Deduplicate: cap same-tag style_trends to 2 to avoid repetitive cards
+    tag_card_count: dict = {}
+    shown = 0
+    for st in result.style_trends:
+        if shown >= max_styles:
+            break
+        count = tag_card_count.get(st.tag, 0)
+        if count >= 2:  # ← max 2 cards per tag
+            continue
+        tag_card_count[st.tag] = count + 1
+        shown += 1
+
+        # Enrich with signal data if available
+        sig = tag_to_signal.get(st.tag)
+        display = sig.display_label if sig and sig.display_label else st.tag
+        colors = ", ".join(sig.color_tags) if sig and sig.color_tags else ""
+        color_str = f" | 颜色: {colors}" if colors else ""
         lines.append(
-            f"- **{st.tag}** | category: {st.category} | "
+            f"- **{display}** | tag: {st.tag} | category: {st.category} | "
             f"帖数: {st.post_count} | 互动: {st.total_engagement:,} | "
-            f"分: {st.aggregated_score:.0f}"
+            f"分: {st.aggregated_score:.0f}{color_str}"
             + (f'\n  样本文案: "{st.sample_caption[:60]}"' if st.sample_caption else "")
         )
+
+    # If style_trends is empty or short, fall back to top_10 signals directly
+    if shown == 0:
+        seen_labels: set = set()
+        for sig in result.top_10[:max_styles]:
+            label = sig.display_label or (sig.style_tags[0] if sig.style_tags else sig.keyword)
+            if label in seen_labels:
+                continue
+            seen_labels.add(label)
+            colors = ", ".join(sig.color_tags) if sig.color_tags else ""
+            color_str = f" | 颜色: {colors}" if colors else ""
+            lines.append(
+                f"- **{label}** | 关键词: {sig.keyword}{color_str} | 点赞: {sig.likes:,}"
+            )
+
     if result.patterns:
         lines.append("\n## 观察到的模式")
         for p in result.patterns[:3]:
