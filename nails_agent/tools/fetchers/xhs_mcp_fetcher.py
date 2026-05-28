@@ -921,16 +921,43 @@ class XHSMCPFetcher:
                     path.unlink(missing_ok=True)
                     continue
                 if kind == "grid9":
-                    logger.info("9-grid detected, splitting: %s", path.name)
-                    stem = f"{signal.trend_id}_{idx}"
-                    cells = self._split_grid9(path, out_dir, stem)
-                    path.unlink(missing_ok=True)
-                    if cells:
-                        # Use only the best cell as the primary image
-                        local_paths.append(str(cells[0]))
-                        logger.info("Grid split → best cell: %s", cells[0].name)
+                    # Prefer individual images from imageList over splitting the composite:
+                    # If the post has more URLs beyond this cover, they are individual
+                    # photos (higher quality). Download one of those instead.
+                    remaining_urls = signal.image_urls[idx:]  # URLs after the grid cover
+                    if remaining_urls:
+                        logger.info(
+                            "9-grid cover but post has %d individual images — downloading best individual instead: %s",
+                            len(remaining_urls),
+                            path.name,
+                        )
+                        path.unlink(missing_ok=True)
+                        # Download the first individual image
+                        for ind_url in remaining_urls[:1]:
+                            try:
+                                ind_r = self._session.get(
+                                    ind_url,
+                                    headers={"User-Agent": "Mozilla/5.0", "Referer": "https://www.xiaohongshu.com/"},
+                                    timeout=20,
+                                )
+                                if ind_r.ok and ind_r.content:
+                                    ind_path = out_dir / f"{signal.trend_id}_{idx}_ind{path.suffix}"
+                                    ind_path.write_bytes(ind_r.content)
+                                    local_paths.append(str(ind_path))
+                                    logger.info("Individual image downloaded: %s", ind_path.name)
+                            except Exception as exc:
+                                logger.debug("Individual image download failed: %s", exc)
                     else:
-                        logger.warning("Grid split produced no cells for %s", path.name)
+                        # Only the grid composite — split 3×3 and pick best cell
+                        logger.info("9-grid only image, splitting 3×3: %s", path.name)
+                        stem = f"{signal.trend_id}_{idx}"
+                        cells = self._split_grid9(path, out_dir, stem)
+                        path.unlink(missing_ok=True)
+                        if cells:
+                            local_paths.append(str(cells[0]))
+                            logger.info("Grid split → best cell: %s", cells[0].name)
+                        else:
+                            logger.warning("Grid split produced no cells for %s", path.name)
                     continue
                 local_paths.append(str(path))
             except Exception as exc:

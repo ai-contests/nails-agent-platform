@@ -6,6 +6,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "7654", "--directory", "docs"],
       "port": 7654
+    },
+    {
+      "name": "report",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "7655", "--directory", "web"],
+      "port": 7655
     }
   ]
 }
