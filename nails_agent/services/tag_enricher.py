@@ -258,9 +258,9 @@ class QwenTagEnricher:
             "请抽取四类标签，字段固定为 style_tags、color_tags、material_tags、scene_tags。\n"
             "要求：\n"
             "1. 只抽取原文明确提到或强相关的短标签，不要创造新概念。\n"
-            "2. 不要输出“美甲、好看、显白、推荐、教程、分享、合集、爆款、种草”等泛词。\n"
+            "2. 不要输出「美甲、好看、显白、推荐、教程、分享、合集、爆款、种草」等泛词。\n"
             "3. 如果某类没有明确依据，返回空数组。\n"
-            "4. 每个标签尽量为 2-4 个汉字的短词，例如“法式、猫眼、裸色、亮片、约会”。\n"
+            "4. 每个标签尽量为 2-4 个汉字的短词，例如「法式、猫眼、裸色、亮片、约会」。\n"
             "5. 只返回 JSON，例如：\n"
             '{"style_tags":["法式"],"color_tags":["裸色"],"material_tags":[],"scene_tags":[]}'
         )
@@ -268,25 +268,28 @@ class QwenTagEnricher:
     def _batch_prompt(self, signals: List[TrendSignal]) -> str:
         items = [
             {
-                “source_note_id”: s.source_note_id or s.trend_id,
-                “source_title”: s.source_title or “”,
-                “caption”: s.caption or “”,
+                "source_note_id": s.source_note_id or s.trend_id,
+                "source_title": s.source_title or "",
+                "caption": s.caption or "",
             }
             for s in signals
         ]
+        example = (
+            '{"items":[{"source_note_id":"xxx","style_tags":[],'
+            '"color_tags":[],"material_tags":[],"scene_tags":[]}]}'
+        )
         return (
-            “请为 items 中每条美甲内容分别抽取四类标签。\n”
-            “字段固定为 style_tags、color_tags、material_tags、scene_tags。\n”
-            “要求：\n”
-            “1. color_tags 重点关注：根据标题和文案中提到的颜色词填写，如”裸粉、奶油白、蓝色、莫兰迪”等。\n”
-            “2. 只抽取每条原文明确提到或强相关的短标签，不要创造新概念。\n”
-            “3. 不要输出”美甲、好看、显白、推荐、教程、分享、合集、爆款、种草”等泛词。\n”
-            “4. 如果某类没有明确依据，返回空数组。\n”
-            “5. 每个标签为 2-6 个汉字的短词，例如”法式、猫眼、裸色、奶油白、亮片、约会”。\n”
-            “6. 必须保留每条输入的 source_note_id，用它对齐结果；不要靠顺序。\n”
-            “7. 只返回 JSON，格式如下：\n”
-            '{“items”:[{“source_note_id”:”xxx”,”style_tags”:[],”color_tags”:[],”material_tags”:[],”scene_tags”:[]}]}\n\n'
-            f”items:\n{json.dumps(items, ensure_ascii=False, indent=2)}”
+            "请为 items 中每条美甲内容分别抽取四类标签。\n"
+            "字段固定为 style_tags、color_tags、material_tags、scene_tags。\n"
+            "要求：\n"
+            "1. color_tags 重点关注：根据标题和文案中提到的颜色词填写，如裸粉、奶油白、蓝色、莫兰迪等。\n"
+            "2. 只抽取每条原文明确提到或强相关的短标签，不要创造新概念。\n"
+            "3. 不要输出美甲、好看、显白、推荐、教程、分享、合集、爆款、种草等泛词。\n"
+            "4. 如果某类没有明确依据，返回空数组。\n"
+            "5. 每个标签为 2-6 个汉字的短词，例如法式、猫眼、裸色、奶油白、亮片、约会。\n"
+            "6. 必须保留每条输入的 source_note_id，用它对齐结果；不要靠顺序。\n"
+            f"7. 只返回 JSON，格式如下：\n{example}\n\n"
+            f"items:\n{json.dumps(items, ensure_ascii=False, indent=2)}"
         )
 
     @staticmethod
