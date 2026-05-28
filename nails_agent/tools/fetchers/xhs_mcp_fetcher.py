@@ -711,13 +711,17 @@ class XHSMCPFetcher:
                     continue
                 body = r.json()
                 if body.get("success") is False:
+                    msg = body.get("message") or ""
                     logger.warning(
                         "XHS-MCP detail '%s' failed (attempt %d/%d): %s",
                         feed_id,
                         attempt,
                         attempts,
-                        body.get("message"),
+                        msg,
                     )
+                    # "Note not found" / token mismatch — retrying won't help, skip immediately
+                    if "not found" in msg.lower() or "xsectoken" in msg.lower():
+                        break
                     continue
                 return body
             except requests.Timeout:
@@ -931,6 +935,25 @@ class XHSMCPFetcher:
                 local_paths.append(str(path))
             except Exception as exc:
                 logger.debug("XHS image download failed for %s: %s", url, exc)
+
+        # Pick the sharpest image from all downloaded paths as the primary
+        # (important when max_images > 1: e.g. a 9-photo post's best shot).
+        if len(local_paths) > 1:
+            try:
+                import numpy as np
+                from PIL import Image as _PILImage
+
+                def _sharpness(p: str) -> float:
+                    with _PILImage.open(p) as _img:
+                        gray = np.array(_img.convert("L"), dtype=np.float32)
+                    return float(np.var(np.diff(gray, axis=0)) + np.var(np.diff(gray, axis=1)))
+
+                local_paths.sort(key=_sharpness, reverse=True)
+                logger.debug(
+                    "Multi-image sharpness sort → best: %s", Path(local_paths[0]).name
+                )
+            except Exception:
+                pass
 
         return signal.model_copy(
             update={

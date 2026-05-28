@@ -43,18 +43,20 @@ logger = logging.getLogger(__name__)
 
 XHS_KEYWORD_POOL: dict[str, list[str]] = {
     # 色系 — colour-family searches surface colour trends first
-    "色系": ["猫眼美甲", "渐变色美甲", "法式美甲", "奶油色美甲", "多巴胺美甲"],
+    "色系": ["猫眼美甲", "渐变色美甲", "法式美甲", "奶油色美甲", "多巴胺美甲", "纯色美甲", "莫兰迪美甲"],
     # 场景 — context/occasion-driven posts skew toward real-use nail photos
-    "场景": ["夏日美甲", "约会美甲", "日常美甲", "通勤美甲", "婚礼美甲"],
+    "场景": ["夏日美甲", "约会美甲", "日常美甲", "通勤美甲", "婚礼美甲", "秋冬美甲"],
     # 风格 — aesthetic style keywords
-    "风格": ["简约美甲", "ins风美甲", "复古美甲", "甜酷美甲", "高级感美甲"],
+    "风格": ["简约美甲", "ins风美甲", "复古美甲", "甜酷美甲", "高级感美甲", "韩系美甲", "冷淡风美甲"],
     # 甲型 — nail shape/length
-    "甲型": ["长甲美甲设计", "短甲美甲", "方形甲"],
+    "甲型": ["长甲美甲设计", "短甲美甲", "方形甲", "圆形甲", "杏仁甲"],
     # 工艺 — technique/material
-    "工艺": ["猫眼甲", "亮片美甲", "光疗甲推荐", "镭射美甲"],
+    "工艺": ["猫眼甲", "亮片美甲", "光疗甲推荐", "镭射美甲", "晕染美甲", "贴片美甲"],
+    # 合集 — compilation posts (multi-image, higher chance of 9-grid covers)
+    "合集": ["美甲款式合集", "春季美甲合集", "美甲灵感合集", "2025美甲流行"],
 }
 
-# Default 7-keyword set sampled across all dimensions (one per bucket).
+# Default 9-keyword set sampled across all dimensions (one per bucket).
 # Rotated each run via collect_signals; override via keywords= param.
 XHS_KEYWORDS = [
     "猫眼美甲",       # 色系
@@ -64,6 +66,8 @@ XHS_KEYWORDS = [
     "光疗甲推荐",     # 工艺
     "法式美甲",       # 色系 — second colour pick
     "约会美甲",       # 场景 — second scene pick
+    "美甲款式合集",   # 合集 — multi-image posts
+    "韩系美甲",       # 风格 — second style pick
 ]
 
 
@@ -112,7 +116,9 @@ IG_NAIL_TAGS = [
 DEFAULT_NAIL_KEYWORDS = XHS_KEYWORDS
 
 # Per-platform per-keyword target. XHS detail enrichment then keeps global Top 10.
-_PER_KW_LIMIT = 10
+# 20 per keyword × 9 keywords = ~180 candidates before dedup → gives detail pool of 20
+# → stable Top 10 output even when a few detail calls fail with "Note not found".
+_PER_KW_LIMIT = 20
 
 
 class SignalCollector:
@@ -226,8 +232,8 @@ class SignalCollector:
         refresh_sources: bool = True,
         download_xhs_images: bool = True,
         xhs_image_dir: str = "web/output/images/latest/raw",
-        xhs_max_images_per_signal: int = 1,
-        xhs_detail_candidate_n: int = 15,
+        xhs_max_images_per_signal: int = 3,
+        xhs_detail_candidate_n: int = 20,
         xhs_detail_retry_attempts: int = 2,
         xhs_use_llm_tags: bool = True,
         parallel: bool = True,
