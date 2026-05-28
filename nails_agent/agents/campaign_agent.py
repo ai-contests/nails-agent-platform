@@ -46,11 +46,13 @@ def run_campaign_agent(
     context = _format_trend_context(trend_result, max_cards)
     user_msg = (
         f"为以下热门美甲款式生成完整运营策略。\n\n{context}\n\n"
-        f"要求：\n"
+        "要求：\n"
         f"1. 生成最多 {max_cards} 款不同风格的卡片，每款都要有三平台文案。\n"
-        f"2. style_name 必须具体，使用'颜色·风格'或'工艺·场景'格式，例如"蓝色猫眼·夏日"、"裸粉渐变·通勤"、"极简法式·约会"，禁止用"法式甲"、"猫眼"这类泛名。\n"
-        f"3. 同一 tag 类型（如猫眼）最多出现 2 张卡片，确保整体多样性。\n"
-        f"完成后调用 finalise_campaign。"
+        "2. style_name 必须具体，使用「颜色·风格」或「工艺·场景」格式，"
+        "例如「蓝色猫眼·夏日」「裸粉渐变·通勤」「极简法式·约会」，"
+        "禁止用「法式甲」「猫眼」这类泛名。\n"
+        "3. 同一 tag 类型（如猫眼）最多出现 2 张卡片，确保整体多样性。\n"
+        "完成后调用 finalise_campaign。"
     )
 
     try:
