@@ -6,9 +6,11 @@ Provider priority (first available wins):
   3. OpenRouter  — OPENROUTER_API_KEY
 
 Both ModelScope and DashScope expose OpenAI-compatible `/v1/chat/completions`.
-ModelScope vision models: Qwen/Qwen3-VL-8B-Instruct  (only VL model available via API inference)
-DashScope vision models:  qwen-vl-max
-OpenRouter vision models: qwen/qwen2.5-vl-72b-instruct:free
+Vision tagging uses a fallback chain (see vision_tag_configs): if one VL model
+returns 429 (quota) or 400 (no provider), the next candidate is tried.
+ModelScope VL chain: Qwen3-VL-8B → Qwen3-VL-30B → Qwen3-VL-235B → InternVL3.5-241B → QVQ-72B
+DashScope vision:    qwen-vl-max
+OpenRouter vision:   qwen/qwen2.5-vl-72b-instruct:free
 """
 
 from __future__ import annotations
@@ -125,54 +127,100 @@ def tag_llm_config(
 
 
 def vision_tag_config() -> LLMEndpointConfig:
-    """Vision LLM for image-based tag extraction.
+    """First (preferred) vision LLM endpoint for image-based tag extraction.
 
-    Priority:
-      1. NAILS_VISION_TAG_* env vars (explicit override)
-      2. ModelScope  — Qwen/QVQ-72B-Preview (visual reasoning)
-      3. DashScope   — qwen-vl-max  (same key as tag LLM)
-      4. OpenRouter  — qwen/qwen2.5-vl-72b-instruct:free
+    Backwards-compatible single-endpoint accessor. For the full fallback chain
+    use vision_tag_configs().
     """
-    # Explicit dedicated override
-    dedicated = LLMEndpointConfig(
-        model=env_value("NAILS_VISION_TAG_MODEL"),
-        api_key=env_value("NAILS_VISION_TAG_API_KEY"),
-        base_url=env_value("NAILS_VISION_TAG_BASE_URL").rstrip("/"),
+    chain = vision_tag_configs()
+    return chain[0] if chain else LLMEndpointConfig()
+
+
+# ModelScope VL models verified working via API inference (probed 2026-05-29),
+# ordered fast/cheap → large/accurate. Used as the fallback chain when one model
+# returns 429 (quota) or 400 (no provider).
+_MODELSCOPE_VL_CHAIN = (
+    "Qwen/Qwen3-VL-8B-Instruct",
+    "Qwen/Qwen3-VL-30B-A3B-Instruct",
+    "Qwen/Qwen3-VL-235B-A22B-Instruct",
+    "OpenGVLab/InternVL3_5-241B-A28B",
+    "Qwen/QVQ-72B-Preview",
+)
+
+
+def vision_tag_configs() -> list[LLMEndpointConfig]:
+    """Prioritized chain of vision LLM endpoints for tag extraction.
+
+    The caller (VisionTagEnricher) tries each in order, advancing to the next
+    on quota (429) / no-provider (400) errors until one succeeds.
+
+    Order:
+      1. NAILS_VISION_TAG_* explicit override (single endpoint, if set)
+      2. ModelScope VL chain (5 verified models, fast → accurate)
+      3. DashScope qwen-vl-max
+      4. OpenRouter qwen2.5-vl-72b free
+    """
+    chain: list[LLMEndpointConfig] = []
+    seen: set[tuple[str, str]] = set()
+
+    def _add(cfg: LLMEndpointConfig) -> None:
+        if not cfg.available:
+            return
+        key = (cfg.base_url, cfg.model)
+        if key in seen:
+            return
+        seen.add(key)
+        chain.append(cfg)
+
+    # 1. Explicit dedicated override (if a model is pinned via env)
+    _add(
+        LLMEndpointConfig(
+            model=env_value("NAILS_VISION_TAG_MODEL"),
+            api_key=env_value("NAILS_VISION_TAG_API_KEY"),
+            base_url=env_value("NAILS_VISION_TAG_BASE_URL").rstrip("/"),
+        )
     )
-    if dedicated.available:
-        return dedicated
 
-    # ModelScope vision — Qwen3-VL-8B is the currently available VL model via API inference
+    # 2. ModelScope VL chain — reuse the explicit key/base_url if provided so the
+    #    chain works even when only NAILS_VISION_TAG_API_KEY is set.
     ms = modelscope_config()
-    if ms.api_key:
-        return LLMEndpointConfig(
-            model="Qwen/Qwen3-VL-8B-Instruct",
-            api_key=ms.api_key,
-            base_url=ms.base_url or "https://api-inference.modelscope.cn/v1",
-        )
+    ms_key = env_value("NAILS_VISION_TAG_API_KEY") or ms.api_key
+    ms_base = (
+        env_value("NAILS_VISION_TAG_BASE_URL")
+        or ms.base_url
+        or "https://api-inference.modelscope.cn/v1"
+    ).rstrip("/")
+    if ms_key:
+        for model in _MODELSCOPE_VL_CHAIN:
+            _add(LLMEndpointConfig(model=model, api_key=ms_key, base_url=ms_base))
 
-    # DashScope vision
+    # 3. DashScope vision — only when the configured endpoint is actually
+    #    DashScope (qwen-vl-max is not served by ModelScope's inference API).
     ds = dashscope_config()
-    if ds.api_key:
-        return LLMEndpointConfig(
-            model="qwen-vl-max",
-            api_key=ds.api_key,
-            base_url=ds.base_url or "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    if ds.api_key and "dashscope" in ds.base_url:
+        _add(
+            LLMEndpointConfig(
+                model="qwen-vl-max",
+                api_key=ds.api_key,
+                base_url=ds.base_url,
+            )
         )
 
-    # OpenRouter vision (free tier)
+    # 4. OpenRouter vision (free tier)
     router_key = env_value("OPENROUTER_API_KEY")
     if router_key:
-        return LLMEndpointConfig(
-            model="qwen/qwen2.5-vl-72b-instruct:free",
-            api_key=router_key,
-            base_url=env_value(
-                "NAILS_OPENROUTER_BASE_URL", "OPENROUTER_BASE_URL",
-                default="https://openrouter.ai/api/v1",
-            ).rstrip("/"),
+        _add(
+            LLMEndpointConfig(
+                model="qwen/qwen2.5-vl-72b-instruct:free",
+                api_key=router_key,
+                base_url=env_value(
+                    "NAILS_OPENROUTER_BASE_URL", "OPENROUTER_BASE_URL",
+                    default="https://openrouter.ai/api/v1",
+                ).rstrip("/"),
+            )
         )
 
-    return LLMEndpointConfig()
+    return chain
 
 
 def anthropic_model() -> str:

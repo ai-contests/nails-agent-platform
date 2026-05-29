@@ -367,23 +367,39 @@ class VisionTagEnricher:
         base_url: str | None = None,
         timeout: int = 45,
     ):
-        from nails_agent.services.llm_config import vision_tag_config
+        from nails_agent.services.llm_config import (
+            LLMEndpointConfig,
+            vision_tag_configs,
+        )
 
-        cfg = vision_tag_config()
-        self.model = model or cfg.model
-        self.api_key = api_key or cfg.api_key
-        self.base_url = (base_url or cfg.base_url or "").rstrip("/")
+        # Explicit caller override pins a single endpoint (no fallback).
+        if model or api_key or base_url:
+            self.candidates: List[LLMEndpointConfig] = [
+                LLMEndpointConfig(
+                    model=model or "",
+                    api_key=api_key or "",
+                    base_url=(base_url or "").rstrip("/"),
+                )
+            ]
+        else:
+            self.candidates = vision_tag_configs()
         self.timeout = timeout
 
     @property
     def available(self) -> bool:
-        return bool(self.api_key and self.base_url and self.model)
+        return any(c.available for c in self.candidates)
+
+    @property
+    def model(self) -> str:
+        """Preferred (first) model — kept for backward-compatible logging."""
+        return self.candidates[0].model if self.candidates else ""
 
     def extract_from_image(self, image_path: str) -> Dict[str, List[str]]:
         """Return tag dict extracted from *image_path* via vision API.
 
-        Returns an empty dict on any failure so callers can fall through to
-        rule-based tags safely.
+        Tries each candidate endpoint in priority order, advancing to the next
+        on quota (429) / no-provider (400) / transport errors. Returns an empty
+        dict on total failure so callers can fall through to rule-based tags.
         """
         empty: Dict[str, List[str]] = {field: [] for field in TAG_FIELDS}
         if not self.available:
@@ -413,45 +429,72 @@ class VisionTagEnricher:
             logger.warning("VisionTagEnricher: failed to read image %s: %s", image_path, exc)
             return empty
 
-        payload = {
-            "model": self.model,
-            "temperature": 0,
-            "messages": [
-                {"role": "system", "content": _VISION_SYSTEM},
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "image_url", "image_url": {"url": data_url}},
-                        {"type": "text", "text": "请分析这张美甲图片并提取标签。"},
-                    ],
-                },
-            ],
-        }
+        messages = [
+            {"role": "system", "content": _VISION_SYSTEM},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image_url", "image_url": {"url": data_url}},
+                    {"type": "text", "text": "请分析这张美甲图片并提取标签。"},
+                ],
+            },
+        ]
 
-        try:
-            resp = requests.post(
-                f"{self.base_url}/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                },
-                json=payload,
-                timeout=self.timeout,
-            )
-            if not resp.ok:
-                logger.warning(
-                    "VisionTagEnricher HTTP %d for %s: %s",
-                    resp.status_code,
-                    path.name,
-                    resp.text[:200],
+        last_error = "no candidates"
+        for cfg in self.candidates:
+            if not cfg.available:
+                continue
+            try:
+                resp = requests.post(
+                    f"{cfg.base_url}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {cfg.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={"model": cfg.model, "temperature": 0, "messages": messages},
+                    timeout=self.timeout,
                 )
-                return empty
-            content = resp.json()["choices"][0]["message"]["content"]
-            parsed = QwenTagEnricher._parse_json(content)
-            return clean_tag_dict(parsed)
-        except Exception as exc:
-            logger.warning("VisionTagEnricher failed for %s: %s", path.name, exc)
-            return empty
+                if not resp.ok:
+                    last_error = f"HTTP {resp.status_code}: {resp.text[:160]}"
+                    # 429 = quota, 400 = no provider / bad model → try next model.
+                    if resp.status_code in (400, 402, 404, 429, 503):
+                        logger.info(
+                            "VisionTagEnricher: %s unavailable (%s), trying next model",
+                            cfg.model,
+                            last_error,
+                        )
+                        continue
+                    logger.warning(
+                        "VisionTagEnricher HTTP %d for %s via %s: %s",
+                        resp.status_code,
+                        path.name,
+                        cfg.model,
+                        resp.text[:200],
+                    )
+                    continue
+                content = resp.json()["choices"][0]["message"]["content"]
+                parsed = QwenTagEnricher._parse_json(content)
+                result = clean_tag_dict(parsed)
+                if any(result.values()):
+                    logger.debug("VisionTagEnricher: %s succeeded for %s", cfg.model, path.name)
+                    return result
+                last_error = "empty tag result"
+            except Exception as exc:
+                last_error = str(exc)
+                logger.info(
+                    "VisionTagEnricher: %s errored (%s), trying next model",
+                    cfg.model,
+                    last_error,
+                )
+                continue
+
+        logger.warning(
+            "VisionTagEnricher: all %d candidate models failed for %s (last: %s)",
+            len(self.candidates),
+            path.name,
+            last_error,
+        )
+        return empty
 
 
 def enrich_signal_tags_with_vision(
