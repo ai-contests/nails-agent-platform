@@ -381,6 +381,14 @@ class XHSMCPFetcher:
         self._session = requests.Session()
         # Local MCP traffic should not be routed through HTTP_PROXY/ALL_PROXY.
         self._session.trust_env = False
+        # Pace per-keyword searches: each one drives a headless-browser scrape on
+        # XHS; firing many back-to-back trips XHS rate-limiting (search returns
+        # empty / waitForFunction timeout). Sleep a jittered delay between
+        # keywords to look human. Tunable via env; set 0 to disable.
+        import os
+
+        self._search_delay_min = float(os.environ.get("NAILS_XHS_SEARCH_DELAY_MIN", "3"))
+        self._search_delay_max = float(os.environ.get("NAILS_XHS_SEARCH_DELAY_MAX", "7"))
 
     def _candidate_base_urls(self) -> List[str]:
         parsed = urlparse(self.base_url)
@@ -448,7 +456,18 @@ class XHSMCPFetcher:
         if isinstance(keywords, str):
             keywords = [keywords]
         candidates: List[Tuple[TrendSignal, dict, str]] = []
-        for kw in keywords:
+        for i, kw in enumerate(keywords):
+            # Throttle between keywords to avoid tripping XHS rate-limiting.
+            if i > 0 and self._search_delay_max > 0:
+                import random
+                import time
+
+                delay = random.uniform(
+                    min(self._search_delay_min, self._search_delay_max),
+                    self._search_delay_max,
+                )
+                logger.debug("XHS-MCP: throttle %.1fs before '%s'", delay, kw)
+                time.sleep(delay)
             try:
                 logger.info("XHS-MCP: searching '%s'…", kw)
                 r = self._session.get(
