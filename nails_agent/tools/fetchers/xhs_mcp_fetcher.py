@@ -872,14 +872,12 @@ class XHSMCPFetcher:
                         cell_path = out_dir / f"{stem}_cell{row}_{col}.webp"
                         cell.save(cell_path, "WEBP", quality=88)
 
-                        # Sharpness via Laplacian variance (higher = sharper)
+                        # Sharpness proxy: variance of row/column gradients
+                        # (higher = sharper, more in-focus nail detail).
                         gray = np.array(cell.convert("L"), dtype=np.float32)
-                        kx = np.array([[0, 1, 0], [1, -4, 1], [0, 1, 0]], dtype=np.float32)
-                        lap = np.abs(
-                            np.convolve(gray.ravel(), kx.ravel()[:1], mode="same")
+                        sharpness = float(
+                            np.var(np.diff(gray, axis=0)) + np.var(np.diff(gray, axis=1))
                         )
-                        # Simple: variance of Laplacian approximation via row diffs
-                        sharpness = float(np.var(np.diff(gray, axis=0)) + np.var(np.diff(gray, axis=1)))
                         cells.append((sharpness, cell_path))
 
                 cells.sort(key=lambda x: x[0], reverse=True)

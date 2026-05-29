@@ -136,16 +136,24 @@ expected result given the §5 blocker, not a code failure.**
 
 ---
 
-## 5. Known limitation — fresh-data e2e is gated on XHS session
+## 5. Known limitation — fresh-data e2e is gated on the XHS scraper
 
 The e2e produced 0 signals because **all 19 XHS keyword searches returned 0
-results**. Direct bridge probe confirms it:
-```
-GET /api/v1/feeds/search?keyword=猫眼美甲 → {"feeds":[],"total":0}
-GET /api/v1/login/status               → {"is_logged_in":true, ...}
-```
-"Logged in" but empty searches = expired anti-bot tokens
-(`websectiga` / `acw_tc`). This is an account/credential issue, not a code bug.
+results**. Root cause (traced end-to-end — it is **not** login/cookie expiry):
+
+- DB session is valid and complete: `web_session`, `websectiga`, `acw_tc`, `a1`
+  all present; `login/status → is_logged_in: true`.
+- The actual failure from xhs-mcp is:
+  `Search failed: page.waitForFunction: Timeout 30000ms exceeded.`
+- xhs-mcp scrapes results with a **headless** browser. The bridge had been
+  running 9h+, and the e2e fired ~19 searches in ~5 min — XHS challenges the
+  long-lived headless scraper, so the results feed never renders and the wait
+  times out. XHS allows the *login* (headful + stealth) but blocks the
+  *scraper* (headless). Re-login alone does not help; the stale bridge browser
+  must be reset.
+
+**Mitigation shipped:** per-keyword search throttling (3–7s jittered delay,
+`NAILS_XHS_SEARCH_DELAY_MIN/_MAX`) so a run can't burst-trip the limiter again.
 
 Because no posts were fetched, three items are **code-complete but not yet
 verified against live output**: specific style names, top-10 diversity, and the
@@ -156,16 +164,21 @@ verified against live output**: specific style names, top-10 diversity, and the
 ## 6. How to reproduce a fully-green e2e
 
 ```bash
-# 1. Refresh the XHS session (scan QR with the secondary XHS app)
+# 1. Reset the stale bridge + headless browsers, restart in HEADFUL mode
+#    (visible browser is far less likely to be bot-challenged)
+pkill -f xhs_rest_bridge; pkill -f chrome-headless-shell
+XHS_MCP_HEADLESS=false node scripts/xhs_rest_bridge.mjs --port 18060 &
+
+# 2. Refresh the XHS session (scan QR with the secondary XHS app)
 uv run python scripts/xhs_login.py --name nails
 
-# 2. Confirm searches return data
+# 3. Confirm a single search returns data before running the full set
 curl "http://localhost:18060/api/v1/feeds/search?keyword=猫眼美甲&count=3"
 
-# 3. Run the full pipeline
+# 4. Run the full pipeline (throttling paces the keyword searches)
 uv run python -m nails_agent run --output-dir web/output
 
-# 4. Inspect output
+# 5. Inspect output
 cat web/output/report.json
 ls  web/output/images/latest/raw/   # expect TREND_*_cell*.webp for grid posts
 ```
