@@ -223,6 +223,38 @@ def vision_tag_configs() -> list[LLMEndpointConfig]:
     return chain
 
 
+# ModelScope text models for agent reasoning, ordered primary → fallback.
+# Per-model daily quotas are independent, so a different model id sidesteps a
+# 429 on the primary. The configured NAILS_MODELSCOPE_MODEL is always tried first.
+_MODELSCOPE_TEXT_CHAIN = (
+    "Qwen/Qwen3-235B-A22B-Instruct-2507",
+    "Qwen/Qwen3-235B-A22B-Thinking-2507",
+    "deepseek-ai/DeepSeek-V3.1",
+    "Qwen/Qwen2.5-72B-Instruct",
+    "ZhipuAI/GLM-4.5",
+)
+
+
+def agent_text_models() -> list[str]:
+    """Ordered list of text model identifiers for the active backend.
+
+    Used by the agent runner to fall back to an alternate model when the
+    primary returns 429 (daily quota) or is otherwise unavailable.
+    """
+    ms = modelscope_config()
+    models: list[str] = []
+    if ms.api_key:
+        # Configured model first, then the rest of the ModelScope chain.
+        for m in (ms.model, *_MODELSCOPE_TEXT_CHAIN):
+            if m and m not in models:
+                models.append(m)
+        return models
+    router = openrouter_config()
+    if router.api_key and router.model:
+        models.append(router.model)
+    return models
+
+
 def anthropic_model() -> str:
     return env_value("NAILS_ANTHROPIC_MODEL", "NAILS_AGENT_MODEL")
 
