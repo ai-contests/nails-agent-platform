@@ -231,16 +231,25 @@ def _rule_based_fallback(trend_result, progress_cb) -> "CampaignStrategyResult":
     # st.tag as trend_id which caused a mismatch → all scores defaulted to 50 → P0=0.
     signals = trend_result.top_10[:6]
     if signals:
-        max_score = max((s.interaction_score for s in signals), default=1.0) or 1.0
+        # TrendSignal carries `composite_score`; fall back to raw engagement
+        # (likes+comments+shares+collects) when the score wasn't computed.
+        def _score(s) -> float:
+            if getattr(s, "composite_score", 0):
+                return float(s.composite_score)
+            return float(
+                (s.likes or 0) + (s.comments or 0) + (s.shares or 0) + (s.collects or 0)
+            )
+
+        max_score = max((_score(s) for s in signals), default=1.0) or 1.0
         snapshots = [
             MetricSnapshot(
                 rank=i + 1,
                 keyword=sig.keyword,
                 trend_id=sig.trend_id,
-                external_heat_score=round(min(100.0, sig.interaction_score / max_score * 100), 1),
+                external_heat_score=round(min(100.0, _score(sig) / max_score * 100), 1),
                 trend_growth_score=50.0,
                 style_gap_score=50.0,
-                launch_priority_score=round(min(100.0, sig.interaction_score / max_score * 100), 1),
+                launch_priority_score=round(min(100.0, _score(sig) / max_score * 100), 1),
             )
             for i, sig in enumerate(signals)
         ]
