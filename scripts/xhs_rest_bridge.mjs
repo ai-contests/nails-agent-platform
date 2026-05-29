@@ -250,6 +250,23 @@ async function handle(req, res) {
     }
   }
 
+  // Reload account — clears cached XhsClient so next request picks up fresh DB cookies.
+  // Call this after running xhs_login.py to apply new cookies without restarting.
+  if (path === '/api/v1/accounts/reload' && req.method === 'POST') {
+    try {
+      const clearedNames = [];
+      for (const [id] of pool.clients) {
+        clearedNames.push(id);
+      }
+      pool.clients.clear();
+      console.error(`[xhs-bridge] account pool cleared (${clearedNames.length} clients evicted)`);
+      return json(res, 200, { success: true, data: { evicted: clearedNames.length } });
+    } catch (err) {
+      console.error('[xhs-bridge] reload error:', err.message);
+      return json(res, 500, { success: false, message: err.message });
+    }
+  }
+
   return json(res, 404, { success: false, message: 'not found' });
 }
 
