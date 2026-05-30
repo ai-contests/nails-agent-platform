@@ -49,13 +49,15 @@ class LLMEndpointConfig:
 
 # ── Per-provider helpers ───────────────────────────────────────────────────────
 
+
 def modelscope_config() -> LLMEndpointConfig:
     """ModelScope API-Inference (OpenAI-compatible, bearer auth)."""
     return LLMEndpointConfig(
         model=env_value("NAILS_MODELSCOPE_MODEL", default="Qwen/Qwen3-235B-A22B-Instruct-2507"),
         api_key=env_value("MODELSCOPE_API_KEY"),
         base_url=env_value(
-            "NAILS_MODELSCOPE_BASE_URL", "MODELSCOPE_BASE_URL",
+            "NAILS_MODELSCOPE_BASE_URL",
+            "MODELSCOPE_BASE_URL",
             default="https://api-inference.modelscope.cn/v1",
         ).rstrip("/"),
     )
@@ -67,7 +69,8 @@ def dashscope_config() -> LLMEndpointConfig:
         model=env_value("NAILS_TAG_LLM_MODEL", default="qwen3-max"),
         api_key=env_value("NAILS_TAG_LLM_API_KEY", "OPENAI_API_KEY"),
         base_url=env_value(
-            "NAILS_TAG_LLM_BASE_URL", "OPENAI_BASE_URL",
+            "NAILS_TAG_LLM_BASE_URL",
+            "OPENAI_BASE_URL",
             default="https://dashscope.aliyuncs.com/compatible-mode/v1",
         ).rstrip("/"),
     )
@@ -82,13 +85,15 @@ def openrouter_config() -> LLMEndpointConfig:
         ),
         api_key=env_value("OPENROUTER_API_KEY"),
         base_url=env_value(
-            "NAILS_OPENROUTER_BASE_URL", "OPENROUTER_BASE_URL",
+            "NAILS_OPENROUTER_BASE_URL",
+            "OPENROUTER_BASE_URL",
             default="https://openrouter.ai/api/v1",
         ).rstrip("/"),
     )
 
 
 # ── Composite config selectors ─────────────────────────────────────────────────
+
 
 def tag_llm_config(
     *,
@@ -105,7 +110,9 @@ def tag_llm_config(
         return LLMEndpointConfig(
             model=model or env_value("NAILS_TAG_LLM_MODEL"),
             api_key=api_key or env_value("NAILS_TAG_LLM_API_KEY", "OPENAI_API_KEY"),
-            base_url=(base_url or env_value("NAILS_TAG_LLM_BASE_URL", "OPENAI_BASE_URL")).rstrip("/"),
+            base_url=(base_url or env_value("NAILS_TAG_LLM_BASE_URL", "OPENAI_BASE_URL")).rstrip(
+                "/"
+            ),
         )
 
     # Env-configured dedicated tag endpoint (covers both ModelScope and DashScope
@@ -214,7 +221,8 @@ def vision_tag_configs() -> list[LLMEndpointConfig]:
                 model="qwen/qwen2.5-vl-72b-instruct:free",
                 api_key=router_key,
                 base_url=env_value(
-                    "NAILS_OPENROUTER_BASE_URL", "OPENROUTER_BASE_URL",
+                    "NAILS_OPENROUTER_BASE_URL",
+                    "OPENROUTER_BASE_URL",
                     default="https://openrouter.ai/api/v1",
                 ).rstrip("/"),
             )

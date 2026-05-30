@@ -43,11 +43,27 @@ logger = logging.getLogger(__name__)
 
 XHS_KEYWORD_POOL: dict[str, list[str]] = {
     # 色系 — colour-family searches surface colour trends first
-    "色系": ["猫眼美甲", "渐变色美甲", "法式美甲", "奶油色美甲", "多巴胺美甲", "纯色美甲", "莫兰迪美甲"],
+    "色系": [
+        "猫眼美甲",
+        "渐变色美甲",
+        "法式美甲",
+        "奶油色美甲",
+        "多巴胺美甲",
+        "纯色美甲",
+        "莫兰迪美甲",
+    ],
     # 场景 — context/occasion-driven posts skew toward real-use nail photos
     "场景": ["夏日美甲", "约会美甲", "日常美甲", "通勤美甲", "婚礼美甲", "秋冬美甲"],
     # 风格 — aesthetic style keywords
-    "风格": ["简约美甲", "ins风美甲", "复古美甲", "甜酷美甲", "高级感美甲", "韩系美甲", "冷淡风美甲"],
+    "风格": [
+        "简约美甲",
+        "ins风美甲",
+        "复古美甲",
+        "甜酷美甲",
+        "高级感美甲",
+        "韩系美甲",
+        "冷淡风美甲",
+    ],
     # 甲型 — nail shape/length
     "甲型": ["长甲美甲设计", "短甲美甲", "方形甲", "圆形甲", "杏仁甲"],
     # 工艺 — technique/material
@@ -59,15 +75,15 @@ XHS_KEYWORD_POOL: dict[str, list[str]] = {
 # Default 9-keyword set sampled across all dimensions (one per bucket).
 # Rotated each run via collect_signals; override via keywords= param.
 XHS_KEYWORDS = [
-    "猫眼美甲",       # 色系
-    "夏日美甲",       # 场景
-    "简约美甲",       # 风格
-    "短甲美甲",       # 甲型
-    "光疗甲推荐",     # 工艺
-    "法式美甲",       # 色系 — second colour pick
-    "约会美甲",       # 场景 — second scene pick
-    "美甲款式合集",   # 合集 — multi-image posts
-    "韩系美甲",       # 风格 — second style pick
+    "猫眼美甲",  # 色系
+    "夏日美甲",  # 场景
+    "简约美甲",  # 风格
+    "短甲美甲",  # 甲型
+    "光疗甲推荐",  # 工艺
+    "法式美甲",  # 色系 — second colour pick
+    "约会美甲",  # 场景 — second scene pick
+    "美甲款式合集",  # 合集 — multi-image posts
+    "韩系美甲",  # 风格 — second style pick
 ]
 
 
@@ -287,6 +303,7 @@ class SignalCollector:
                 pass
 
             if cdp_ready:
+
                 def _run_xhs_cdp():
                     return xhs_cdp.search_many(xhs_kws, target_per_kw=limit_per_kw)
 

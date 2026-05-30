@@ -122,21 +122,21 @@ class HermesNailsAgent:
             agent = get_orchestrator_agent()
             stream = Runner.run_streamed(agent, message, max_turns=30)
             async for event in stream.stream_events():
-                    if hasattr(event, "type"):
-                        if event.type == "run_item_stream_event":
-                            item = event.item
-                            if hasattr(item, "raw_item"):
-                                ri = item.raw_item
-                                # Tool call
-                                name = getattr(ri, "name", "")
-                                if name:
-                                    yield ("tool", f"🔧 {name}(…)")
-                        elif event.type == "raw_responses_stream_event":
-                            delta = getattr(event.data, "delta", None)
-                            if delta and hasattr(delta, "content"):
-                                for c in delta.content:
-                                    if hasattr(c, "text"):
-                                        yield ("text", c.text)
+                if hasattr(event, "type"):
+                    if event.type == "run_item_stream_event":
+                        item = event.item
+                        if hasattr(item, "raw_item"):
+                            ri = item.raw_item
+                            # Tool call
+                            name = getattr(ri, "name", "")
+                            if name:
+                                yield ("tool", f"🔧 {name}(…)")
+                    elif event.type == "raw_responses_stream_event":
+                        delta = getattr(event.data, "delta", None)
+                        if delta and hasattr(delta, "content"):
+                            for c in delta.content:
+                                if hasattr(c, "text"):
+                                    yield ("text", c.text)
             yield ("done", str(stream.final_output or ""))
 
         # Drive the async generator synchronously via a background thread + queue.

@@ -250,7 +250,9 @@ def ingest_campaign_styles(
     for card in campaign.style_cards:
         priority = _priority(card)
         if priority not in allowed_priorities:
-            logger.debug("Skipping card %s with priority=%s", getattr(card, "trend_id", "?"), priority)
+            logger.debug(
+                "Skipping card %s with priority=%s", getattr(card, "trend_id", "?"), priority
+            )
             continue
 
         signal = signals.get(card.trend_id)
@@ -263,7 +265,12 @@ def ingest_campaign_styles(
         style_item = _initial_style_item(card, signal, now)
         style_id = style_item["style_id"]
 
-        logger.info("Ingesting style_id=%s priority=%s image_url=%s", style_id, priority, style_item.get("image_url", ""))
+        logger.info(
+            "Ingesting style_id=%s priority=%s image_url=%s",
+            style_id,
+            priority,
+            style_item.get("image_url", ""),
+        )
 
         # Phase 1: write the candidate style as soon as the strategy says P0/P1.
         _upsert_table_row(data_path, "nail_styles_store", "style_id", style_item)

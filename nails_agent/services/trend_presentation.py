@@ -59,10 +59,18 @@ def generate_display_label(signal: Any) -> str:
       4. Fallback: cleaned keyword                        (→ "猫眼美甲")
       5. Last resort: "趋势样本"
     """
-    style_tags = [t for t in (_get(signal, "style_tags", []) or []) if t and t.lower() not in _NOISE_TAGS]
-    color_tags = [t for t in (_get(signal, "color_tags", []) or []) if t and t.lower() not in _NOISE_TAGS]
-    material_tags = [t for t in (_get(signal, "material_tags", []) or []) if t and t.lower() not in _NOISE_TAGS]
-    scene_tags = [t for t in (_get(signal, "scene_tags", []) or []) if t and t.lower() not in _NOISE_TAGS]
+    style_tags = [
+        t for t in (_get(signal, "style_tags", []) or []) if t and t.lower() not in _NOISE_TAGS
+    ]
+    color_tags = [
+        t for t in (_get(signal, "color_tags", []) or []) if t and t.lower() not in _NOISE_TAGS
+    ]
+    material_tags = [
+        t for t in (_get(signal, "material_tags", []) or []) if t and t.lower() not in _NOISE_TAGS
+    ]
+    scene_tags = [
+        t for t in (_get(signal, "scene_tags", []) or []) if t and t.lower() not in _NOISE_TAGS
+    ]
 
     base = style_tags[0] if style_tags else ""
 

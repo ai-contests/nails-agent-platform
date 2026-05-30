@@ -64,9 +64,7 @@ def run_trend_scout(
         # Run synchronously; stream events for progress (result written to disk)
         # Use asyncio.run() so this works in threads that have no running event loop
         # (e.g. Streamlit's ScriptRunner.scriptThread).
-        asyncio.run(
-            _run_with_progress(agent, user_msg, progress_cb, max_turns)
-        )
+        asyncio.run(_run_with_progress(agent, user_msg, progress_cb, max_turns))
 
     except Exception as exc:
         logger.exception("TrendScoutAgent failed: %s", exc)

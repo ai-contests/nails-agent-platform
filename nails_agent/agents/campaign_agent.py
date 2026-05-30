@@ -63,9 +63,7 @@ def run_campaign_agent(
         if progress_cb:
             progress_cb("🤖 CampaignAgent 启动 (Qwen3)…")
 
-        asyncio.run(
-            _run_with_progress(agent, user_msg, progress_cb, max_turns)
-        )
+        asyncio.run(_run_with_progress(agent, user_msg, progress_cb, max_turns))
     except Exception as exc:
         logger.exception("CampaignAgent failed: %s", exc)
         if progress_cb:
@@ -85,7 +83,7 @@ def _format_trend_context(result: "TrendAnalysisResult", max_styles: int) -> str
     # Build a map from style tag → best matching signal (for display_label / color info)
     tag_to_signal: dict = {}
     for sig in result.top_10:
-        for tag in (sig.style_tags or []):
+        for tag in sig.style_tags or []:
             if tag and tag not in tag_to_signal:
                 tag_to_signal[tag] = sig
 
@@ -130,9 +128,7 @@ def _format_trend_context(result: "TrendAnalysisResult", max_styles: int) -> str
             seen_labels.add(label)
             colors = ", ".join(sig.color_tags) if sig.color_tags else ""
             color_str = f" | 颜色: {colors}" if colors else ""
-            lines.append(
-                f"- **{label}** | 关键词: {sig.keyword}{color_str} | 点赞: {sig.likes:,}"
-            )
+            lines.append(f"- **{label}** | 关键词: {sig.keyword}{color_str} | 点赞: {sig.likes:,}")
 
     if result.patterns:
         lines.append("\n## 观察到的模式")
@@ -227,9 +223,7 @@ def _rule_based_fallback(trend_result, progress_cb) -> "CampaignStrategyResult":
         def _score(s) -> float:
             if getattr(s, "composite_score", 0):
                 return float(s.composite_score)
-            return float(
-                (s.likes or 0) + (s.comments or 0) + (s.shares or 0) + (s.collects or 0)
-            )
+            return float((s.likes or 0) + (s.comments or 0) + (s.shares or 0) + (s.collects or 0))
 
         max_score = max((_score(s) for s in signals), default=1.0) or 1.0
         snapshots = [

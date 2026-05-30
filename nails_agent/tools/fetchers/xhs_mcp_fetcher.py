@@ -530,11 +530,17 @@ class XHSMCPFetcher:
                     # Vision VL fallback: fill missing tags from the downloaded image
                     if use_llm_tags and vision_enricher and vision_enricher.available:
                         first_img = (enriched.local_image_paths or [None])[0]
-                        if first_img and should_call_llm(signal_tag_dict(enriched), enriched.tag_confidence):
+                        if first_img and should_call_llm(
+                            signal_tag_dict(enriched), enriched.tag_confidence
+                        ):
                             vision_tags = vision_enricher.extract_from_image(first_img)
                             if any(vision_tags.values()):
                                 merged = merge_tag_dict(signal_tag_dict(enriched), vision_tags)
-                                enriched = apply_tags(enriched, merged, f"{enriched.tag_source}+vision:{vision_enricher.model}")
+                                enriched = apply_tags(
+                                    enriched,
+                                    merged,
+                                    f"{enriched.tag_source}+vision:{vision_enricher.model}",
+                                )
                 signals.append(enriched)
             return signals
 
@@ -557,7 +563,9 @@ class XHSMCPFetcher:
                         kw,
                     )
                     # Fall back to search-level signal rather than skipping entirely.
-                    enriched = apply_tags(sig, signal_tag_dict(sig), sig.tag_source or "rules:title")
+                    enriched = apply_tags(
+                        sig, signal_tag_dict(sig), sig.tag_source or "rules:title"
+                    )
                     detailed.append(enriched)
                     continue
                 enriched = _merge_detail_to_signal(sig, detail, feed, kw)
@@ -567,7 +575,9 @@ class XHSMCPFetcher:
                         feed.get("id") or sig.source_note_id,
                         kw,
                     )
-                    enriched = apply_tags(sig, signal_tag_dict(sig), sig.tag_source or "rules:title")
+                    enriched = apply_tags(
+                        sig, signal_tag_dict(sig), sig.tag_source or "rules:title"
+                    )
                     detailed.append(enriched)
                     continue
                 enriched = apply_tags(
@@ -819,8 +829,8 @@ class XHSMCPFetcher:
                 gray = img.convert("L")
                 arr = np.array(gray, dtype=np.float32)
 
-            col_mean = arr.mean(axis=0)   # mean brightness per column
-            row_mean = arr.mean(axis=1)   # mean brightness per row
+            col_mean = arr.mean(axis=0)  # mean brightness per column
+            row_mean = arr.mean(axis=1)  # mean brightness per row
 
             def _count_troughs(profile: np.ndarray, n_expected: int = 2) -> int:
                 """Count valleys significantly below local mean in a 1-D profile."""
@@ -954,7 +964,10 @@ class XHSMCPFetcher:
                             try:
                                 ind_r = self._session.get(
                                     ind_url,
-                                    headers={"User-Agent": "Mozilla/5.0", "Referer": "https://www.xiaohongshu.com/"},
+                                    headers={
+                                        "User-Agent": "Mozilla/5.0",
+                                        "Referer": "https://www.xiaohongshu.com/",
+                                    },
                                     timeout=20,
                                 )
                                 if ind_r.ok and ind_r.content:
@@ -993,9 +1006,7 @@ class XHSMCPFetcher:
                     return float(np.var(np.diff(gray, axis=0)) + np.var(np.diff(gray, axis=1)))
 
                 local_paths.sort(key=_sharpness, reverse=True)
-                logger.debug(
-                    "Multi-image sharpness sort → best: %s", Path(local_paths[0]).name
-                )
+                logger.debug("Multi-image sharpness sort → best: %s", Path(local_paths[0]).name)
             except Exception:
                 pass
 
