@@ -83,7 +83,11 @@ load_dotenv(Path.home() / ".hermes" / ".env", override=False)
 
 
 def _check_agents_available() -> bool:
-    return bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENROUTER_API_KEY"))
+    return bool(
+        os.environ.get("ANTHROPIC_API_KEY")
+        or os.environ.get("OPENROUTER_API_KEY")
+        or os.environ.get("MODELSCOPE_API_KEY")
+    )
 
 
 _AGENTS_AVAILABLE = _check_agents_available()
@@ -453,6 +457,10 @@ class ChatPipelineRunner:
 
     def _phase_trends_review(self, store: Dict[str, Any]) -> List[ChatEvent]:
         ctx = store["context"]
+        # Guard: collecting phase may have returned early (empty signals) without
+        # setting ctx["analysis"]. In that case there's nothing to review.
+        if "analysis" not in ctx:
+            return []
         analysis = ctx["analysis"]
         signals = ctx["signals"]
 
@@ -598,6 +606,8 @@ class ChatPipelineRunner:
 
     def _phase_evaluating(self, store: Dict[str, Any]) -> List[ChatEvent]:
         ctx = store["context"]
+        if "analysis" not in ctx:
+            return []
         analysis = ctx["analysis"]
         state = self._get_pipeline_state(store)
         state.status = "running"
