@@ -12,8 +12,6 @@ import re
 from pathlib import Path
 from typing import Any, Iterable
 
-logger = logging.getLogger(__name__)
-
 from nails_agent.memory.store import MemoryStore
 from nails_agent.models.schemas import (
     CampaignStrategyResult,
@@ -24,6 +22,8 @@ from nails_agent.models.schemas import (
 )
 from nails_agent.services import storage
 from nails_agent.services.trend_presentation import signal_image_url, source_title
+
+logger = logging.getLogger(__name__)
 
 LISTING_PRIORITIES = {"P0", "P1"}
 
