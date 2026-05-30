@@ -557,28 +557,24 @@ class XHSMCPFetcher:
                     max_attempts=detail_retry_attempts,
                 )
                 if not detail:
+                    # Detail call failed (transient/HTTP error). Skip this candidate
+                    # so the backfill loop replaces it with the next-ranked one — a
+                    # failed detail is NOT a content rejection, so do not record it.
                     logger.info(
-                        "XHS-MCP detail unavailable — using search-level data: feed_id=%s keyword=%s",
+                        "XHS-MCP detail failed — skipping for backfill: feed_id=%s keyword=%s",
                         feed.get("id") or sig.source_note_id,
                         kw,
                     )
-                    # Fall back to search-level signal rather than skipping entirely.
-                    enriched = apply_tags(
-                        sig, signal_tag_dict(sig), sig.tag_source or "rules:title"
-                    )
-                    detailed.append(enriched)
                     continue
                 enriched = _merge_detail_to_signal(sig, detail, feed, kw)
                 if not enriched.detail_enriched:
+                    # Detail returned but could not be parsed into a richer signal.
+                    # Treat like a failed detail: skip for backfill, do not reject.
                     logger.info(
-                        "XHS-MCP detail parse skipped — using search-level data: feed_id=%s keyword=%s",
+                        "XHS-MCP detail parse failed — skipping for backfill: feed_id=%s keyword=%s",
                         feed.get("id") or sig.source_note_id,
                         kw,
                     )
-                    enriched = apply_tags(
-                        sig, signal_tag_dict(sig), sig.tag_source or "rules:title"
-                    )
-                    detailed.append(enriched)
                     continue
                 enriched = apply_tags(
                     enriched,
